@@ -13,7 +13,7 @@ inicio de sesion
 
 despues de conectarce el reloj
 
-recibe <- {"lista_usuarios":[{"nombre":nombre,"id":id}, ....], "has_changes":true}
+recibe <- {"lista_usuarios":[{"nombre":nombre,"id":id}, ....], "vibrar":true}
 
 
 al seleccionar empleado
@@ -24,13 +24,13 @@ envia -> {"tipo":"relojes", "comando":"empleado_seleccionado", "nombre":nombre, 
 tareas
 
 comando ="tareas", "tareas_extras"
-has_changes = true, false
+vibrar = true, false
 
-recibe<- {"comando":comando, "tareas":[{"id":id,"tarea": tarea, "estado":estado, "hora_inicio": hora_inicio}, .....], "has_changes": has_changes}
+recibe<- {"comando":comando, "tareas":[{"id":id,"tarea": tarea, "estado":estado, "hora_inicio": hora_inicio}, .....], "vibrar": vibrar}
 
 
 al completar tarea 
 
 tipo= "tarea", "extra"
 
-envia -> {"tipo": "relojes", "comando":"tarea_terminada", "id":id, "id_empleado":id_empleado, "tipo":tipo}
+envia -> {"tipo": "relojes", "comando":"completar_tarea", "tarea":{"id":id, "id_empleado":id_empleado, "tipo":tipo}}
