@@ -1,5 +1,8 @@
 from database.database import DatabaseManager
 from database.db_relojes import RelojManager
+from conexiones import Conexiones
+
+Conexiones = Conexiones()
 
 
 class Relojes():
@@ -7,7 +10,7 @@ class Relojes():
         self.db_manager = DatabaseManager("relojes.db")
         self.reloj_manager = RelojManager(self.db_manager)
 
-    def AnalizarMensaje(self, data):
+    def AnalizarMensaje(self, data, uuid):
         """
         Analiza mensajes de relojes
         Formatos esperados:
@@ -23,22 +26,34 @@ class Relojes():
             return self._registrar_reloj_nuevo(data)
         
         elif comando == "inicio":
-            uuid_reloj = data.get("uuid")
-            if not uuid_reloj:
+            if not uuid:
                 return {"status": "error", "mensaje": "UUID requerido para inicio"}
-            return self._iniciar_reloj(uuid_reloj)
+            return self._iniciar_reloj(uuid)
         
         else:
             return {"status": "error", "mensaje": f"Comando desconocido: {comando}"}
     
+    def conexion(self, uuid):
+        try:
+            return Conexiones.obtener_conexion(uuid)
+        except KeyError:
+            print(f"Error: No se encontró conexión para UUID: {uuid}")
+            return None
+
+
     def _registrar_reloj_nuevo(self, data):
         """Maneja el registro de un reloj nuevo"""
         resultado = self.reloj_manager.registrar_reloj_nuevo()
         print(f"Respuesta de registro en relojes: {resultado}")
-        return resultado
+        uuid = resultado.get("uuid")
+        cone = self.conexion(uuid)
+        cone.send_json(resultado)
+        return
     
-    def _iniciar_reloj(self, uuid_reloj):
+    def _iniciar_reloj(self, uuid):
         """Maneja el inicio de sesión de un reloj"""
-        resultado = self.reloj_manager.iniciar_sesion_reloj(uuid_reloj)
+        resultado = self.reloj_manager.iniciar_sesion_reloj(uuid)
         print(f"Respuesta inicio en relojes: {resultado}")
-        return resultado
+        cone = self.conexion(uuid)
+        cone.send_json({"status": "ok", "mensaje": "Reloj iniciado correctamente", "data": resultado})
+        return
