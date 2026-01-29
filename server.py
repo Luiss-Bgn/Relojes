@@ -33,10 +33,10 @@ async def ws_handler(request):
                 print(f"Mensaje recibido: {data}")
 
                 # Obtener respuesta del manejador para ver si es valido el mensaje
-                respuesta = Manager.AnalizarMensaje(data)
+                Manager.AnalizarMensaje(data)
                 
                 # Enviar respuesta real al reloj
-                await ws.send_json(respuesta if respuesta else {"status": "error", "mensaje": "Sin respuesta"})
+                await ws.send_json({"status": "ok", "mensaje": "Mensaje procesado"})
     finally:
         print("Cliente desconectado")
 
