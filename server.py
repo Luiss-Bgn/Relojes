@@ -1,14 +1,25 @@
 from aiohttp import web
+import asyncio
 import json
 
 from funciones import manager
 from database import db_manager
+import time_manager
 
 Manager = manager.Manager()
 
 # Manejar base de datos
 iniciar_db = db_manager.IniciarDB()
 cerrar_db = db_manager.CerrarDB()
+
+# Manejo de tiempo
+async def iniciar_chequeo_hora(app):
+    app['tiempo_task'] = asyncio.create_task(time_manager.chequeo_hora())
+
+async def detener_chequeo_hora(app):
+    app['tiempo_task'].cancel()
+    await app['tiempo_task']
+
 
 async def ws_handler(request):
     ws = web.WebSocketResponse(protocols=['arduino', 'web-client'])
@@ -35,5 +46,9 @@ app.router.add_get('/ws', ws_handler)
 
 # app.on_startup.append(iniciar_db)
 # app.on_cleanup.append(cerrar_db)
+
+# Arrancar manejo de tiempo
+app.on_startup.append(iniciar_chequeo_hora)
+app.on_cleanup.append(detener_chequeo_hora)
 
 web.run_app(app, host="0.0.0.0", port=8000)

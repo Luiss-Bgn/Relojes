@@ -22,3 +22,12 @@ class Manager():
         else:
             print(f"Mensaje sin 'tipo'") #en caso de no enviar tipo
             return {"status": "error", "mensaje": "Campo 'tipo' requerido"}
+
+    
+    def Actualizar(self):
+        print("Actualizando Manager y sus funciones...")
+        for funcion in self.funciones.values():
+            if hasattr(funcion, 'Actualizar'):
+                funcion.Actualizar()
+        return
+
