@@ -1,0 +1,36 @@
+reloj no registrado
+
+envia-> {"tipo":"relojes", "comando":"registro"}
+recibe<- {"uuid":uuid}
+
+reloj registrado
+
+envia-> {"tipo":"relojes", "comando":"inicio", "uuid":uuid}
+
+
+
+inicio de sesion 
+
+despues de conectarce el reloj
+
+recibe <- {"lista_usuarios":[{"nombre":nombre,"id":id}, ....], "has_changes":true}
+
+
+al seleccionar empleado
+
+envia -> {"tipo":"relojes", "comando":"empleado_seleccionado", "nombre":nombre, "id":id, "uuid":uuid}
+
+
+tareas
+
+comando ="tareas", "tareas_extras"
+has_changes = true, false
+
+recibe<- {"comando":comando, "tareas":[{"id":id,"tarea": tarea, "estado":estado, "hora_inicio": hora_inicio}, .....], "has_changes": has_changes}
+
+
+al completar tarea 
+
+tipo= "tarea", "extra"
+
+envia -> {"tipo": "relojes", "comando":"tarea_terminada", "id":id, "id_empleado":id_empleado, "tipo":tipo}
