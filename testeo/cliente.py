@@ -11,7 +11,7 @@ async def enviar_comandos():
 
             # ===== EJEMPLO DE COMANDO =====
             comando = {
-                "tipo": "relojes",
+                "tipo": "usuarios",
                 "comando": "iniciar",
             }
 

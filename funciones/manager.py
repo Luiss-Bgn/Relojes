@@ -17,3 +17,10 @@ class Manager():
             else:
                 print(f"Tipo de mensaje desconocido: {tipo}")
         return
+    
+    def Actualizar(self):
+        print("Actualizando Manager y sus funciones...")
+        for funcion in self.funciones.values():
+            if hasattr(funcion, 'Actualizar'):
+                funcion.Actualizar()
+        return
