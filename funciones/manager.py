@@ -3,8 +3,8 @@ import funciones
 class Manager():
     def __init__(self):
         self.funciones = {
-            "usuarios": funciones.usuarios.Usuarios(),
-            "relojes": funciones.Relojes.Relojes(),
+            "usuarios": funciones.Usuarios(),
+            "relojes": funciones.Relojes(),
         }
 
     def AnalizarMensaje(self, data):
