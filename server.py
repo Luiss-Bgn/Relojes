@@ -1,6 +1,13 @@
 from aiohttp import web
 import json
 
+from funciones import manager
+from database import db_manager
+
+# Manejar base de datos
+iniciar_db = db_manager.IniciarDB()
+cerrar_db = db_manager.CerrarDB()
+
 async def ws_handler(request):
     ws = web.WebSocketResponse(protocols=['arduino', 'web-client'])
     await ws.prepare(request)
@@ -9,7 +16,9 @@ async def ws_handler(request):
         async for msg in ws:
             if msg.type == web.WSMsgType.TEXT:
                 data = msg.json()
-                print(f"Mensaje recibido: {data}")
+
+                manager.Manager().AnalizarMensaje(data)
+
                 await ws.send_json({"status": "recibido", "data": data})
 
     finally:

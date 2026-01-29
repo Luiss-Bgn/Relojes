@@ -1,0 +1,21 @@
+
+
+tipo = "relojes", "extra", "tareas", "usuarios" 
+comando = "tareas", "usuarios"
+
+{
+    "tipo": tipo,
+    "comando": comando
+}
+
+
+--- relojes
+Actualizaciones de relojes
+Envio de datos a relojes
+inicio de sesion
+
+    comandos = inicio - Para conectarse al servidor
+                registro - Primera conexion con el servidor
+                
+
+    {"uuid": uuid, "tipo": relojes, "comando": "inicio"}
