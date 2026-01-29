@@ -18,3 +18,5 @@ class Conexiones():
     def obtener_conexiones(self):
         print(self.conexiones_activas)
         return self.conexiones_activas
+    
+conexiones = Conexiones()

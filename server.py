@@ -4,11 +4,10 @@ import json
 
 from funciones import manager
 from database import db_manager
-import conexiones
+from conexiones import conexiones
 import time_manager
 
 Manager = manager.Manager()
-Conexiones = conexiones.Conexiones()
 
 # Manejar base de datos
 iniciar_db = db_manager.IniciarDB()
@@ -16,7 +15,7 @@ cerrar_db = db_manager.CerrarDB()
 
 # Manejo de tiempo
 async def iniciar_chequeo_hora(app):
-    app['tiempo_task'] = asyncio.create_task(time_manager.chequeo_hora())
+    app['tiempo_task'] = asyncio.create_task(time_manager.chequeo_hora(Manager))
 
 async def detener_chequeo_hora(app):
     app['tiempo_task'].cancel()
@@ -26,25 +25,21 @@ async def detener_chequeo_hora(app):
 async def ws_handler(request):
     ws = web.WebSocketResponse(protocols=['arduino', 'web-client'])
     await ws.prepare(request)
-    Conexiones.agregar_conexion(request.remote, ws)
+    conexiones.agregar_conexion(request.remote, ws)
 
     try:
         async for msg in ws:
             if msg.type == web.WSMsgType.TEXT:
                 data = msg.json()
-                print(f"Mensaje recibido: {data}")
+                # print(f"Mensaje recibido: {data}")
 
-                # Obtener respuesta del manejador para ver si es valido el mensaje
-                Manager.AnalizarMensaje(data)
-                
-                # Enviar respuesta real al reloj
-                await ws.send_json({"status": "ok", "mensaje": "Mensaje procesado"})
+                conectados = conexiones.obtener_conexiones()
+                await Manager.AnalizarMensaje(data)
 
-                conexiones = Conexiones.obtener_conexiones()
-                print(f"Conexiones activas: {list(conexiones.keys())}")
+                print(f"Conexiones activas: {list(conectados.keys())}")
     finally:
         print("Cliente desconectado")
-        Conexiones.eliminar_conexion(request.remote)
+        conexiones.eliminar_conexion(request.remote)
 
     return ws
 

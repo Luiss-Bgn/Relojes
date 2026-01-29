@@ -5,9 +5,10 @@ class Manager():
         self.funciones = {
             "usuarios": funciones.Usuarios(),
             "relojes": funciones.Relojes(),
+            "tareas": funciones.Tareas(),
         }
 
-    def AnalizarMensaje(self, data):
+    async def AnalizarMensaje(self, data):
         print(f"Procesando mensaje: {data}")
         
         try:
@@ -16,7 +17,7 @@ class Manager():
                 print(f"Tipo de mensaje desconocido: {tipo}")
                 return
             
-            self.funciones[tipo].AnalizarMensaje(data) #entra al mensaje del tipo corresponsinte
+            await self.funciones[tipo].AnalizarMensaje(data) #entra al mensaje del tipo corresponsinte
             return
         
         except KeyError as e:
@@ -28,10 +29,10 @@ class Manager():
             return
 
     
-    def Actualizar(self):
+    async def Actualizar(self):
         print("Actualizando Manager y sus funciones...")
         for funcion in self.funciones.values():
             if hasattr(funcion, 'Actualizar'):
-                funcion.Actualizar()
+                await funcion.Actualizar()
         return
 

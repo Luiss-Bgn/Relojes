@@ -1,9 +1,8 @@
 import asyncio
 from datetime import datetime
 
-import funciones
 
-async def chequeo_hora():
+async def chequeo_hora(Manager):
     print("Iniciando chequeo de hora...")
 
     ultimo_minuto = None
@@ -15,6 +14,5 @@ async def chequeo_hora():
             if ahora.second == 0:
                 print(f"[{ahora.strftime('%H:%M:%S')}] Minuto nuevo detectado.")
                 # Actualizar todo cada minuto
-                funciones.Manager().Actualizar()
-
+                await Manager.Actualizar()
         await asyncio.sleep(0.5)
