@@ -16,12 +16,6 @@ class Conexiones():
         print(f"Conexión eliminada. Total conexiones: {len(self.conexiones_activas)}")
 
     def obtener_conexiones(self):
-        print(self.conexiones_activas)
         return self.conexiones_activas
     
-<<<<<<< HEAD
 conexiones = Conexiones()
-=======
-    def obtener_conexion(self, uuid):
-        return self.conexiones_activas.get(uuid)
->>>>>>> 0964c4f567a3ae5337859b9f597259923f5bb063

@@ -33,20 +33,11 @@ async def ws_handler(request):
                 data = msg.json()
                 # print(f"Mensaje recibido: {data}")
 
-<<<<<<< HEAD
+                uuid = data.get("uuid", "desconocid")
                 conectados = conexiones.obtener_conexiones()
-                await Manager.AnalizarMensaje(data)
+                await Manager.AnalizarMensaje(data,uuid)
 
                 print(f"Conexiones activas: {list(conectados.keys())}")
-=======
-                # Obtener respuesta del manejador para ver si es valido el mensaje
-                uuid = data.get("uuid", "desconocid")
-                Manager.AnalizarMensaje(data, uuid)
-                # Enviar respuesta real al reloj
-                await ws.send_json({"status": "ok", "mensaje": "Mensaje procesado"})
-                conexiones = Conexiones.obtener_conexiones()
-                print(f"Conexiones activas: {list(conexiones.keys())}")
->>>>>>> 0964c4f567a3ae5337859b9f597259923f5bb063
     finally:
         print("Cliente desconectado")
         conexiones.eliminar_conexion(request.remote)

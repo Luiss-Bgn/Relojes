@@ -13,12 +13,12 @@ class Tareas():
         }
         pass
 
-    async def AnalizarMensaje(self, mensaje):
+    async def AnalizarMensaje(self, mensaje, uuid):
         # print(f"Analizando mensaje en Tareas: {mensaje}")
         try:
             comando = mensaje["comando"]
             if comando in self.comandos:
-                await self.comandos[comando](mensaje)
+                await self.comandos[comando](mensaje, uuid)
         except KeyError as e:
             print(f"Error: campo '{e.args[0]}' no encontrado en el mensaje de Tareas")
         except Exception as e:
@@ -26,7 +26,7 @@ class Tareas():
 
         return
     
-    async def ObtenerTareas(self,mensaje = None):
+    async def ObtenerTareas(self,mensaje = None, uuid = None):
         # print("Obteniendo tareas del día...")
         # print(f"Tareas del día: {self.tareas_del_dia}")
         conectados = conexiones.obtener_conexiones()
@@ -34,7 +34,7 @@ class Tareas():
             await ws.send_json({"tipo": "tareas","tareas": self.tareas_del_dia})
         return
     
-    async def CrearTarea(self, tarea):
+    async def CrearTarea(self, tarea, uuid = None):
         try:
             tareas = tarea['tareas']
             for tarea in tareas:

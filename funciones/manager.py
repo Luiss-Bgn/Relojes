@@ -8,11 +8,7 @@ class Manager():
             "tareas": funciones.Tareas(),
         }
 
-<<<<<<< HEAD
-    async def AnalizarMensaje(self, data):
-=======
-    def AnalizarMensaje(self, data, uuid):
->>>>>>> 0964c4f567a3ae5337859b9f597259923f5bb063
+    async def AnalizarMensaje(self, data, uuid):
         print(f"Procesando mensaje: {data}")
         
         try:
@@ -21,11 +17,7 @@ class Manager():
                 print(f"Tipo de mensaje desconocido: {tipo}")
                 return
             
-<<<<<<< HEAD
-            await self.funciones[tipo].AnalizarMensaje(data) #entra al mensaje del tipo corresponsinte
-=======
-            self.funciones[tipo].AnalizarMensaje(data, uuid) #entra al mensaje del tipo corresponsinte
->>>>>>> 0964c4f567a3ae5337859b9f597259923f5bb063
+            await self.funciones[tipo].AnalizarMensaje(data, uuid) #entra al mensaje del tipo corresponsinte
             return
         
         except KeyError as e:
