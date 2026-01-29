@@ -4,6 +4,7 @@ class Manager():
     def __init__(self):
         self.funciones = {
             "usuarios": funciones.usuarios.Usuarios(),
+            "relojes": funciones.Relojes.Relojes(),
         }
 
     def AnalizarMensaje(self, data):
