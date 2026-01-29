@@ -1,3 +1,6 @@
 # Ignorar el pycache y archivos compilados de Python
 __pycache__/
 *.py[cod]
+
+.vscode/
+firmware/.pio
