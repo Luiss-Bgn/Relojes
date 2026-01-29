@@ -4,9 +4,11 @@ import json
 
 from funciones import manager
 from database import db_manager
+import conexiones
 import time_manager
 
 Manager = manager.Manager()
+Conexiones = conexiones.Conexiones()
 
 # Manejar base de datos
 iniciar_db = db_manager.IniciarDB()
@@ -24,7 +26,7 @@ async def detener_chequeo_hora(app):
 async def ws_handler(request):
     ws = web.WebSocketResponse(protocols=['arduino', 'web-client'])
     await ws.prepare(request)
-    print(request.remote)
+    Conexiones.agregar_conexion(request.remote, ws)
 
     try:
         async for msg in ws:
@@ -37,8 +39,12 @@ async def ws_handler(request):
                 
                 # Enviar respuesta real al reloj
                 await ws.send_json({"status": "ok", "mensaje": "Mensaje procesado"})
+
+                conexiones = Conexiones.obtener_conexiones()
+                print(f"Conexiones activas: {list(conexiones.keys())}")
     finally:
         print("Cliente desconectado")
+        Conexiones.eliminar_conexion(request.remote)
 
     return ws
 
