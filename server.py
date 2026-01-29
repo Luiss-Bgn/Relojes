@@ -29,11 +29,13 @@ async def ws_handler(request):
         async for msg in ws:
             if msg.type == web.WSMsgType.TEXT:
                 data = msg.json()
+                print(f"Mensaje recibido: {data}")
 
-                Manager.AnalizarMensaje(data)
-
-                await ws.send_json({"status": "recibido", "data": data})
-
+                # Obtener respuesta del manejador para ver si es valido el mensaje
+                respuesta = Manager.AnalizarMensaje(data)
+                
+                # Enviar respuesta real al reloj
+                await ws.send_json(respuesta if respuesta else {"status": "error", "mensaje": "Sin respuesta"})
     finally:
         print("Cliente desconectado")
 
