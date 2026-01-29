@@ -24,6 +24,7 @@ async def detener_chequeo_hora(app):
 async def ws_handler(request):
     ws = web.WebSocketResponse(protocols=['arduino', 'web-client'])
     await ws.prepare(request)
+    print(request.remote)
 
     try:
         async for msg in ws:

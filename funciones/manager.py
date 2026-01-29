@@ -9,19 +9,23 @@ class Manager():
 
     def AnalizarMensaje(self, data):
         print(f"Procesando mensaje: {data}")
-
-        if "tipo" in data:
+        
+        try:
             tipo = data["tipo"]
-            if tipo in self.funciones: #buscamos si el tipo existe en las operacioens validas de la clasew
-                # Obtener respuesta del módulo específico
-                respuesta = self.funciones[tipo].AnalizarMensaje(data) #entra al mensaje del tipo corresponsinte
-                return respuesta
-            else:
-                print(f"Tipo de mensaje desconocido: {tipo}") #tipo erroneo 
-                return {"status": "error", "mensaje": f"Tipo desconocido: {tipo}"}
-        else:
-            print(f"Mensaje sin 'tipo'") #en caso de no enviar tipo
-            return {"status": "error", "mensaje": "Campo 'tipo' requerido"}
+            if not tipo in self.funciones: 
+                print(f"Tipo de mensaje desconocido: {tipo}")
+                return
+            
+            self.funciones[tipo].AnalizarMensaje(data) #entra al mensaje del tipo corresponsinte
+            return
+        
+        except KeyError as e:
+            print(f"Error: campo '{e.args[0]}' no encontrado en el mensaje") #en caso de no enviar tipo
+            return
+        
+        except Exception as e:
+            print(f"Error al procesar mensaje: {e}")
+            return
 
     
     def Actualizar(self):
