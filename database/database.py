@@ -91,7 +91,7 @@ class DatabaseManager:
                 id_dueño INTEGER NOT NULL,
                 hora_ini TIME,
                 hora_fin TIME,
-                fecha DATE NOT NULL,
+                fecha TEXT NOT NULL,
                 puntos INTEGER,
                 estatus TEXT,
                 completadaPor INTEGER,

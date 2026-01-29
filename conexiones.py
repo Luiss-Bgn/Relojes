@@ -18,4 +18,8 @@ class Conexiones():
     def obtener_conexiones(self):
         return self.conexiones_activas
     
+    def obtener_conexion(self, uuid):
+        """Obtiene una conexión específica por UUID"""
+        return self.conexiones_activas.get(uuid)
+    
 conexiones = Conexiones()

@@ -1,11 +1,10 @@
 from database.database import DatabaseManager
 from database.db_relojes import RelojManager
-from conexiones import Conexiones
-Conexiones = Conexiones()
+from conexiones import conexiones
 
 
 class Relojes():
-    def _init_(self):
+    def __init__(self):
         self.db_manager = DatabaseManager("relojes.db")
         self.reloj_manager = RelojManager(self.db_manager)
 
@@ -34,7 +33,7 @@ class Relojes():
     
     def conexion(self, uuid):
         try:
-            return Conexiones.obtener_conexion(uuid)
+            return conexiones.obtener_conexion(uuid)
         except KeyError:
             print(f"Error: No se encontró conexión para UUID: {uuid}")
             return None
@@ -45,10 +44,28 @@ class Relojes():
         resultado = self.reloj_manager.registrar_reloj_nuevo()
         print(f"Respuesta de registro en relojes: {resultado}")
         uuid = resultado.get("uuid")
-        cone = self.conexion(uuid)
+        
+        # Obtener la conexión actual (registrada por server.py con request.remote)
+        # y re-registrarla con el UUID que acabamos de obtener
+        cone = None
+        # Buscar en todas las conexiones la más reciente sin UUID
+        todas_conexiones = conexiones.obtener_conexiones()
+        if todas_conexiones:
+            # Tomar la última conexión registrada (que debería ser la del cliente actual)
+            cone = list(todas_conexiones.values())[-1] if todas_conexiones else None
+        
+        # Re-registrar con el UUID
         if cone:
+            # Eliminar el registro anterior con IP
+            for key in list(todas_conexiones.keys()):
+                if todas_conexiones[key] == cone:
+                    conexiones.eliminar_conexion(key)
+                    break
+            # Registrar con UUID
+            conexiones.agregar_conexion(uuid, cone)
             await cone.send_json(resultado)
-        return 
+        
+        return resultado 
 
     async def _iniciar_reloj(self, uuid):
         """Maneja el inicio de sesión de un reloj"""

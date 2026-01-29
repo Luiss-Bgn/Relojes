@@ -1,10 +1,9 @@
 
 
 class Usuarios():
-    def AnalizarMensaje(self, data, uuid):
+    async def AnalizarMensaje(self, data, uuid):
         print(f"Analizando mensaje en Usuarios: {data}")
         return
     
-    def Actualizar(self):
-        print("Actualizando Usuarios...")
+    async def Actualizar(self):
         return
