@@ -35,11 +35,10 @@ async def ws_handler(request):
                 print(f"Mensaje recibido: {data}")
 
                 # Obtener respuesta del manejador para ver si es valido el mensaje
-                Manager.AnalizarMensaje(data)
-                
+                uuid = data.get("uuid", "desconocid")
+                Manager.AnalizarMensaje(data, uuid)
                 # Enviar respuesta real al reloj
                 await ws.send_json({"status": "ok", "mensaje": "Mensaje procesado"})
-
                 conexiones = Conexiones.obtener_conexiones()
                 print(f"Conexiones activas: {list(conexiones.keys())}")
     finally:

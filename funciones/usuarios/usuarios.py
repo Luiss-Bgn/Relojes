@@ -1,7 +1,7 @@
 
 
 class Usuarios():
-    def AnalizarMensaje(self, data):
+    def AnalizarMensaje(self, data, uuid):
         print(f"Analizando mensaje en Usuarios: {data}")
         return
     

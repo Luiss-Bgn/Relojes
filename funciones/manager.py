@@ -7,7 +7,7 @@ class Manager():
             "relojes": funciones.Relojes(),
         }
 
-    def AnalizarMensaje(self, data):
+    def AnalizarMensaje(self, data, uuid):
         print(f"Procesando mensaje: {data}")
         
         try:
@@ -16,7 +16,7 @@ class Manager():
                 print(f"Tipo de mensaje desconocido: {tipo}")
                 return
             
-            self.funciones[tipo].AnalizarMensaje(data) #entra al mensaje del tipo corresponsinte
+            self.funciones[tipo].AnalizarMensaje(data, uuid) #entra al mensaje del tipo corresponsinte
             return
         
         except KeyError as e:
