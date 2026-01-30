@@ -12,7 +12,7 @@ async def chequeo_hora(Manager):
         if ahora.minute != ultimo_minuto:
             ultimo_minuto = ahora.minute
             if ahora.second == 0:
-                print(f"[{ahora.strftime('%H:%M:%S')}] Minuto nuevo detectado.")
+                # print(f"[{ahora.strftime('%H:%M:%S')}] Minuto nuevo detectado.")
                 # Actualizar todo cada minuto
                 await Manager.Actualizar()
         await asyncio.sleep(0.5)
