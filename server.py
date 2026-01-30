@@ -16,8 +16,8 @@ from database import db_manager
 from conexiones import conexiones
 import time_manager
 
-# Importar API REST declarada el directorio /api
-from api.usuarios import app as api_app
+# Importar API REST (ahora ambos: usuarios + historial )
+from api import app as api_app
 
 Manager = manager.Manager()
 

@@ -1,0 +1,67 @@
+
+@baseUrl = http://localhost:8001
+
+### status check
+GET {{baseUrl}}/health
+
+### info api
+GET {{baseUrl}}/
+
+
+### Crear registro
+POST {{baseUrl}}/historial
+Content-Type: application/json
+
+{
+  "nombre": "Limpieza general",
+  "descripcion": "Limpiar pisos y pasillos",
+  "id_dueño": 1,
+  "hora_ini": "09:00",
+  "hora_fin": "12:00",
+  "fecha": "2026-01-30",
+  "puntos": 5,
+  "estatus": "pendiente"
+}
+
+
+### get d todo el historial
+GET {{baseUrl}}/historial
+
+### get tareas del usuario 1 
+GET {{baseUrl}}/historial/usuario/1
+
+### tareas del dia 2026-01-30
+GET {{baseUrl}}/historial/fecha/2026-01-30
+
+### tarea del dia 2026-01-29
+GET {{baseUrl}}/historial/fecha/2026-01-29
+
+### Obtener la tarea con id = 1
+GET {{baseUrl}}/historial/4
+
+### Obtener tarea de un empleado que no existe
+GET {{baseUrl}}/historial/999
+
+
+### Actualizar estado a completada 
+PUT {{baseUrl}}/historial/1
+Content-Type: application/json
+
+{
+  "estatus": "completada",
+  "completadaPor": 1 // ID del usuario que la completo 
+}
+
+### Actualizar con múltiples campos es lo mismoq arriba
+PUT {{baseUrl}}/historial/2
+Content-Type: application/json
+
+{ "nombre": "tarea 2 actualizada",
+  "estatus": "completada",
+  "completadaPor": 2
+
+}
+
+### Eliminar registro 4
+DELETE {{baseUrl}}/historial/5
+

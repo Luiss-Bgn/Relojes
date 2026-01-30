@@ -11,10 +11,7 @@ private:
 
 public:
     static void clearTasks();
-    static void addTask(const Task& task);
-    static bool parseTasks(const JsonDocument& doc);
-    static bool parseExtraTasks(const JsonDocument& doc);
+    static bool parseTasks(const JsonDocument& doc,const bool isExtra);
     static const std::vector<Task>& getTasks();
     static const std::vector<Task>& getExtraTasks();
-    static void updateTaskStatus(String taskId, String newStatus);
 };

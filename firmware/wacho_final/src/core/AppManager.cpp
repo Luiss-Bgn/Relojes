@@ -130,7 +130,9 @@ void AppManager::processMessage(String message)
     if (pingCmd == "ping")
     {
         JsonDocument pong;
+        pong["tipo"] = "relojes";
         pong["comando"] = "pong";
+        pong["uuid"] = AuthService::getUUID();
         String out;
         serializeJson(pong, out);
         NetworkService::send(out);
@@ -200,7 +202,7 @@ void AppManager::processMessage(String message)
 
         if (isExtra)
         {
-            if (TaskService::parseExtraTasks(doc))
+            if (TaskService::parseTasks(doc,isExtra))
             {
                 DEBUG_PRINTLN("[App] Extra Tasks updated");
                 UIManager::updateExtrasList(TaskService::getExtraTasks());
@@ -214,7 +216,7 @@ void AppManager::processMessage(String message)
         }
         else
         {
-            bool parsed = TaskService::parseTasks(doc);
+            bool parsed = TaskService::parseTasks(doc, isExtra);
             if (parsed)
             {
                 DEBUG_PRINTLN("[App] Tasks updated");

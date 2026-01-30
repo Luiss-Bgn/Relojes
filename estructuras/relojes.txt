@@ -33,4 +33,11 @@ al completar tarea
 
 tipo= "tarea", "extra"
 
-envia -> {"tipo": "relojes", "comando":"completar_tarea", "tarea":{"id":id, "id_empleado":id_empleado, "tipo":tipo}}
+envia -> {"tipo": "relojes", "comando":"completar_tarea", "tarea":{"id":id, "id_empleado":id_empleado, "tipo":tipo}, "uuid":uuid}
+
+
+ping con el server
+
+recibe <- {"comando":"ping"}
+
+envia -> {"tipo":"relojes", "uuid":uuid, "comando":"pong"}

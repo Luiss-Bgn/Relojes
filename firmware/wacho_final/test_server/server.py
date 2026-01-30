@@ -5,7 +5,7 @@ import uuid
 from aiohttp import web
 
 EMPLOYEES = [
-    {"id": "1", "nombre": "Juan Perez ñ"},
+    {"id": "1", "nombre": "Juan Perez"},
     {"id": "2", "nombre": "Maria Lopez"},
     {"id": "3", "nombre": "Carlos Ruiz"},
 ]
@@ -17,30 +17,10 @@ TASKS = [
 ]
 
 EXTRA_TASKS = [
-    {"id": "201", "tarea": "Limpieza Extra", "estado": "Pendiente", "hora_inicio": "14:00"},
+    {"id": "201", "tarea": "Limpieza Extra", "estado": "Extra", "hora_inicio": "14:00"},
 ]
 
 REGISTERED_UUIDS: set[str] = set()
-
-
-def to_watch_task_payload(tasks):
-    """Return payload with both the new ("tareas") and firmware-friendly keys."""
-    legacy = [
-        {
-            "TaskID": t["id"],
-            "Tarea": t["tarea"],
-            "Estado": t["estado"],
-            "hora_inicio": t.get("hora_inicio", ""),
-            "hora_fin": t.get("hora_fin", ""),
-        }
-        for t in tasks
-    ]
-
-    return {
-        "tareas": tasks,
-        "tareas no completadas": legacy,
-        "tareas_no_completadas": legacy,
-    }
 
 
 async def send_employee_list(ws):
@@ -51,8 +31,7 @@ async def send_employee_list(ws):
 async def send_tasks(ws, extras=False, vibrar=True):
     tasks = EXTRA_TASKS if extras else TASKS
     comando = "tareas_extras" if extras else "tareas"
-    payload = {"comando": comando, "vibrar": vibrar}
-    payload.update(to_watch_task_payload(tasks))
+    payload = {"comando": comando, "tareas": tasks, "vibrar": vibrar}
     await ws.send_str(json.dumps(payload))
 
 
