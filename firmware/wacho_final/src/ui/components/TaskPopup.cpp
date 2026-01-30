@@ -11,7 +11,7 @@ namespace
         delete data;
     }
 
-    // Envía al servidor la tarea completada (nuevo formato encapsulado en "tarea")
+    // Envía al servidor la tarea completada
     void sendTaskCompleted(const TaskPopupData &data)
     {
         JsonDocument doc;
@@ -27,6 +27,7 @@ namespace
         // }
         doc["tipo"] = "relojes";
         doc["comando"] = "completar_tarea";
+        doc["uuid"]= AuthService::getUUID();
 
         JsonObject tarea = doc.createNestedObject("tarea");
 
@@ -42,18 +43,7 @@ namespace
             tarea["id_empleado"] = AuthService::getCurrentEmployeeId();
         }
 
-        // tipo: normal/extra
-        String tipo = data.task.type;
-        tipo.toLowerCase();
-        if (tipo == "tareaextra" || tipo == "extra")
-        {
-            tarea["tipo"] = "extra";
-        }
-        else
-        {
-            // Fallback según popup
-            tarea["tipo"] = (data.type == TaskPopupType::Extra) ? "extra" : "tarea";
-        }
+        tarea["tipo"] = data.task.type;
 
         String jsonString;
         serializeJson(doc, jsonString);
