@@ -1,11 +1,23 @@
+"""
+Iniciar ambos servidores:
+- Puerto 8000: WebSocket (aiohttp) para los websocka
+- Puerto 8001: API REST (FastAPI) para la api
+
+"""
+
 from aiohttp import web
 import asyncio
 import json
+import threading
+import uvicorn
 
 from funciones import manager
 from database import db_manager
 from conexiones import conexiones
 import time_manager
+
+# Importar API REST declarada el directorio /api
+from api.usuarios import app as api_app
 
 Manager = manager.Manager()
 
@@ -54,4 +66,54 @@ app.router.add_get('/ws', ws_handler)
 app.on_startup.append(iniciar_chequeo_hora)
 app.on_cleanup.append(detener_chequeo_hora)
 
-web.run_app(app, host="0.0.0.0", port=8000)
+
+#funciones para correr ambos servidores
+
+def run_websocket():
+    """Ejecuta el servidor WebSocket en puerto 8000"""
+    print("\n" + "="*60)
+    print("INICIANDO SERVIDOR WEBSOCKET")
+    print("="*60)
+    print("Puerto: 8000")
+    print("URL: ws://localhost:8000/ws")
+    print("="*60 + "\n")
+    
+    web.run_app(app, host="0.0.0.0", port=8000)
+
+
+def run_rest_api():
+    """Ejecuta la API REST en puerto 8001"""
+    print("\n" + "="*60)
+    print("INICIANDO API REST (FastAPI)")
+    print("="*60)
+    print("Puerto: 8001")
+    print("URL: http://localhost:8001")
+    print("Documentación: http://localhost:8001/docs")
+    print("="*60 + "\n")
+    
+    uvicorn.run(
+        api_app,
+        host="0.0.0.0",
+        port=8001,
+        log_level="info"
+    )
+
+#corremos servidor api y el ws
+if __name__ == "__main__":
+    print("\n" + "="*60)
+    print("SERVIDOR RELOJES - INICIO DUAL")
+    print("="*60)
+    print("Iniciando WebSocket + API REST...\n")
+    
+    # Crear threads para cada servidor
+    ws_thread = threading.Thread(target=run_websocket, daemon=False)
+    api_thread = threading.Thread(target=run_rest_api, daemon=False)
+    
+    # Iniciar ambos
+    ws_thread.start()
+    api_thread.start()
+    
+    # Esperar a que ambos terminen
+    ws_thread.join()
+    api_thread.join()
+
