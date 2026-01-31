@@ -13,5 +13,5 @@ void setup() {
 
 void loop() {
     AppManager::loop();
-    delay(2);
+    delay(1);
 }
