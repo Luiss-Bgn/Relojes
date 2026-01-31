@@ -124,10 +124,11 @@ void AppManager::processMessage(String message)
         return;
     }
 
-    // Manejar ping/pong (keep-alive)
-    String pingCmd = doc["comando"].is<const char *>() ? String(doc["comando"].as<const char *>()) : "";
+    String comando = doc["comando"].is<const char *>() ? String(doc["comando"].as<const char *>()) : "";
+    String cmdLower = comando; cmdLower.toLowerCase();
 
-    if (pingCmd == "ping")
+    // Manejar ping/pong (keep-alive)
+    if (cmdLower == "ping")
     {
         JsonDocument pong;
         pong["tipo"] = "relojes";
@@ -141,6 +142,13 @@ void AppManager::processMessage(String message)
 
     bool handledCommand = false;
     bool vibrar = doc["vibrar"].is<bool>() && doc["vibrar"].as<bool>();
+
+    // Actualizar hora del reloj
+    if (cmdLower == "actualizar_hora") {
+        if (Hal::updateClockFromJson(doc)) {
+            handledCommand = true;
+        }
+    }
 
     // Handle UUID reception
     if (currentState == AppState::WAITING_UUID && doc["uuid"].is<String>())
@@ -195,10 +203,7 @@ void AppManager::processMessage(String message)
 
     if (!tareasArr.isNull())
     {
-        String comando = doc["comando"].is<const char *>() ? String(doc["comando"].as<const char *>()) : "";
-        comando.toLowerCase();
-
-        bool isExtra = comando == "tareas_extras";
+        bool isExtra = cmdLower == "tareas_extras";
 
         if (isExtra)
         {

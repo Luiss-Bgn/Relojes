@@ -41,3 +41,8 @@ ping con el server
 recibe <- {"comando":"ping"}
 
 envia -> {"tipo":"relojes", "uuid":uuid, "comando":"pong"}
+
+
+actualizar hora y fecha
+
+recibe <- {"comando":"actualizar_hora", "anio":anio, "mes":mes, "dia":dia, "hora":hora, "minuto": minuto, "segundo":segundo}

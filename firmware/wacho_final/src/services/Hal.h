@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include <LilyGoLib.h>
 #include <LV_Helper.h>
+#include <ArduinoJson.h>
 
 class Hal {
 public:
@@ -15,6 +16,9 @@ public:
     // Manual vibration control
     static void vibrateManual(uint32_t durationMs, uint8_t intensity = 100);
     static void vibratePattern(uint8_t intensity, int count);
+
+    // RTC/time helpers
+    static bool updateClockFromJson(JsonDocument &doc);
 
 private:
     static struct VibrationState {

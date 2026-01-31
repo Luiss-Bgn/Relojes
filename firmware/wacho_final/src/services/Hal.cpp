@@ -99,3 +99,34 @@ void Hal::vibratePattern(uint8_t intensity, int count) {
     // Ensure off
     watch.setRealtimeValue(0);
 }
+
+bool Hal::updateClockFromJson(JsonDocument &doc) {
+    
+    bool hasYear = doc["Anio"].is<int>();
+    bool hasMonth = doc["Mes"].is<int>();
+    bool hasDay = doc["Dia"].is<int>();
+    bool hasHour = doc["Hora"].is<int>();
+    bool hasMinute = doc["Minuto"].is<int>();
+    bool hasSecond = doc["Segundo"].is<int>();
+
+    if (!(hasYear && hasMonth && hasDay && hasHour && hasMinute && hasSecond)) {
+        Serial.println("❌ updateClockFromJson: parámetros inválidos");
+        return false;
+    }
+
+    int year = doc["Anio"].as<int>();
+    int month = doc["Mes"].as<int>();
+    int day = doc["Dia"].is<int>() ? doc["Dia"].as<int>() : doc["Día"].as<int>();
+    int hour = doc["Hora"].as<int>();
+    int minute = doc["Minuto"].as<int>();
+    int second = doc["Segundo"].as<int>();
+
+    Serial.printf("🕐 Actualizando hora: %04d-%02d-%02d %02d:%02d:%02d\n",
+                  year, month, day, hour, minute, second);
+
+    watch.setDateTime(year, month, day, hour, minute, second);
+    Serial.printf("✅ RTC actualizado: %04d-%02d-%02d %02d:%02d:%02d\n",
+                  year, month, day, hour, minute, second);
+
+    return true;
+}
