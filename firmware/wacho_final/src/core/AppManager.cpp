@@ -144,7 +144,7 @@ void AppManager::processMessage(String message)
     bool vibrar = doc["vibrar"].is<bool>() && doc["vibrar"].as<bool>();
 
     // Actualizar hora del reloj
-    if (cmdLower == "actualizarhora") {
+    if (cmdLower == "actualizar_hora") {
         if (Hal::updateClockFromJson(doc)) {
             handledCommand = true;
         }

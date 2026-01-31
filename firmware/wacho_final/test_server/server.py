@@ -1,6 +1,7 @@
 import asyncio
 import json
 import uuid
+from datetime import datetime
 
 from aiohttp import web
 
@@ -21,6 +22,24 @@ EXTRA_TASKS = [
 ]
 
 REGISTERED_UUIDS: set[str] = set()
+
+
+def build_time_payload(dt: datetime | None = None) -> dict:
+    dt = dt or datetime.now()
+    return {
+        "comando": "ActualizarHora",
+        "Anio": dt.year,
+        "Mes": dt.month,
+        "Dia": dt.day,
+        "Hora": dt.hour,
+        "Minuto": dt.minute,
+        "Segundo": dt.second,
+        "vibrar": False,
+    }
+
+
+async def send_time(ws):
+    await ws.send_str(json.dumps(build_time_payload()))
 
 
 async def send_employee_list(ws):
@@ -62,6 +81,7 @@ async def handler(request: web.Request):
             new_uuid = str(uuid.uuid4())
             REGISTERED_UUIDS.add(new_uuid)
             await ws.send_str(json.dumps({"uuid": new_uuid}))
+            await send_time(ws)
             continue
 
         if comando == "inicio":
@@ -69,6 +89,7 @@ async def handler(request: web.Request):
             if incoming_uuid:
                 REGISTERED_UUIDS.add(incoming_uuid)
             await send_employee_list(ws)
+            await send_time(ws)
             continue
 
         if comando == "empleado_seleccionado":
