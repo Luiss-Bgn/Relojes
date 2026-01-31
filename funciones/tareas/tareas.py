@@ -1,15 +1,27 @@
 from datetime import datetime
 from database import db_tareas
+from database.database import DatabaseManager
+from database.db_historial import HistorialManager
 
 from conexiones import conexiones
 
 class Tareas():
     def __init__(self):
         self.tareas_del_dia = []
+        
+        # Inicializar DB para historial
+        try:
+            self.db_manager = DatabaseManager("relojes.db")
+            self.historial_manager = HistorialManager(self.db_manager)
+            print("✓ HistorialManager inicializado correctamente en Tareas")
+        except Exception as e:
+            print(f"✗ Error al inicializar HistorialManager: {e}")
+            self.historial_manager = None
 
         self.comandos = {
             "crear_tarea": self.CrearTarea,
             "obtener_tareas": self.ObtenerTareas,
+            "completar_tarea": self.actualizar_tarea,
         }
         pass
 
@@ -69,11 +81,108 @@ class Tareas():
             print(f"Error al crear tarea: {e}")
         return
     
-    async def actualizar_tarea(self, tarea, uuid = None):
+    async def actualizar_tarea(self, mensaje, uuid = None):
+        """
+        Actualiza el estado de una tarea a completada
+        Esperado: {"tipo": "tareas", "comando":"completar_tarea", "tarea":{"id":id, "id_empleado":id_empleado, "tipo":tipo}, "uuid":uuid}
+        """
         try:
-            print(f"Actualizando tarea: {tarea['tarea']}")
+            # Validar que historial_manager esté inicializado
+            if not self.historial_manager:
+                print(f" Error: HistorialManager no inicializado")
+                respuesta = {
+                    "tipo": "respuesta",
+                    "comando": "completar_tarea",
+                    "status": "error",
+                    "mensaje": "Error interno del servidor"
+                }
+                if uuid:
+                    conexion = conexiones.obtener_conexion(uuid)
+                    if conexion:
+                        await conexion.send_json(respuesta)
+                return
+            
+            # Extraer datos del mensaje
+            tarea_data = mensaje.get('tarea', {})
+            tarea_id = tarea_data.get('id')
+            comando = mensaje.get('comando')
+            id_empleado = tarea_data.get('id_empleado')
+            tipo_tarea = tarea_data.get('tipo')
+            
+            print(f"Actualizando tarea: id={tarea_id}, empleado={id_empleado}, tipo={tipo_tarea}")
+            
+            if not tarea_id or not id_empleado:
+                print(f"Error: Faltan datos de tarea (id o id_empleado)")
+                respuesta = {
+                    "tipo": "respuesta",
+                    "comando": "completar_tarea",
+                    "status": "error",
+                    "mensaje": "Datos insuficientes para completar tarea"
+                }
+            else:
+                estatus = ""
+                if comando == "completar_tarea":
+                    estatus = "completada"    
+                # Actualizar en la base de datos
+                actualizado = self.historial_manager.historial_dao.actualizar(
+                    historial_id=tarea_id,
+                    estatus=estatus,
+                    completadaPor=id_empleado
+                )
+                
+                if actualizado:
+                    print(f"tarea {tarea_id} completada por empleado {id_empleado}")
+                    respuesta = {
+                        "tipo": "respuesta",
+                        "comando": "completar_tarea",
+                        "status": "exitoso",
+                        "mensaje": "Tarea completada exitosamente",
+                        "tarea_id": tarea_id
+                    }
+                else:
+                    print(f"rror: No se pudo actualizar la tarea {tarea_id}")
+                    respuesta = {
+                        "tipo": "respuesta",
+                        "comando": "completar_tarea",
+                        "status": "error",
+                        "mensaje": "No se pudo actualizar la tarea"
+                    }
+            
+            # Enviar respuesta al reloj que lo solicitó
+            if uuid:
+                conexion = conexiones.obtener_conexion(uuid)
+                if conexion:
+                    print(f"Enviando respuesta al UUID: {uuid}")
+                    await conexion.send_json(respuesta)
+                else:
+                    print(f"Error: No hay conexión activa para el UUID {uuid}")
+            
+        except KeyError as e:
+            print(f"Error: campo '{e.args[0]}' no encontrado al actualizar tarea")
+            respuesta = {
+                "tipo": "respuesta",
+                "comando": "completar_tarea",
+                "status": "error",
+                "mensaje": f"Campo faltante: {e.args[0]}"
+            }
+            if uuid:
+                conexion = conexiones.obtener_conexion(uuid)
+                if conexion:
+                    await conexion.send_json(respuesta)
         except Exception as e:
             print(f"Error al actualizar tarea: {e}")
+            import traceback
+            traceback.print_exc()
+            respuesta = {
+                "tipo": "respuesta",
+                "comando": "completar_tarea",
+                "status": "error",
+                "mensaje": str(e)
+            }
+            if uuid:
+                conexion = conexiones.obtener_conexion(uuid)
+                if conexion:
+                    await conexion.send_json(respuesta)
         return
     
     async def EliminarTarea(self, tarea, uuid = None):
