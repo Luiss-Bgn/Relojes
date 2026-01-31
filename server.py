@@ -37,22 +37,30 @@ async def detener_chequeo_hora(app):
 async def ws_handler(request):
     ws = web.WebSocketResponse(protocols=['arduino', 'web-client'])
     await ws.prepare(request)
-    conexiones.agregar_conexion(request.remote, ws)
+    
+    uuid_cliente = None  
 
     try:
         async for msg in ws:
             if msg.type == web.WSMsgType.TEXT:
                 data = msg.json()
-                # print(f"Mensaje recibido: {data}")
-
-                uuid = data.get("uuid", "desconocid")
+                uuid = data.get("uuid", "desconocido")
+                
+                # Si es la primera vez que recibimos el UUID, registrar la conexión
+                if uuid_cliente is None and uuid != "desconocido":
+                    uuid_cliente = uuid
+                    conexiones.agregar_conexion(uuid, ws)
+                    print(f"Conexión registrada con UUID: {uuid}")
+                
                 conectados = conexiones.obtener_conexiones()
-                await Manager.AnalizarMensaje(data,uuid)
+                await Manager.AnalizarMensaje(data, uuid)
 
                 print(f"Conexiones activas: {list(conectados.keys())}")
     finally:
         print("Cliente desconectado")
-        conexiones.eliminar_conexion(request.remote)
+        # Eliminar con el UUID correcto
+        if uuid_cliente:
+            conexiones.eliminar_conexion(uuid_cliente)
 
     return ws
 
