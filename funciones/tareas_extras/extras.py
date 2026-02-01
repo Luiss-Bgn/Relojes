@@ -1,35 +1,143 @@
 
 from datetime import datetime, timedelta
+from database.database import DatabaseManager
+from database.db_tareas import TareasManager
+from conexiones import conexiones
 
 
 class Extras():
     def __init__(self):
-        self.lista_extras = []
+        self.tareas_del_dia = []
+        
+        # Inicializar DB para historial
+        try:
+            self.db_manager = DatabaseManager("relojes.db")
+            self.tareas_manager = TareasManager(self.db_manager)
+            print("✓ TareasManager inicializado correctamente en Tareas")
+        except Exception as e:
+            print(f"✗ Error al inicializar TareasManager: {e}")
+            self.tareas_manager = None
 
-        self.tiempoParaExtra = timedelta(hours=1)
+        self.comandos = {
+            "crear_tarea": self.CrearTarea, 
+            "obtener_tareas": self.ObtenerTareas,
+            "completar_tarea": self.actualizar_tarea,
+        }
         pass
 
-    def AnalizarMensaje(self, data):
-        print(f"Analizando mensaje en Extras: {data}")
-        return
+
+    async def AnalizarMensaje(self, data, uuid):
+        try:
+            comando = data["comando"]
+            if comando in self.comandos:
+                await self.comandos[comando](data, uuid)
+        except KeyError as e:
+            print(f"Error: campo '{e.args[0]}' no encontrado en el mensaje de Tareas")
+        except Exception as e:
+            print(f"Error al procesar mensaje en Tareas: {e}")
+
+        return 
     
-    def Actualizar(self):
-        print("Actualizando Extras...")
-
-        hora_actual = datetime.now()
-
-        for tarea in self.lista_extras:
-            # Estados a ignorar
-            if tarea['estado'] in ['en_progreso','completada', 'sin_iniciar']:
-                continue
+    async def actualizar_tarea(self, mensaje, uuid = None):
+        """
+        Actualiza el estado de una tarea a completada
+        Esperado: {"tipo": "tareas", "comando":"completar_tarea", "tarea":{"id":id, "id_empleado":id_empleado, "tipo":tipo}, "uuid":uuid}
+        """
+        try:
+            # Validar que tareas_manager esté inicializado
+            if not self.tareas_manager:
+                print(f" Error: TareasManager no inicializado")
+                respuesta = {
+                    "tipo": "respuesta",
+                    "comando": "completar_tarea",
+                    "status": "error",
+                    "mensaje": "Error interno del servidor"
+                }
+                if uuid:
+                    conexion = conexiones.obtener_conexion(uuid)
+                    if conexion:
+                        await conexion.send_json(respuesta)
+                return
+            
+            # Extraer datos del mensaje
+            tarea_data = mensaje.get('tarea', {})
+            tarea_id = tarea_data.get('id')
+            comando = mensaje.get('comando')
+            id_empleado = tarea_data.get('id_empleado')
+            tipo_tarea = tarea_data.get('tipo')
+            
+            print(f"Actualizando tarea (tareas_semana): id={tarea_id}, empleado={id_empleado}, tipo={tipo_tarea}")
+            
+            if not tarea_id or not id_empleado:
+                print(f"Error: Faltan datos de tarea (id o id_empleado)")
+                respuesta = {
+                    "tipo": "respuesta",
+                    "comando": "completar_tarea",
+                    "status": "error",
+                    "mensaje": "Datos insuficientes para completar tarea"
+                }
             else:
-                hora_fin = datetime.strptime(tarea['hora_fin'], "%H:%M").replace(year=hora_actual.year, month=hora_actual.month, day=hora_actual.day)
+                estatus = ""
+                if comando == "completar_tarea":
+                    estatus = "extra"    
+                # Actualizar en la base de datos tareas_semana
+                actualizado = self.tareas_manager.tareas_dao.actualizar(
+                    tareas_semana_id=tarea_id,
+                    estatus=estatus,
+                    completadaPor=id_empleado
+                )
                 
-                # Cambiar estado de vencida a extra
-                if hora_actual >= hora_fin and hora_actual < hora_fin + timedelta(self.tiempoParaExtra) and tarea['estado'] == 'vencida':
-                    tarea['estado'] = 'extra'
-                    print(f"Cambio a extra: {tarea['titulo']}")
-                elif hora_actual >= hora_fin + timedelta(self.tiempoParaExtra) and tarea['estado'] == 'extra':
-                    tarea['estado'] = 'vencida'
-                    print(f"Extra vencida: {tarea['titulo']}")
+                if actualizado:
+                    print(f"tarea {tarea_id} completada por empleado {id_empleado} (tareas_semana)")
+                    respuesta = {
+                        "tipo": "respuesta",
+                        "comando": "completar_tarea",
+                        "status": "exitoso",
+                        "mensaje": "Tarea completada exitosamente",
+                        "tarea_id": tarea_id
+                    }
+                else:
+                    print(f"rror: No se pudo actualizar la tarea {tarea_id} (tareas_semana)")
+                    respuesta = {
+                        "tipo": "respuesta",
+                        "comando": "completar_tarea",
+                        "status": "error",
+                        "mensaje": "No se pudo actualizar la tarea"
+                    }
+            
+            # Enviar respuesta al reloj que lo solicitó
+            if uuid:
+                conexion = conexiones.obtener_conexion(uuid)
+                if conexion:
+                    print(f"Enviando respuesta al UUID: {uuid}")
+                    await conexion.send_json(respuesta)
+                else:
+                    print(f"Error: No hay conexión activa para el UUID {uuid}")
+            
+        except KeyError as e:
+            print(f"Error: campo '{e.args[0]}' no encontrado al actualizar tarea")
+            respuesta = {
+                "tipo": "respuesta",
+                "comando": "completar_tarea",
+                "status": "error",
+                "mensaje": f"Campo faltante: {e.args[0]}"
+            }
+            if uuid:
+                conexion = conexiones.obtener_conexion(uuid)
+                if conexion:
+                    await conexion.send_json(respuesta)
+        except Exception as e:
+            print(f"Error al actualizar tarea: {e}")
+            import traceback
+            traceback.print_exc()
+            respuesta = {
+                "tipo": "respuesta",
+                "comando": "completar_tarea",
+                "status": "error",
+                "mensaje": str(e)
+            }
+            if uuid:
+                conexion = conexiones.obtener_conexion(uuid)
+                if conexion:
+                    await conexion.send_json(respuesta)
         return

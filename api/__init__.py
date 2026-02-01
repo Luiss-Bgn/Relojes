@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.usuarios.routes import router as usuarios_router
 from api.historial.routes import router as historial_router
+from api.tareas.routes import router as tareas_router
 
 # Crear aplicación principal que integra todos los módulos
 app = FastAPI(
@@ -26,6 +27,7 @@ app.add_middleware(
 # Incluir routers (no montar sub-aplicaciones)
 app.include_router(usuarios_router)
 app.include_router(historial_router)
+app.include_router(tareas_router)
 
 
 # ==================== RUTAS DE INFORMACIÓN ====================
@@ -52,6 +54,15 @@ async def root():
                 "por_fecha": "GET /historial/fecha/{fecha}",
                 "actualizar": "PUT /historial/{id}",
                 "eliminar": "DELETE /historial/{id}"
+            },
+            "tareas": {
+                "crear": "POST /tareas",
+                "listar": "GET /tareas",
+                "obtener": "GET /tareas/{id}",
+                "por_usuario": "GET /tareas/usuario/{usuario_id}",
+                "por_dia": "GET /tareas/fecha/{dia_semana}",
+                "actualizar": "PUT /tareas/{id}",
+                "eliminar": "DELETE /tareas/{id}"
             }
         }
     }
@@ -63,7 +74,7 @@ async def health():
     return {
         "status": "ok",
         "mensaje": "API Relojes funcionando correctamente",
-        "endpoints_disponibles": ["usuarios", "historial"]
+        "endpoints_disponibles": ["usuarios", "historial", "tareas"]
     }
 
 

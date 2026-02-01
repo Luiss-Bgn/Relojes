@@ -47,11 +47,6 @@ async def ws_handler(request):
                 uuid = data.get("uuid", "desconocido")
                 
                 # Si es la primera vez que recibimos el UUID, registrar la conexión
-                if uuid_cliente is None and uuid != "desconocido":
-                    uuid_cliente = uuid
-                    conexiones.agregar_conexion(uuid, ws)
-                    print(f"Conexión registrada con UUID: {uuid}")
-                
                 conectados = conexiones.obtener_conexiones()
                 await Manager.AnalizarMensaje(data, uuid)
 

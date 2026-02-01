@@ -2,7 +2,7 @@ from datetime import datetime
 from database import db_tareas
 from database.database import DatabaseManager
 from database.db_historial import HistorialManager
-
+from database.db_tareas import TareasManager
 from conexiones import conexiones
 
 class Tareas():
@@ -12,11 +12,11 @@ class Tareas():
         # Inicializar DB para historial
         try:
             self.db_manager = DatabaseManager("relojes.db")
-            self.historial_manager = HistorialManager(self.db_manager)
-            print("✓ HistorialManager inicializado correctamente en Tareas")
+            self.tareas_manager = TareasManager(self.db_manager)
+            print("✓ TareasManager inicializado correctamente en Tareas")
         except Exception as e:
-            print(f"✗ Error al inicializar HistorialManager: {e}")
-            self.historial_manager = None
+            print(f"✗ Error al inicializar TareasManager: {e}")
+            self.tareas_manager = None
 
         self.comandos = {
             "crear_tarea": self.CrearTarea,
@@ -87,9 +87,9 @@ class Tareas():
         Esperado: {"tipo": "tareas", "comando":"completar_tarea", "tarea":{"id":id, "id_empleado":id_empleado, "tipo":tipo}, "uuid":uuid}
         """
         try:
-            # Validar que historial_manager esté inicializado
-            if not self.historial_manager:
-                print(f" Error: HistorialManager no inicializado")
+            # Validar que tareas_manager esté inicializado
+            if not self.tareas_manager:
+                print(f" Error: TareasManager no inicializado")
                 respuesta = {
                     "tipo": "respuesta",
                     "comando": "completar_tarea",
@@ -109,7 +109,7 @@ class Tareas():
             id_empleado = tarea_data.get('id_empleado')
             tipo_tarea = tarea_data.get('tipo')
             
-            print(f"Actualizando tarea: id={tarea_id}, empleado={id_empleado}, tipo={tipo_tarea}")
+            print(f"Actualizando tarea (tareas_semana): id={tarea_id}, empleado={id_empleado}, tipo={tipo_tarea}")
             
             if not tarea_id or not id_empleado:
                 print(f"Error: Faltan datos de tarea (id o id_empleado)")
@@ -123,15 +123,15 @@ class Tareas():
                 estatus = ""
                 if comando == "completar_tarea":
                     estatus = "completada"    
-                # Actualizar en la base de datos
-                actualizado = self.historial_manager.historial_dao.actualizar(
-                    historial_id=tarea_id,
+                # Actualizar en la base de datos tareas_semana
+                actualizado = self.tareas_manager.tareas_dao.actualizar(
+                    tareas_semana_id=tarea_id,
                     estatus=estatus,
                     completadaPor=id_empleado
                 )
                 
                 if actualizado:
-                    print(f"tarea {tarea_id} completada por empleado {id_empleado}")
+                    print(f"tarea {tarea_id} completada por empleado {id_empleado} (tareas_semana)")
                     respuesta = {
                         "tipo": "respuesta",
                         "comando": "completar_tarea",
@@ -140,7 +140,7 @@ class Tareas():
                         "tarea_id": tarea_id
                     }
                 else:
-                    print(f"rror: No se pudo actualizar la tarea {tarea_id}")
+                    print(f"rror: No se pudo actualizar la tarea {tarea_id} (tareas_semana)")
                     respuesta = {
                         "tipo": "respuesta",
                         "comando": "completar_tarea",
@@ -184,7 +184,7 @@ class Tareas():
                 if conexion:
                     await conexion.send_json(respuesta)
         return
-    
+     
     async def EliminarTarea(self, tarea, uuid = None):
         try:
             self.tareas_del_dia = [tarea for tarea in self.tareas_del_dia if tarea['id'] != tarea['id']]
@@ -192,9 +192,7 @@ class Tareas():
         except Exception as e:
             print(f"Error al eliminar tarea: {e}")
         return
-    
 
-    async def Actualizar(self):
         print("Actualizando Tareas...")
         hora_actual = datetime.now().strftime('%H:%M')
 

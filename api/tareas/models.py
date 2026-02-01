@@ -1,17 +1,39 @@
 """
-modelo de datos para las tareas
+Modelos para la tabla del Tareas
 """
 
 from pydantic import BaseModel
 from typing import Optional
 
-class TareaBase(BaseModel):
+
+class TareasBase(BaseModel):
     nombre: str
-    descripcion: Optional[str] = None
+    descripcion: str
     id_dueño: int
-    hora_ini: Optional[str] = None  # Formato HH:MM:SS
-    hora_fin: Optional[str] = None  # Formato HH:MM:SS
-    fecha: str  # Formato YYYY-MM-DD
-    puntos: Optional[int] = 0
-    estatus: Optional[str] = "sin iniciar"
+    hora_ini: str
+    hora_fin: str
+    fecha: str
+    puntos: int
+    estatus: str
+
+
+class TareasCrear(TareasBase):
+    pass
+
+
+class TareasActualizar(BaseModel):
+    nombre: Optional[str] = None
+    descripcion: Optional[str] = None
+    hora_ini: Optional[str] = None
+    hora_fin: Optional[str] = None
+    puntos: Optional[int] = None
+    estatus: Optional[str] = None
     completadaPor: Optional[int] = None
+
+
+class TareasResponse(TareasBase):
+    id: int
+    completadaPor: Optional[int] = None
+
+    class Config:
+        from_attributes = True

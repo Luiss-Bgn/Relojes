@@ -9,23 +9,23 @@ GET {{baseUrl}}/
 
 
 ### Crear registro
-POST {{baseUrl}}/historial
+POST {{baseUrl}}/tareas
 Content-Type: application/json
 
 {
-  "nombre": "Limpieza general",
-  "descripcion": "Limpiar pisos y pasillos",
+  "nombre": "Primera tarea desde test",
+  "descripcion": " primera tarea",
   "id_dueño": 1,
   "hora_ini": "09:00",
   "hora_fin": "12:00",
   "fecha": "2026-01-30",
   "puntos": 5,
-  "estatus": "pendiente"
+  "estatus": "sinIniciar"
 }
 
 
 ### get d todo el historial
-GET {{baseUrl}}/historial
+GET {{baseUrl}}/tareas
 
 ### get tareas del usuario 1 
 GET {{baseUrl}}/historial/usuario/1

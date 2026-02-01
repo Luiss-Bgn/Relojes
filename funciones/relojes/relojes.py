@@ -72,6 +72,7 @@ class Relojes():
         resultado = self.reloj_manager.iniciar_sesion_reloj(uuid)
         print(f"Respuesta inicio en relojes: {resultado}")
         cone = self.conexion(uuid)
+        conexiones.agregar_conexion(uuid, cone)
         if cone:
             await cone.send_json({"status": "ok", "mensaje": "Reloj iniciado correctamente", "data": resultado})
         return 
