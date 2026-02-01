@@ -37,7 +37,7 @@ constexpr WifiCredential WIFI_NETWORKS[] = {
 constexpr size_t WIFI_NETWORK_COUNT = sizeof(WIFI_NETWORKS) / sizeof(WIFI_NETWORKS[0]);
 
 // WebSocket server configuration
-constexpr const char* WS_SERVER = "192.168.100.30";
+constexpr const char* WS_SERVER = "192.168.100.11";
 constexpr int   WS_PORT   = 8000;
 constexpr const char* WS_PATH   = "/ws";
 

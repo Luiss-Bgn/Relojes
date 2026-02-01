@@ -1,6 +1,7 @@
 import asyncio
 import json
 import uuid
+from contextlib import suppress
 from datetime import datetime
 
 from aiohttp import web
@@ -49,9 +50,16 @@ async def send_employee_list(ws):
 
 async def send_tasks(ws, extras=False, vibrar=True):
     tasks = EXTRA_TASKS if extras else TASKS
-    comando = "tareas_extras" if extras else "tareas"
+    comando = "extras" if extras else "tareas"
     payload = {"comando": comando, "tareas": tasks, "vibrar": vibrar}
     await ws.send_str(json.dumps(payload))
+
+
+async def send_ping_loop(ws, interval: int = 5):
+    """Envia pings periódicos al reloj para verificar la conexión."""
+    while not ws.closed:
+        await ws.send_str(json.dumps({"comando": "ping"}))
+        await asyncio.sleep(interval)
 
 
 async def handler(request: web.Request):
@@ -59,61 +67,65 @@ async def handler(request: web.Request):
     await ws.prepare(request)
     print(f"Cliente conectado: {request.remote}")
 
-    async for msg in ws:
-        if msg.type != web.WSMsgType.TEXT:
-            continue
+    ping_task = None
+    try:
+        async for msg in ws:
+            if msg.type != web.WSMsgType.TEXT:
+                continue
 
-        print(f"Recibido: {msg.data}")
-        try:
-            data = json.loads(msg.data)
-        except json.JSONDecodeError:
-            print("Error decodificando JSON")
-            continue
+            print(f"Recibido: {msg.data}")
+            try:
+                data = json.loads(msg.data)
+            except json.JSONDecodeError:
+                print("Error decodificando JSON")
+                continue
 
-        tipo = data.get("tipo")
-        comando = data.get("comando")
+            tipo = data.get("tipo")
+            comando = data.get("comando")
 
-        if tipo != "relojes":
-            print("Mensaje ignorado (tipo distinto de relojes)")
-            continue
+            if tipo != "relojes":
+                print("Mensaje ignorado (tipo distinto de relojes)")
+                continue
 
-        if comando == "registro":
-            new_uuid = str(uuid.uuid4())
-            REGISTERED_UUIDS.add(new_uuid)
-            await ws.send_str(json.dumps({"uuid": new_uuid}))
-            await send_time(ws)
-            continue
+            if ping_task is None:
+                ping_task = asyncio.create_task(send_ping_loop(ws))
 
-        if comando == "inicio":
-            incoming_uuid = data.get("uuid", "")
-            if incoming_uuid:
-                REGISTERED_UUIDS.add(incoming_uuid)
-            await send_employee_list(ws)
-            await send_time(ws)
-            continue
+            if comando == "registro":
+                new_uuid = str(uuid.uuid4())
+                REGISTERED_UUIDS.add(new_uuid)
+                await ws.send_str(json.dumps({"uuid": new_uuid}))
+                await send_time(ws)
+                continue
 
-        if comando == "empleado_seleccionado":
-            print(f"Empleado seleccionado: {data.get('nombre')} ({data.get('id')})")
-            await send_tasks(ws, extras=False, vibrar=True)
-            await send_tasks(ws, extras=True, vibrar=False)
-            continue
+            if comando == "inicio":
+                incoming_uuid = data.get("uuid", "")
+                if incoming_uuid:
+                    REGISTERED_UUIDS.add(incoming_uuid)
+                await send_employee_list(ws)
+                await send_time(ws)
+                continue
 
-        if comando in ("tareas", "tareas_extras"):
-            await send_tasks(ws, extras=(comando == "tareas_extras"), vibrar=data.get("vibrar", False))
-            continue
+            if comando == "empleado_seleccionado":
+                print(f"Empleado seleccionado: {data.get('nombre')} ({data.get('id')})")
+                await send_tasks(ws, extras=False, vibrar=True)
+                await send_tasks(ws, extras=True, vibrar=False)
+                continue
 
-        if comando == "completar_tarea":
-            tarea = data.get("tarea", {})
-            tarea_id = tarea.get("id")
-            tarea_tipo = tarea.get("tipo", "tarea")
-            pool = EXTRA_TASKS if tarea_tipo == "extra" else TASKS
-            pool[:] = [t for t in pool if t.get("id") != tarea_id]
-            print(f"Tarea completada: {tarea_id} ({tarea_tipo})")
-            await send_tasks(ws, extras=(tarea_tipo == "extra"), vibrar=False)
-            continue
-
-        if comando == "ping":
-            await ws.send_str(json.dumps({"comando": "pong"}))
+            if comando == "completar_tarea":
+                tarea = data.get("tarea", {})
+                tarea_id = tarea.get("id")
+                tarea_tipo = tarea.get("tipo", "tarea")
+                pool = EXTRA_TASKS if tarea_tipo == "extra" else TASKS
+                pool[:] = [t for t in pool if t.get("id") != tarea_id]
+                print(f"Tarea completada: {tarea_id} ({tarea_tipo})")
+                await send_tasks(ws, extras=(tarea_tipo == "extra"), vibrar=False)
+                continue
+            
+    finally:
+        if ping_task:
+            ping_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await ping_task
 
     print("Cliente desconectado")
     return ws

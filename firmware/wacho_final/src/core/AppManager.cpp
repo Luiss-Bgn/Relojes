@@ -115,151 +115,117 @@ AppState AppManager::getState()
 void AppManager::processMessage(String message)
 {
     DEBUG_PRINTLN("[App] Processing message...");
-    DynamicJsonDocument doc(8192);
-    DeserializationError error = deserializeJson(doc, message);
 
-    if (error)
-    {
+    DynamicJsonDocument doc(8192);
+    if (deserializeJson(doc, message)) {
         DEBUG_PRINTLN("[App] JSON Error");
         return;
     }
 
-    String comando = doc["comando"].is<const char *>() ? String(doc["comando"].as<const char *>()) : "";
-    String cmdLower = comando; cmdLower.toLowerCase();
+    const char* comando = doc["comando"] | "";
+    bool vibrarFlag = doc["vibrar"].is<bool>() && doc["vibrar"].as<bool>();
+    bool handled = false;
 
-    // Manejar ping/pong (keep-alive)
-    if (cmdLower == "ping")
+    /* ===============================
+       1️⃣ COMANDOS INMEDIATOS
+       =============================== */
+
+    if (strcmp(comando, "ping") == 0)
     {
         JsonDocument pong;
         pong["tipo"] = "relojes";
         pong["comando"] = "pong";
         pong["uuid"] = AuthService::getUUID();
+
         String out;
         serializeJson(pong, out);
         NetworkService::send(out);
-        return;
+        return; // ⚠️ ping no sigue procesando nada más
     }
 
-    bool handledCommand = false;
-    bool vibrar = doc["vibrar"].is<bool>() && doc["vibrar"].as<bool>();
-
-    // Actualizar hora del reloj
-    if (cmdLower == "actualizar_hora") {
+    if (strcmp(comando, "actualizar_hora") == 0)
+    {
         if (Hal::updateClockFromJson(doc)) {
-            handledCommand = true;
+            handled = true;
         }
     }
 
-    // Handle UUID reception
+    /* ===============================
+       2️⃣ MENSAJES DEPENDIENTES DE ESTADO
+       =============================== */
+
     if (currentState == AppState::WAITING_UUID && doc["uuid"].is<String>())
     {
         String newUuid = doc["uuid"].as<String>();
         ConfigService::setUUID(newUuid);
-        DEBUG_PRINTLN("[App] UUID received and saved: " + newUuid);
 
-        // Immediately login with new UUID without restart
-        JsonDocument loginDoc;
-        loginDoc["tipo"] = "relojes";
-        loginDoc["comando"] = "inicio";
-        loginDoc["uuid"] = newUuid;
+        DEBUG_PRINTLN("[App] UUID received: " + newUuid);
 
-        String output;
-        serializeJson(loginDoc, output);
-        NetworkService::send(output);
+        JsonDocument login;
+        login["tipo"] = "relojes";
+        login["comando"] = "inicio";
+        login["uuid"] = newUuid;
+
+        String out;
+        serializeJson(login, out);
+        NetworkService::send(out);
 
         changeState(AppState::EMPLOYEE_SELECTION);
-        handledCommand = true;
+        handled = true;
     }
 
-    // Handle Employee List
+    /* ===============================
+       3️⃣ PAYLOADS DE DATOS
+       =============================== */
+
     if (doc["lista_usuarios"].is<JsonArray>())
     {
-        DEBUG_PRINTLN("[App] Found lista_usuarios array");
-        JsonArrayConst users = doc["lista_usuarios"];
-        if (AuthService::parseEmployees(users))
+        if (AuthService::parseEmployees(doc["lista_usuarios"]))
         {
-            DEBUG_PRINTLN("[App] Employees updated");
             UIManager::updateEmployeeList(AuthService::getEmployees());
-
-            // If we were waiting for this, ensure we are in the right state
-            if (currentState == AppState::SERVER_CONNECTING || currentState == AppState::EMPLOYEE_SELECTION)
-            {
-                changeState(AppState::EMPLOYEE_SELECTION);
-            }
-            handledCommand = true;
-        }
-        else
-        {
-            DEBUG_PRINTLN("[App] Failed to parse employees");
+            changeState(AppState::EMPLOYEE_SELECTION);
+            handled = true;
         }
     }
-    else if (doc.containsKey("lista_usuarios"))
+
+    if (doc["tareas"].is<JsonArray>())
     {
-        DEBUG_PRINTLN("[App] lista_usuarios exists but is NOT an array");
-    }
+        bool isExtra = strcmp(comando, "extras") == 0;
 
-    // Handle Task List
-    JsonArrayConst tareasArr = doc["tareas"].as<JsonArrayConst>();
-
-    if (!tareasArr.isNull())
-    {
-        bool isExtra = cmdLower == "tareas_extras";
-
-        if (isExtra)
+        if (TaskService::parseTasks(doc, isExtra))
         {
-            if (TaskService::parseTasks(doc,isExtra))
-            {
-                DEBUG_PRINTLN("[App] Extra Tasks updated");
+            if (isExtra) {
                 UIManager::updateExtrasList(TaskService::getExtraTasks());
-                UIManager::setExtrasButtonVisible(!TaskService::getExtraTasks().empty());
-                handledCommand = true;
-            }
-            else
-            {
-                DEBUG_PRINTLN("[App] Failed to parse extra tasks");
-            }
-        }
-        else
-        {
-            bool parsed = TaskService::parseTasks(doc, isExtra);
-            if (parsed)
-            {
-                DEBUG_PRINTLN("[App] Tasks updated");
+            } else {
                 UIManager::updateTaskList(TaskService::getTasks());
+                if (currentState == AppState::EMPLOYEE_SELECTION) {
+                    changeState(AppState::TASK_LIST);
+                }
             }
-            else
-            {
-                DEBUG_PRINTLN("[App] Failed to parse tasks (forcing task screen)");
-                TaskService::clearTasks();
-                UIManager::updateTaskList(TaskService::getTasks());
-            }
-            // Mostrar/ocultar botón de extras según disponibilidad
+
             UIManager::setExtrasButtonVisible(!TaskService::getExtraTasks().empty());
-            // Siempre pasar a TASK_LIST cuando llegan tareas normales, incluso si el parseo falla
-            if (currentState == AppState::EMPLOYEE_SELECTION)
-            {
-                changeState(AppState::TASK_LIST);
-            }
-            handledCommand = true;
+            handled = true;
         }
     }
 
-    // Handle Vibration
+    /* ===============================
+       4️⃣ EFECTOS (NO LÓGICA)
+       =============================== */
+
     if (doc["vibrar"].is<int>())
     {
-        int intensity = doc["vibrar"].as<int>();
-        int count = doc["veces"].is<int>() ? doc["veces"].as<int>() : 1;
-        DEBUG_PRINTF("[App] Vibrating: %d, %d times\n", intensity, count);
-        Hal::vibratePattern(intensity, count);
-        handledCommand = true;
+        int intensidad = doc["vibrar"].as<int>();
+        int veces = doc["veces"] | 1;
+        Hal::vibratePattern(intensidad, veces);
+        handled = true;
     }
 
-    // Notificación condicional según hasChanges
-    if (handledCommand && vibrar)
+    if (handled && vibrarFlag)
     {
-        Hal::vibratePattern(90, 1); // Vibración corta para indicar cambio
+        Hal::vibratePattern(90, 1);
     }
 }
+
 
 void AppManager::onEmployeeSelected(String id, String name)
 {
