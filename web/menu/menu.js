@@ -278,9 +278,21 @@ function mostrarConfirmacionLogout() {
   });
   
   // Botón confirmar
-  document.getElementById('btn-confirmar-logout').addEventListener('click', () => {
-    localStorage.removeItem("loggedUser");
-    window.location.href = "/logout";
+  document.getElementById('btn-confirmar-logout').addEventListener('click', async () => {
+    try {
+      // Limpiar el localStorage
+      localStorage.removeItem("loggedUser");
+      
+      // Hacer petición al endpoint de logout (opcional, para limpiar sesión en backend)
+      await fetch("/logout", { method: "GET" }).catch(() => {});
+      
+      // Redirigir al login
+      window.location.replace("/login");
+    } catch (error) {
+      console.error("Error en logout:", error);
+      // Aún así redirigir al login
+      window.location.replace("/login");
+    }
   });
   
   // Cerrar al hacer clic fuera del popup
