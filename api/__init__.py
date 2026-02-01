@@ -123,6 +123,15 @@ async def login_view():
     return FileResponse(WEB_DIR / "Login" / "login.html")
 
 
+@app.get("/logout", tags=["Vistas"], include_in_schema=False)
+async def logout_view():
+    """
+    Endpoint de logout - redirige a login
+    El localStorage ya fue limpiado en el frontend
+    """
+    return RedirectResponse(url="/login")
+
+
 # Montar archivos estáticos (CSS, JS, imágenes)
 app.mount("/web", StaticFiles(directory=WEB_DIR), name="static")
 
