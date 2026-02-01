@@ -23,7 +23,7 @@ envia -> {"tipo":"relojes", "comando":"empleado_seleccionado", "nombre":nombre, 
 
 tareas
 
-comando ="tareas", "tareas_extras"
+comando ="tareas", "extras"
 vibrar = true, false
 
 recibe<- {"comando":comando, "tareas":[{"id":id,"tarea": tarea, "estado":estado, "hora_inicio": hora_inicio}, .....], "vibrar": vibrar}

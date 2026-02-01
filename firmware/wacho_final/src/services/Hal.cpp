@@ -102,24 +102,24 @@ void Hal::vibratePattern(uint8_t intensity, int count) {
 
 bool Hal::updateClockFromJson(JsonDocument &doc) {
     
-    bool hasYear = doc["Anio"].is<int>();
-    bool hasMonth = doc["Mes"].is<int>();
-    bool hasDay = doc["Dia"].is<int>();
-    bool hasHour = doc["Hora"].is<int>();
-    bool hasMinute = doc["Minuto"].is<int>();
-    bool hasSecond = doc["Segundo"].is<int>();
+    bool hasYear = doc["anio"].is<int>();
+    bool hasMonth = doc["mes"].is<int>();
+    bool hasDay = doc["dia"].is<int>();
+    bool hasHour = doc["hora"].is<int>();
+    bool hasMinute = doc["minuto"].is<int>();
+    bool hasSecond = doc["segundo"].is<int>();
 
     if (!(hasYear && hasMonth && hasDay && hasHour && hasMinute && hasSecond)) {
         Serial.println("❌ updateClockFromJson: parámetros inválidos");
         return false;
     }
 
-    int year = doc["Anio"].as<int>();
-    int month = doc["Mes"].as<int>();
-    int day = doc["Dia"].is<int>() ? doc["Dia"].as<int>() : doc["Día"].as<int>();
-    int hour = doc["Hora"].as<int>();
-    int minute = doc["Minuto"].as<int>();
-    int second = doc["Segundo"].as<int>();
+    int year = doc["anio"].as<int>();
+    int month = doc["mes"].as<int>();
+    int day = doc["dia"].as<int>();
+    int hour = doc["hora"].as<int>();
+    int minute = doc["minuto"].as<int>();
+    int second = doc["segundo"].as<int>();
 
     Serial.printf("🕐 Actualizando hora: %04d-%02d-%02d %02d:%02d:%02d\n",
                   year, month, day, hour, minute, second);
