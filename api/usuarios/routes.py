@@ -118,6 +118,7 @@ async def autenticar(datos: AutenticarRequest):
     
     #Autentica un usuario y retorna datos del usuario si es exitosa la autenticación
     
+    # print("datos recibidos para autenticar:", datos)
     resultado = usuario_manager.autenticar(
         username =datos.username,
         contraseña =datos.contraseña

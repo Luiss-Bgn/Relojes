@@ -19,7 +19,7 @@ function buildMenu() {
     // No hay sesión iniciada (visitante)
     menuItems = [
       { tabId: 'tab-1', label: 'Actividades Diarias', href: '/actividades' },
-      { tabId: 'tab-2', label: 'Top Empleados', href: '/historial' },
+      { tabId: 'tab-2', label: 'Top Empleados', href: '/top' },
       { tabId: 'tab-3', label: 'Iniciar Sesión', href: '/login' }
     ];
   } else {
@@ -35,7 +35,7 @@ function buildMenu() {
         { tabId: 'tab-1', label: 'Actividades Diarias', href: '/actividades', defaultChecked: true },
         { tabId: 'tab-2', label: 'Informes'     , href: '/informes' },
         { tabId: 'tab-3', label: 'Gestión'      , href: '/gestion' },
-        { tabId: 'tab-5', label: 'Top Empleados'    , href: '/historial'},
+        { tabId: 'tab-5', label: 'Top Empleados'    , href: '/top'},
         { tabId: 'tab-4', label: 'Cerrar Sesión', href: '/logout' }
       ];
     } else if (userRole === "supervisor") {
@@ -45,7 +45,8 @@ function buildMenu() {
         { tabId: 'tab-1', label: 'Actividades Diarias', href: '/actividades', defaultChecked: true },
         { tabId: 'tab-2', label: 'Informes'     , href: '/informes' },
         { tabId: 'tab-3', label: 'Gestión'      , href: '/gestion' },
-        { tabId: 'tab-4', label: 'Cerrar Sesión', href: '/logout' }
+        { tabId: 'tab-4', label: 'Top Empleados'    , href: '/top'},
+        { tabId: 'tab-5', label: 'Cerrar Sesión', href: '/logout' }
       ];
     } else {
       // Usuario empleado (no admin ni supervisor)
@@ -53,7 +54,8 @@ function buildMenu() {
       menuItems = [
         { tabId: 'tab-1', label: 'Actividades Diarias', href: '/actividades', defaultChecked: true },
         { tabId: 'tab-2', label: 'Informes', href: '/informes' },
-        { tabId: 'tab-3', label: 'Cerrar Sesión', href: '/logout' }
+        { tabId: 'tab-3', label: 'Top Empleados'    , href: '/top'},
+        { tabId: 'tab-4', label: 'Cerrar Sesión', href: '/logout' }
       ];
     }
   }

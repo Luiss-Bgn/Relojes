@@ -111,10 +111,10 @@ async def gestion_view():
     return FileResponse(WEB_DIR / "Gestion" / "gestion.html")
 
 
-@app.get("/historial", tags=["Vistas"], include_in_schema=False)
-async def historial_view():
-    """Sirve la página de Historial"""
-    return FileResponse(WEB_DIR / "Historial" / "historial.html")
+@app.get("/top", tags=["Vistas"], include_in_schema=False)
+async def top_view():
+    """Sirve la página de Top"""
+    return FileResponse(WEB_DIR / "TopEmpleados" / "top.html")
 
 
 @app.get("/login", tags=["Vistas"], include_in_schema=False)

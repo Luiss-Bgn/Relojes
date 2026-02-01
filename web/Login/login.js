@@ -7,26 +7,27 @@ if (loginForm) {
         e.preventDefault();
         
         const username = document.getElementById("username").value.trim();
-        const password = document.getElementById("password").value;
+        const contraseña = document.getElementById("password").value;
         const mensajeElement = document.getElementById("mensaje");
 
         try {
-            const response = await fetch("/login", {
+            const response = await fetch("/usuarios/autenticar", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password })
+                body: JSON.stringify({ username, contraseña })
             });
 
             const data = await response.json();
-
-            if (response.ok && data.success) {
+            console.log("✅ Login exitoso:", data);
+            console.log("🔍 Datos recibidos:", data.usuario);
+            const usuario = data.usuario;
+            if (response.ok && data.status === "success") {
                 const loggedUserData = {
-                    username: data.username,
-                    role: data.role,
-                    empleado_id: data.empleado_id,
-                    tipo: data.tipo
+                    username: usuario.username,
+                    role: usuario.rol,
+                    empleado_id: usuario.id,
+                    tipo: usuario.puesto
                 };
-                
                 localStorage.setItem("loggedUser", JSON.stringify(loggedUserData));
                 window.location.href = "/actividades";
             } else {
