@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial de Tareas</title>
+    <link rel="stylesheet" href="/web/menu/menu.css">
+    <link rel="stylesheet" href="/web/Historial/historial.css">
+    <script src="/web/menu/menu.js" defer></script>
+</head>
+<body>
+    <div id="menu-container"></div>
+
+    <div class="container">
+        <div id="contenido-fade" class="fade-in">
+            <!-- Header compacto -->
+            <div class="header">
+                <h1>Top Empleados</h1>
+                <div id="fecha-actual-historial" style="font-size: 1.1rem; color: #666; margin-top: 5px; font-weight: 500;"></div>
+            </div>
+
+            <!-- Filtros mejorados -->
+            <div class="filters">
+                <div class="filter-item">
+                    <label for="selectorQuincena">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <path d="M9 11h6M9 15h6"></path>
+                        </svg>
+                        Seleccionar Quincena
+                    </label>
+                    <select id="selectorQuincena" onchange="aplicarFiltroQuincena()">
+                        <option value="">Todas las quincenas</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Dashboard Layout - Una columna con estadísticas y tabla -->
+            <div class="dashboard-unified">
+                
+                <!-- Sección de Ranking de Empleados -->
+                <div class="ranking-section">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 class="section-title" id="title-empleados" style="margin: 0;">🏆 Ranking de Empleados</h2>
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 1.1rem; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);">
+                            <span style="font-size: 0.85rem; opacity: 0.9;">Total Tareas: </span>
+                            <span id="totalTareasRanking" style="font-size: 1.4rem;">-</span>
+                        </div>
+                    </div>
+                    <div class="tabla-empleados-scroll">
+                        <table id="tablaEmpleadosTop">
+                            <thead>
+                                <tr>
+                                    <th style="width: 3%; text-align: center;"></th>
+                                    <th style="width: 3%;"></th>
+                                    <th style="width: 20%;">Nombre</th>
+                                    <th style="width: 15%;">Puesto</th>
+                                    <th style="width: 8%; text-align: center;">Total</th>
+                                    <th style="width: 8%; text-align: center;">✗ Vencidas</th>
+                                    <th style="width: 15%; text-align: center;">✓ Completadas</th>
+                                    <th style="width: 15%; text-align: center;">% Completadas</th>
+                                    <th style="width: 10%; text-align: center;">Puntos</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaEmpleadosBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Sección de Ranking de Tareas Extra -->
+                <div class="ranking-section" style="margin-top: 40px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 class="section-title" id="title-extras" style="margin: 0;">⭐ Ranking de Tareas Extra</h2>
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 1.1rem; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);">
+                            <span style="font-size: 0.85rem; opacity: 0.9;">Total Extra: </span>
+                            <span id="totalTareasExtraRanking" style="font-size: 1.4rem;">-</span>
+                        </div>
+                    </div>
+                    <div class="tabla-empleados-scroll">
+                        <table id="tablaTareasExtraTop">
+                            <colgroup>
+                                
+                                <col style="width: 0%;">
+                                <col style="width: 4%;">
+                                <col style="width: 4%;">
+                                <col style="width: 14%;">
+                                <col style="width: 19%;">
+                                <col style="width: 23%;">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th style="width: 0%; text-align: center;"></th>
+                                    <th style="width: 6%;"></th>
+                                    <th style="width: 4%;"></th>
+                                    <th style="width: 19%;">Nombre</th>
+                                    <th style="width: 19%;">Puesto</th>
+                                    <th style="width: 14%; text-align: center;">Tareas Extra</th>
+                                    <th style="width: 19%; text-align: center;">Puntos Extra</th>
+                                    <th style="width: 23%; text-align: center;">% del Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaTareasExtraBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/web/Historial/historial.js" defer></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const fechaDiv = document.getElementById('fecha-actual-historial');
+            if (fechaDiv) {
+                const hoy = new Date();
+                const diasSemana = ['DOMINGO', 'LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO'];
+                const meses = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'];
+                const diaNumero = hoy.getDate();
+                const diaNombre = diasSemana[hoy.getDay()];
+                const mesNombre = meses[hoy.getMonth()];
+                fechaDiv.textContent = `${diaNombre} ${diaNumero} DE ${mesNombre}`;
+            }
+            
+            const loggedUserString = localStorage.getItem('loggedUser');
+            const loggedUser = loggedUserString ? JSON.parse(loggedUserString) : { role: 'visitante' };
+            
+            const name = loggedUser.nombre || loggedUser.name || loggedUser.username || 'Usuario';
+            
+            let userNameDisplay = document.getElementById('user-name-display');
+            if (!userNameDisplay) {
+                userNameDisplay = document.createElement('div');
+                userNameDisplay.id = 'user-name-display';
+                userNameDisplay.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    left: 20px;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 10px 16px;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    font-size: 14px;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                    z-index: 1000;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                `;
+                document.body.appendChild(userNameDisplay);
+            }
+            
+            const rolDisplay = loggedUser.role === 'admin' ? 'Administrador' : 
+                             loggedUser.role === 'supervisor' ? 'Supervisor' : 
+                             loggedUser.role === 'empleado' ? 'Empleado' :
+                             'Visitante';
+            userNameDisplay.innerHTML = `
+                <span style="font-size: 16px;">👤</span>
+                <span>${name} (${rolDisplay})</span>
+            `;
+
+            const fadeElements = document.querySelectorAll('.fade-in');
+            setTimeout(() => {
+                fadeElements.forEach(el => el.classList.add('show'));
+            }, 100);
+        });
+    </script>
+</body>
+</html>

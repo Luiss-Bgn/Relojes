@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Informes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme"  />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/web/menu/menu.css" />
+  <link rel="stylesheet" href="/web/Informes/informes.css" />
+
+  <!-- Iconos (opcional) -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+  <!-- JS -->
+  <script src="/web/menu/menu.js" defer></script>
+  <!-- Los módulos ya son "deferred" por defecto -->
+  <script src="/web/Informes/main.js" type="module"></script>
+</head>
+<body>
+  <!-- Menú -->
+  <div id="menu-container" aria-label="Menú principal"></div>
+
+  <!-- Contenido principal -->
+  <main class="container" id="main-content">
+    <section id="informes-content" class="fade-in" aria-labelledby="titulo-informes">
+      <!-- Header con título -->
+      <div class="informes-header">
+        <h1 id="titulo-informes">Informes</h1>
+        <div id="fecha-actual-informes" style="font-size: 1.1rem; color: #666; margin-top: 5px; font-weight: 500;"></div>
+      </div>
+
+      <!-- Agrupamos tarjetas + calendario en una fila controlada por CSS -->
+      <div class="content-row">
+        <!-- Izquierda: sección de empleados -->
+        <div class="left-panel">
+          <!-- Tarjetas de empleados -->
+          <section id="tarjetas-container"
+                   aria-label="Lista de empleados"
+                   role="list"
+                   aria-live="polite">
+            <!-- Las tarjetas (role="listitem") se inyectan por JS -->
+          </section>
+        </div>
+
+        <!-- Derecha: secciones que se alternan -->
+        <div class="right-content">
+          <!-- Panel Principal: Tareas Vencidas + Gráfica (visible por defecto) -->
+          <section id="tareas-vencidas-panel" class="panel-principal" aria-label="Tareas más vencidas y promedio">
+            <!-- Tareas Vencidas (ocupa todo el espacio) -->
+            <div class="tareas-vencidas-section">
+              <div class="panel-header">
+                <h2>📋 Tareas Más Vencidas</h2>
+                <div class="periodo-selector">
+                  <button id="btn-quincena" class="periodo-btn active">Quincena Actual</button>
+                  <button id="btn-todo" class="periodo-btn">Ver Todo</button>
+                  <!-- Gráfica mini inline -->
+                  <div class="grafica-promedio-inline" id="grafica-promedio-content">
+                    <!-- Se inyecta por JS -->
+                  </div>
+                </div>
+              </div>
+              <div id="tareas-vencidas-content" class="tareas-vencidas-list">
+                <!-- Se inyecta por JS -->
+              </div>
+            </div>
+          </section>
+
+          <!-- Panel de Calendario (oculto por defecto, aparece al hacer click en empleado) -->
+          <aside id="calendario-container"
+                 class="is-hidden"
+                 aria-live="polite"
+                 aria-label="Tareas del empleado seleccionado">
+            <!-- Se inyectará .tasks-card via JS -->
+          </aside>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <noscript>
+    Esta página requiere JavaScript para funcionar correctamente.
+  </noscript>
+</body>
+</html>

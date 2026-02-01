@@ -1,0 +1,177 @@
+/* =============================== */
+/* Estilos específicos de REGISTRO */
+/* =============================== */
+
+/* Contenedor que carga dinámicamente el registro */
+#seccion-crear-dinamica {
+  position: relative; /* Antes estaba fixed */
+  width: 100%;
+  height: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  box-sizing: border-box;
+  overflow-y: hidden;
+}
+
+/* Grupos de entrada con floating label */
+.inputGroup {
+  position: relative;
+  margin-bottom: 12px;
+  width: 100%;
+}
+
+.inputGroup input,
+.inputGroup select {
+  width: 100%;
+  padding: 10px 8px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: none;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.inputGroup label:not(.file-upload-label) {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  color: #777;
+  font-size: 1rem;
+  pointer-events: none;
+  background: white;
+  padding: 0 4px;
+  transition: 0.25s ease;
+}
+
+.inputGroup input:focus + label,
+.inputGroup input:valid + label,
+.inputGroup select:focus + label,
+.inputGroup select:valid + label {
+  top: -10px;
+  left: 10px;
+  font-size: 0.8rem;
+  color: #007bff;
+}
+
+/* Inputs en foco */
+.inputGroup input:focus,
+.inputGroup select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
+}
+
+/* Botón “Volver” del flujo de registro */
+#btn-volver-crear-dinamico {
+  display: inline-flex;
+  margin-top: 1em;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #000;
+  border-radius: 9999px;
+  background-color: rgba(0, 0, 0, 1);
+  padding: 0.625rem 1.5rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 1);
+  outline: 0;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+#btn-volver-crear-dinamico:hover {
+  background-color: transparent;
+  color: rgba(0, 0, 0, 1);
+}
+
+/* ============================================= */
+/* 🔥 ESTILOS PARA FORMULARIO INLINE EN GESTION */
+/* ============================================= */
+.form-scope {
+  width: 100%;
+  height: auto;
+}
+
+.form-scope-container {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.form-scope-container h2 {
+  display: none; /* Ocultar título porque ya está en el header */
+}
+
+.form-scope-container form {
+  width: 100%;
+}
+
+.form-scope-container button[type="submit"] {
+  width: 100%;
+  padding: 12px;
+  margin-top: 15px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.form-scope-container button[type="submit"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.form-scope-container button[type="submit"]:active {
+  transform: translateY(0);
+}
+
+/* 🔥 Estilos para el botón de subir imagen personalizado */
+.file-upload-label {
+  display: inline-block;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer !important;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 1;
+}
+
+.file-upload-label:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.file-upload-label:active {
+  transform: translateY(0);
+}
+
+.file-upload-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.file-upload-text::before {
+  content: '📷';
+  font-size: 1.2rem;
+}

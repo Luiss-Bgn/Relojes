@@ -1,0 +1,1157 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Contenedor principal - idéntico a Informes y Gestión */
+.container {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    height: 85%;
+    margin: 0 auto;
+    overflow-y: auto;
+}
+
+/* Animación fade-in */
+.fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 1s ease-out, transform 1s ease-out;
+}
+
+.fade-in.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.header {
+    padding: 4px 0;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.header h1 {
+    margin: 0;
+    color: #333;
+    font-size: 1.3rem;
+}
+
+.header p {
+    display: none; /* Ocultar subtítulo para ahorrar espacio */
+}
+
+/* Filtros mejorados */
+.filters {
+    background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+    padding: 10px 14px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    border: 1px solid #e0e0e0;
+}
+
+.filter-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.filter-item label {
+    font-weight: 600;
+    color: #555;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.filter-item label svg {
+    color: #667eea;
+}
+
+.filter-item input[type="date"],
+.filter-item select {
+    padding: 10px 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    transition: all 0.3s ease;
+    background: white;
+    cursor: pointer;
+}
+
+.filter-item select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 35px;
+}
+
+.filter-item input[type="date"]:hover,
+.filter-item select:hover {
+    border-color: #667eea;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+}
+
+.filter-item input[type="date"]:focus,
+.filter-item select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    transform: translateY(-1px);
+}
+
+/* Personalizar el icono del calendario */
+.filter-item input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    filter: invert(45%) sepia(52%) saturate(1500%) hue-rotate(215deg) brightness(95%) contrast(90%);
+}
+
+/* Botón de consultar mejorado */
+.btn-consultar {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-consultar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn-consultar:hover::before {
+    left: 100%;
+}
+
+.btn-consultar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-consultar:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.btn-consultar svg {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Dashboard Layout - 2 columnas: estadísticas pequeñas izquierda, tabla derecha */
+.dashboard-unified {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    height: 100%;
+}
+
+/* Header con estadísticas en cards horizontales */
+.stats-header {
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(102, 126, 234, 0.06);
+    border: 1px solid #e9ecef;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.stats-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+
+.stats-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 6px;
+    flex: 1;
+}
+
+.stat-card {
+    background: white;
+    padding: 10px;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border-left: 3px solid #667eea;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.stat-card:hover {
+    transform: translateX(3px);
+    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.12);
+}
+
+.stat-card.completadas {
+    border-left-color: #28a745;
+}
+
+.stat-card.vencidas {
+    border-left-color: #dc3545;
+}
+
+.stat-card.porcentaje {
+    border-left-color: #17a2b8;
+}
+
+.stat-card.puntos {
+    border-left-color: #ffc107;
+}
+
+.stat-card .stat-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #6c757d;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.stat-card .stat-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.stat-card.completadas .stat-value {
+    color: #28a745;
+}
+
+.stat-card.vencidas .stat-value {
+    color: #dc3545;
+}
+
+.stat-card.porcentaje .stat-value {
+    color: #17a2b8;
+}
+
+.stat-card.puntos .stat-value {
+    color: #ffc107;
+}
+
+/* Sección de ranking */
+.ranking-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    padding: 16px;
+}
+
+.ranking-section .section-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 12px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.quincena-info-top {
+    background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+    padding: 6px 8px;
+    border-radius: 6px;
+    text-align: center;
+    border: 1px solid #e0e0e0;
+    margin-bottom: 6px;
+}
+
+.quincena-info-top p {
+    margin: 0;
+    font-size: 0.7rem;
+    color: #555;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.quincena-info-top .quincena-nombre {
+    font-weight: 700;
+    color: #667eea;
+    font-size: 0.75rem;
+}
+
+.quincena-info-top .quincena-fechas {
+    font-size: 0.65rem;
+    color: #777;
+}
+
+.stat-compact.vencidas::after {
+    background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+}
+
+.stat-compact.vencidas .stat-label {
+    color: #dc2626;
+}
+
+.stat-compact.vencidas .stat-value {
+    color: #ef4444;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.stat-compact.puntos {
+    background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
+}
+
+.stat-compact.puntos:hover {
+    border-color: #f59e0b;
+}
+
+.stat-compact.puntos::after {
+    background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+}
+
+.stat-compact.puntos .stat-label {
+    color: #d97706;
+}
+
+.stat-compact.puntos .stat-value {
+    color: #f59e0b;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.stat-compact.porcentaje {
+    background: linear-gradient(135deg, #eef2ff 0%, #ffffff 100%);
+}
+
+.stat-compact.porcentaje:hover {
+    border-color: #667eea;
+}
+
+.stat-compact.porcentaje::after {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+
+.stat-compact.porcentaje .stat-label {
+    color: #5a67d8;
+}
+
+.stat-compact.porcentaje .stat-value {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Info del período/quincena en la parte superior */
+.quincena-info-top {
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%);
+    border-radius: 8px;
+    border-left: 4px solid #10b981;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.1);
+}
+
+.quincena-info-top p {
+    margin: 0;
+    font-size: 0.75rem;
+    color: #059669;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.quincena-info-top strong {
+    color: #047857;
+    font-size: 0.8rem;
+}
+
+/* Tabla de Empleados - Ahora en dashboard-right */
+.dashboard-right {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    padding: 10px;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.1);
+    border: 1px solid #e9ecef;
+    position: relative;
+}
+
+.dashboard-right::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+}
+
+.tabla-empleados-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+/* 🔥 NUEVO: Estilos específicos para tabla de extras con scroll */
+/* Aplicar directamente al contenedor de la tabla de extras */
+#tablaTareasExtraTop {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    background: white;
+}
+
+#tablaTareasExtraTop th {
+    padding: 12px 10px;
+    font-weight: 600;
+}
+
+/* Aplicar max-height al parent directo */
+.dashboard-unified > .ranking-section:last-child {
+    flex: 0 0 auto;
+    max-height: 700px;
+}
+
+.dashboard-unified > .ranking-section:last-child .tabla-empleados-scroll {
+    flex: 0 0 auto;
+    max-height: 500px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-right: 10px;
+}
+
+/* Scrollbar personalizado para tabla de extras */
+.dashboard-unified > .ranking-section:last-child .tabla-empleados-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+
+.dashboard-unified > .ranking-section:last-child .tabla-empleados-scroll::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+.dashboard-unified > .ranking-section:last-child .tabla-empleados-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border-radius: 10px;
+}
+
+.dashboard-unified > .ranking-section:last-child .tabla-empleados-scroll::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+}
+
+#tablaEmpleadosTop {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+#tablaTareasExtraTop {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+#tablaEmpleadosTop thead tr {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+#tablaEmpleadosTop th {
+    background: transparent;
+    color: white;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.8px;
+    padding: 12px 10px;
+    text-align: left;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+#tablaEmpleadosTop th:first-child {
+    border-top-left-radius: 10px;
+    text-align: center;
+    width: 50px;
+}
+
+#tablaEmpleadosTop th:last-child {
+    border-top-right-radius: 10px;
+}
+
+#tablaEmpleadosTop td {
+    padding: 12px 10px;
+    font-size: 0.8rem;
+    color: #333;
+}
+
+#tablaTareasExtraTop thead tr {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+#tablaTareasExtraTop th {
+    background: transparent;
+    color: white;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.8px;
+    padding: 12px 10px;
+    text-align: left;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+#tablaTareasExtraTop thead th:nth-child(1) {
+    width: 3%;
+}
+
+#tablaTareasExtraTop thead th:nth-child(2) {
+    width: 25%;
+    text-align: left;
+}
+
+#tablaTareasExtraTop thead th:nth-child(3) {
+    width: 20%;
+}
+
+#tablaTareasExtraTop thead th:nth-child(4) {
+    width: 18%;
+}
+
+#tablaTareasExtraTop thead th:nth-child(5) {
+    width: 18%;
+}
+
+#tablaTareasExtraTop thead th:nth-child(6) {
+    width: 16%;
+}
+
+#tablaTareasExtraTop th:first-child {
+    border-top-left-radius: 10px;
+    text-align: left;
+}
+
+#tablaTareasExtraTop th:last-child {
+    border-top-right-radius: 10px;
+}
+
+#tablaTareasExtraTop td {
+    padding: 12px 10px;
+    font-size: 0.8rem;
+    color: #333;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-word;
+}
+
+#tablaTareasExtraTop tbody td:nth-child(1) {
+    width: 3%;
+}
+
+#tablaTareasExtraTop tbody td:nth-child(2) {
+    width: 25%;
+    text-align: left;
+}
+
+#tablaTareasExtraTop tbody td:nth-child(3) {
+    width: 20%;
+}
+
+#tablaTareasExtraTop tbody td:nth-child(4) {
+    width: 18%;
+}
+
+#tablaTareasExtraTop tbody td:nth-child(5) {
+    width: 18%;
+}
+
+#tablaTareasExtraTop tbody td:nth-child(6) {
+    width: 16%;
+}
+
+#tablaTareasExtraTop tbody tr {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-bottom: 1px solid #f0f0f0;
+    position: relative;
+}
+
+#tablaTareasExtraTop tbody tr::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+#tablaTareasExtraTop tbody tr:hover {
+    background: linear-gradient(90deg, #fffbeb10 0%, #ffffff 100%);
+    transform: scale(1.01);
+    box-shadow: 0 2px 12px rgba(245, 158, 11, 0.15);
+}
+
+#tablaTareasExtraTop tbody tr:hover::before {
+    opacity: 1;
+}
+
+#tablaTareasExtraTop tbody tr.top-three {
+    background: linear-gradient(90deg, #fffbeb 0%, #ffffff 100%);
+    font-weight: 600;
+}
+
+#tablaTareasExtraTop tbody tr:last-child {
+    border-bottom: none;
+}
+
+#tablaTareasExtraTop td {
+    padding: 12px 10px;
+    font-size: 0.8rem;
+    color: #333;
+}
+
+#tablaEmpleadosTop tbody tr {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-bottom: 1px solid #f0f0f0;
+    position: relative;
+}
+
+#tablaEmpleadosTop tbody tr::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+#tablaEmpleadosTop tbody tr:hover {
+    background: linear-gradient(90deg, #fffbeb10 0%, #ffffff 100%);
+    transform: scale(1.01);
+    box-shadow: 0 2px 12px rgba(239, 68, 68, 0.15);
+}
+
+#tablaEmpleadosTop tbody tr:hover::before {
+    opacity: 1;
+}
+
+#tablaEmpleadosTop tbody tr.top-three {
+    background: linear-gradient(90deg, #fffbeb 0%, #ffffff 100%);
+    font-weight: 600;
+}
+
+#tablaEmpleadosTop tbody tr:last-child {
+    border-bottom: none;
+}
+
+#tablaEmpleadosTop td {
+    padding: 12px 10px;
+    font-size: 0.8rem;
+    color: #333;
+}
+
+.rank-cell {
+    text-align: left;
+    justify-content: left;
+}
+
+.rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-weight: 800;
+    font-size: 0.85rem;
+    background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+    color: #6b7280;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.rank-badge.gold {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: white;
+    box-shadow: 0 3px 12px rgba(251, 191, 36, 0.4);
+    animation: pulseGold 2s infinite;
+}
+
+.rank-badge.silver {
+    background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+    color: white;
+    box-shadow: 0 3px 12px rgba(156, 163, 175, 0.4);
+}
+
+.rank-badge.bronze {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    color: white;
+    box-shadow: 0 3px 12px rgba(249, 115, 22, 0.4);
+}
+
+@keyframes pulseGold {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 3px 12px rgba(251, 191, 36, 0.4);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 4px 16px rgba(251, 191, 36, 0.6);
+    }
+}
+
+.completadas-cell {
+    color: #10b981;
+    font-weight: 700;
+}
+
+.vencidas-cell {
+    color: #ef4444;
+    font-weight: 700;
+}
+
+.puntos-cell {
+    text-align: left;
+}
+
+.puntos-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    font-size: 0.9rem;
+}
+
+.progress-bar-mini {
+    position: relative;
+    width: 80px;
+    height: 24px;
+    background: #f0f0f0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.progress-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
+    border-radius: 12px;
+}
+
+/* Colores de la barra según porcentaje */
+.progress-fill.progress-red {
+    background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+}
+
+.progress-fill.progress-yellow {
+    background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+}
+
+.progress-fill.progress-green {
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+}
+
+.progress-fill.progress-orange {
+    background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+}
+
+.progress-text {
+    position: relative;
+    width: 100%;
+    text-align: left;
+    line-height: 24px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #1f2937;
+    text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+}
+
+/* Tareas Problemáticas mejoradas */
+
+.tareas-problematicas-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+th, td {
+    padding: 12px 8px;
+    text-align: left;
+    font-size: 0.8rem;
+}
+
+thead tr {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+th {
+    background: transparent;
+    color: white;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+th:first-child {
+    border-top-left-radius: 10px;
+}
+
+th:last-child {
+    border-top-right-radius: 10px;
+}
+
+tbody tr {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-bottom: 1px solid #f0f0f0;
+    position: relative;
+}
+
+tbody tr::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+tbody tr:hover {
+    background: linear-gradient(90deg, #fef2f210 0%, #ffffff 100%);
+    transform: scale(1.01);
+    box-shadow: 0 2px 12px rgba(239, 68, 68, 0.1);
+}
+
+tbody tr:hover::before {
+    opacity: 1;
+}
+
+tbody tr:last-child {
+    border-bottom: none;
+}
+
+td {
+    color: #333;
+    font-weight: 500;
+}
+
+td strong {
+    color: #ef4444;
+    font-weight: 700;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.badge {
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s;
+}
+
+.badge-danger {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.2);
+}
+
+.badge-danger:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.badge-danger::before {
+    content: '⚠️';
+    font-size: 0.8rem;
+    animation: warningPulse 2s infinite;
+}
+
+@keyframes warningPulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* Historial por Empleado mejorado */
+.dashboard-right {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    padding: 10px;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.1);
+    border: 1px solid #e9ecef;
+    position: relative;
+}
+
+.dashboard-right::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+}
+
+.empleados-scroll {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-right: 6px;
+    min-height: 0;
+}
+
+/* Scrollbar personalizado */
+.tabla-empleados-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+
+.tabla-empleados-scroll::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.tabla-empleados-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+    border-radius: 4px;
+}
+
+.tabla-empleados-scroll::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #dc2626 0%, #b91c1c 100%);
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+    }
+    
+    .dashboard-left {
+        grid-row: 1;
+    }
+    
+    .dashboard-right {
+        grid-row: 2;
+    }
+}
+
+/* Estilos específicos para columnas de tabla empleados */
+#tablaEmpleadosTop th:nth-child(1),
+#tablaEmpleadosTop td:nth-child(1) {
+    width: 3%;
+    text-align: center;
+}
+
+#tablaEmpleadosTop th:nth-child(2),
+#tablaEmpleadosTop td:nth-child(2) {
+    width: 3%;
+}
+
+#tablaEmpleadosTop th:nth-child(3),
+#tablaEmpleadosTop td:nth-child(3) {
+    width: 20%;
+    font-weight: 600;
+}
+
+#tablaEmpleadosTop th:nth-child(4),
+#tablaEmpleadosTop td:nth-child(4) {
+    width: 15%;
+}
+
+#tablaEmpleadosTop th:nth-child(5),
+#tablaEmpleadosTop td:nth-child(5) {
+    width: 8%;
+    text-align: center;
+}
+
+#tablaEmpleadosTop th:nth-child(6),
+#tablaEmpleadosTop td:nth-child(6) {
+    width: 8%;
+    text-align: center;
+}
+
+#tablaEmpleadosTop th:nth-child(7),
+#tablaEmpleadosTop td:nth-child(7) {
+    width: 15%;
+    text-align: center;
+}
+
+#tablaEmpleadosTop th:nth-child(8),
+#tablaEmpleadosTop td:nth-child(8) {
+    width: 12%;
+    text-align: center;
+}
+
+#tablaEmpleadosTop th:nth-child(9),
+#tablaEmpleadosTop td:nth-child(9) {
+    width: 10%;
+    text-align: center;
+}
+
+/* Estilos específicos para columnas de tabla extras */
+#tablaTareasExtraTop th:nth-child(1),
+#tablaTareasExtraTop td:nth-child(1) {
+    width: 3%;
+    text-align: center;
+}
+
+#tablaTareasExtraTop th:nth-child(2),
+#tablaTareasExtraTop td:nth-child(2) {
+    width: 3%;
+}
+
+#tablaTareasExtraTop th:nth-child(3),
+#tablaTareasExtraTop td:nth-child(3) {
+    width: 20%;
+    font-weight: 600;
+}
+
+#tablaTareasExtraTop th:nth-child(4),
+#tablaTareasExtraTop td:nth-child(4) {
+    width: 15%;
+}
+
+#tablaTareasExtraTop th:nth-child(5),
+#tablaTareasExtraTop td:nth-child(5) {
+    width: 20%;
+    text-align: center;
+}
+
+#tablaTareasExtraTop th:nth-child(6),
+#tablaTareasExtraTop td:nth-child(6) {
+    width: 15%;
+    text-align: center;
+}
+
+#tablaTareasExtraTop th:nth-child(7),
+#tablaTareasExtraTop td:nth-child(7) {
+    width: 15%;
+    text-align: center;
+}
+
+@media (max-width: 900px) {
+    .filters {
+        flex-direction: column;
+    }
+    
+    .filter-item {
+        width: 100%;
+    }
+    
+    .stats-compact {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    #tablaEmpleadosTop th,
+    #tablaEmpleadosTop td {
+        padding: 8px 6px;
+        font-size: 0.75rem;
+    }
+}

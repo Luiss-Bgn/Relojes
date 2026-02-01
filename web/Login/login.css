@@ -1,0 +1,182 @@
+/* Reset y estilos generales */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+/* Contenedor principal */
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100%;
+  padding: 20px;
+}
+
+/* Formulario centrado */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  background-color: #ffffff;
+  padding: 30px;
+  width: 400px;
+  max-width: 92vw;
+  border-radius: 20px;
+  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/*==============================================
+  FORMULARIO TRADICIONAL
+==============================================*/
+
+h2 {
+  text-align: center;
+  margin-bottom: 15px;
+  font-size: 24px;
+  color: #1d1d1f;
+  font-weight: 600;
+}
+
+/* Campos de entrada */
+.flex-column {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.flex-column > label {
+  color: #151717;
+  font-weight: 600;
+}
+
+.inputForm {
+  border: 1.5px solid #ecedec;
+  border-radius: 10px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  transition: 0.2s ease-in-out;
+  background-color: white;
+}
+
+.inputForm:focus-within {
+  border: 1.5px solid #2d79f3;
+}
+
+/* Iconos SVG dentro del input */
+.icon {
+  width: 24px;
+  height: 24px;
+  fill: #888888;
+}
+
+/* Espaciado y estilos de los inputs */
+.input {
+  margin-left: 10px;
+  border-radius: 10px;
+  border: none;
+  width: 100%;
+  height: 100%;
+  font-size: 16px;
+  padding-left: 5px;
+}
+
+.input:focus {
+  outline: none;
+}
+
+/* Botón */
+.button-submit {
+  margin-top: 10px;
+  background-color: #151717;
+  border: none;
+  color: white;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 10px;
+  height: 50px;
+  width: 100%;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.button-submit:hover {
+  background-color: #252727;
+}
+
+/* Mensaje */
+#mensaje {
+  color: red;
+  text-align: center;
+  margin-top: 10px;
+  font-size: 14px;
+  min-height: 20px;
+}
+
+/* Chevron de inicio (parte superior derecha) */
+.chevron-inicio {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 10;
+}
+
+.chevron-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chevron-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none !important;
+  color: #000 !important;
+}
+
+.chevron-link:visited,
+.chevron-link:active,
+.chevron-link:focus,
+.chevron-link:hover {
+  text-decoration: none !important;
+  color: #000 !important;
+}
+
+.chevron-text {
+  font-size: 1rem;
+  color: #000;
+  font-weight: 500;
+}
+
+.chevron-inicio svg path {
+  stroke: #000 !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .form {
+    padding: 22px;
+    gap: 12px;
+    width: 100%;
+  }
+  
+  .chevron-inicio {
+    top: 16px;
+    right: 16px;
+  }
+}

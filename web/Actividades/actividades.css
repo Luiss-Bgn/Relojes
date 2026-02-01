@@ -1,0 +1,1851 @@
+﻿/* =========================================================
+   BASE / RESET + VARIABLES
+   - Normaliza mÃ¡rgenes y modela el layout con box-sizing.
+   - Define variables para colores, espaciamientos y duraciones.
+   ========================================================= */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+:root{
+  /* Colores de UI */
+  --c-bg:           #f4f4f4;
+  --c-surface:      #ffffff;
+  --c-header:       #f0f0f0;
+  --c-border:       #cccccc;
+  --c-muted:        #00000056;
+  --c-shadow:       0 4px 8px rgba(0,0,0,.1);
+
+  /* Estados: 1=En progreso(amarillo), 2=Sin iniciar(gris), 3=Completada(verde), 4=No completada(rojo), 5=Extras(azul) */
+  --c-row-current:  #f5f5dc; /* Beige para la hora actual */
+  --c-inprogress:   #ffd54f; /* 1 - En progreso (amarillo) */
+  --c-todo:         #9e9e9e; /* 2 - Sin iniciar (gris) */
+  --c-done:         #4caf50; /* 3 - Completada (verde) */
+  --c-overdue:      #ff6666; /* 4 - No completada (rojo) */
+  --c-extras:       #1565c0; /* 5 - Extras (azul fuerte/oscuro) */
+
+  /* Layout y motion */
+  --radius:   15px;
+  --radius-sm: 6px;
+  --space:    20px;
+  --gap:      8px;
+  --anim-fast: .4s;
+  --anim-base: 1s;
+
+  /* Banda sticky (altura de fila activa; se actualiza desde JS) */
+  --row-height: 48px;
+}
+
+/* Respeta preferencias de accesibilidad: reduce animaciones/transiciones */
+@media (prefers-reduced-motion: reduce){
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Reset mÃ­nimo */
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: Arial, sans-serif;
+  background: var(--c-bg);
+  min-height: 100dvh;               /* Mejor para mÃ³viles que 100vh */
+  display: grid; place-items: center; /* Centrado simple y robusto */
+  text-align: center;
+  overflow: hidden;
+}
+
+/* =========================================================
+   ANIMACIONES DE ENTRADA
+   - Aplicadas a tÃ­tulo y contenedor al cargar.
+   ========================================================= */
+.fade-in { 
+  opacity: 0; 
+  transform: translateY(20px); 
+  transition: opacity var(--anim-base) ease-out, transform var(--anim-base) ease-out; 
+}
+.fade-in.show { opacity: 1; transform: translateY(0); }
+
+h2 { 
+  opacity: 0; 
+  transition: opacity var(--anim-base) ease-in-out;
+  font-size: 1.5rem; /* TamaÃ±o explÃ­cito */
+  font-weight: bold;
+}
+h2.show { opacity: 1; }
+
+h3 {
+  font-size: 1.5rem; /* Mismo tamaño que h2 */
+  font-weight: bold;
+}
+
+/* =========================================================
+   CONTENEDOR PRINCIPAL
+   ========================================================= */
+.container {
+  position: relative;
+  background: var(--c-surface);
+  padding: var(--space);
+  border-radius: var(--radius);
+  box-shadow: var(--c-shadow);
+  width: 90%;                       /* 🔥 Igual que Informes - se ajusta a pantallas grandes */
+  height: 85vh;                     /* Conserva tu proporción original */
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-start;
+  overflow: hidden;
+  text-align: left;                 /* Para que el contenido interno se alinee a la izquierda */
+}
+
+/* Header: Flechas izq, Título centrado real, Título derecho */
+.page-header{
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr; /* Tres columnas iguales para centrado perfecto */
+  align-items: center; /* Todos los elementos al mismo nivel vertical */
+  column-gap: 12px;
+  margin-bottom: 8px; /* Espacio entre header y grÃ¡fica */
+}
+
+.page-header h2{
+  margin: 0;
+  grid-column: 2;
+  justify-self: center;
+  text-align: center;
+}
+
+/* Flechas de empleados ahora a la izquierda */
+#employee-arrows-left {
+  grid-column: 1;
+  justify-self: start;
+  display: none; /* 🔥 Ocultar botones de paginación - ahora usamos scroll */
+  gap: var(--gap);
+}
+
+/* TÃ­tulo de la grÃ¡fica alineado a la derecha en el header */
+.task-progress-title {
+  grid-column: 3;
+  justify-self: end;
+  margin: 0;
+  font-size: 1.2rem; /* Ligeramente mÃ¡s pequeÃ±o que el tÃ­tulo principal pero visible */
+  font-weight: bold;
+  color: #333;
+  text-align: right;
+  opacity: 0; 
+  transition: opacity var(--anim-base) ease-in-out;
+  white-space: nowrap; /* Evita que se rompa en varias lÃ­neas */
+}
+.task-progress-title.show { 
+  opacity: 1; 
+}
+
+/* Contenedor de la grÃ¡fica - debajo del header, pegado a la derecha */
+.task-progress-container {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+  padding-right: 0; /* Pegado al borde derecho */
+}
+
+/* =========================================================
+   CONTROLES (FLECHAS) DE EMPLEADOS
+   - Ahora a la izquierda en el header.
+   - Unifica estilos de botones con :is() para evitar repeticiÃ³n.
+   ========================================================= */
+
+/* Grupo de botones con mismo look (flechas + 'Hoy') */
+:is(#employee-arrows-left button, .arrows-col button, #today-btn) {
+  font: inherit;
+  font-size: .8rem;
+  text-transform: uppercase;
+  letter-spacing: .1rem;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #000;
+  cursor: pointer;
+  padding: .3rem .6rem;
+  border-radius: var(--radius-sm);
+}
+:is(#employee-arrows-left button, .arrows-col button, #today-btn):hover { 
+  background: #f3f3f3; 
+}
+:is(#employee-arrows-left button, .arrows-col button, #today-btn):focus-visible { 
+  outline: 2px solid #2d79f3; 
+  outline-offset: 2px; 
+}
+
+/* Estado deshabilitado para botón de día anterior */
+#prev-day-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* =========================================================
+   TABLA (CONTENEDOR CON SCROLL)
+   - Scroll suave, scroll-snap para centrar filas.
+   ========================================================= */
+.table-wrapper {
+  position: relative;
+  width: 100%;
+  flex: 1 1 auto;                   /* Ocupa el alto restante del contenedor */
+  overflow-y: auto;
+  overflow-x: auto;                 /* 🔥 Habilitar scroll horizontal */
+  opacity: 0; 
+  transition: opacity var(--anim-base) ease-in-out;
+  scroll-behavior: smooth;
+  scroll-snap-type: y proximity;
+}
+.table-wrapper.show { opacity: 1; }
+
+/* Banda â€œstickyâ€ centrada (oculta por requerimiento) */
+.sticky-center-band {
+  display: none !important;
+}
+
+/* =========================================================
+   ANIMACIONES DE TRANSICIÃ“N (DÃAS / PÃGINAS)
+   - Solo usan transform/opacity (barato para el navegador).
+   ========================================================= */
+.slide-left-exit  { animation: slideLeftExit  var(--anim-fast) forwards; }
+.slide-left-enter { animation: slideLeftEnter var(--anim-fast) forwards; }
+.slide-right-exit { animation: slideRightExit var(--anim-fast) forwards; }
+.slide-right-enter{ animation: slideRightEnter var(--anim-fast) forwards; }
+
+@keyframes slideLeftExit  { 
+  from { opacity:1; transform: translateX(0); }
+  to   { opacity:0; transform: translateX(-40px); }
+}
+@keyframes slideLeftEnter { 
+  from { opacity:0; transform: translateX(40px); }
+  to   { opacity:1; transform: translateX(0); }
+}
+@keyframes slideRightExit { 
+  from { opacity:1; transform: translateX(0); }
+  to   { opacity:0; transform: translateX(40px); }
+}
+@keyframes slideRightEnter{ 
+  from { opacity:0; transform: translateX(-40px); }
+  to   { opacity:1; transform: translateX(0); }
+}
+
+/* =========================================================
+   TABLA
+   ========================================================= */
+table {
+  width: 100%;            /* 🔥 Ancho fijo al contenedor */
+  border-collapse: collapse; 
+  margin-top: 0; 
+  /* fixed layout lets column widths be respected */
+  table-layout: fixed;    /* 🔥 Respeta los anchos definidos, no crece */
+}
+thead {
+  position: sticky; 
+  top: 0; 
+  z-index: 10; 
+  background: var(--c-header);
+  box-shadow: 0 2px 2px rgba(0, 0, 0, .1);
+}
+th, td {
+  border: 1px solid var(--c-border); 
+  padding: 5px; 
+  text-align: center; 
+  overflow: hidden;        /* Evita desbordes visuales */
+  word-break: break-word;  /* Ajuste bÃ¡sico de palabras largas */
+}
+th { 
+  background: var(--c-header); 
+  font-weight: bold; 
+  height: 50px; 
+}
+
+/* Ajustes de ancho para las primeras columnas: horario, actividad, puntos */
+/* 🔥 COLUMNAS FIJAS (sticky) - Horario */
+thead th:nth-child(1), tbody td:nth-child(1) {
+  width: 100px;
+  min-width: 100px;
+  max-width: 100px;
+  white-space: nowrap;
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  background: var(--c-header);
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1); /* Sombra para separar visualmente */
+}
+tbody td:nth-child(1) {
+  background: white; /* Fondo blanco para celdas del body */
+}
+
+/* 🔥 COLUMNAS FIJAS (sticky) - Actividad */
+thead th:nth-child(2), tbody td:nth-child(2) {
+  width: 220px !important;
+  max-width: 220px !important;
+  min-width: 220px !important;
+  position: sticky;
+  left: 100px; /* Offset = ancho de la columna anterior */
+  z-index: 5;
+  background: var(--c-header);
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  box-sizing: border-box;
+}
+tbody td:nth-child(2) {
+  background: white;
+}
+
+/* 🔥 COLUMNAS FIJAS (sticky) - Puntos */
+thead th:nth-child(3), tbody td:nth-child(3) {
+  width: 60px;
+  min-width: 60px;
+  max-width: 60px;
+  position: sticky;
+  left: 320px; /* Offset = 100 + 220 */
+  z-index: 5;
+  background: var(--c-header);
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+}
+tbody td:nth-child(3) {
+  background: white;
+}
+
+/* 🔥 Columnas de empleados (desde la 4ta en adelante) */
+thead th:nth-child(n+4), tbody td:nth-child(n+4) {
+  min-width: 120px;       /* Ancho mínimo para cada empleado */
+  width: 120px;
+}
+
+/* Fila actual (hora actual) */
+tbody tr.current-row { background: var(--c-row-current); }
+
+/* 🔥 Mantener background correcto en columnas sticky cuando es fila actual */
+tbody tr.current-row td:nth-child(1),
+tbody tr.current-row td:nth-child(2),
+tbody tr.current-row td:nth-child(3) {
+  background: var(--c-row-current);
+}
+
+/*  NUEVO: Resaltar celdas amarillas (en progreso) en la fila actual */
+tbody tr.current-row td.status-inprogress {
+  box-shadow: 0 0 0 3px var(--c-row-current) inset, 
+              0 0 8px 2px rgba(245, 245, 220, 0.8);
+  border: 2px solid #d4af37; /* Borde dorado para destacar */
+  font-weight: bold;
+  position: relative;
+  animation: pulse-current 2s ease-in-out infinite;
+  z-index: 1; /* Asegurar que esté encima pero no bloquee otras celdas */
+}
+
+/* 🔥 FIX: Asegurar que las celdas con tareas siempre sean clickeables en current-row */
+tbody tr.current-row td {
+  pointer-events: auto !important;
+}
+
+/* 🔥 FIX: Las celdas azules (disponibles) deben estar siempre encima */
+tbody tr.current-row td.status-available {
+  z-index: 2;
+  position: relative;
+}
+
+/* Efecto de pulso sutil en las tareas actuales */
+@keyframes pulse-current {
+  0%, 100% { 
+    box-shadow: 0 0 0 3px var(--c-row-current) inset, 
+                0 0 8px 2px rgba(245, 245, 220, 0.8);
+  }
+  50% { 
+    box-shadow: 0 0 0 3px var(--c-row-current) inset, 
+                0 0 12px 4px rgba(245, 245, 220, 1);
+  }
+}
+
+/* Cada fila â€œsnapeaâ€ al centro del contenedor */
+tbody tr { scroll-snap-align: center; }
+
+/* =========================================================
+   ENCABEZADO DE TRABAJADORES (FOTO + NOMBRE + PUESTO)
+   - Layout vertical (column) para encajar en header estrecho.
+   ========================================================= */
+.worker-header {
+  display: flex; 
+  flex-direction: column;
+  align-items: center; 
+  justify-content: center;
+  gap: 3px;
+  padding: 0;
+  white-space: nowrap;
+}
+.worker-header img {
+  width: 50px; 
+  height: 50px; 
+  border-radius: 50%; 
+  border: 2px solid #ffffff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, .2); /* Solo en imagen, no en filas (mejor rendimiento) */
+}
+.worker-text { 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  max-width: 100%; 
+  white-space: normal; 
+  text-align: center; 
+  width: 100%;
+}
+.worker-header .worker-name { 
+  font-weight: bold; 
+  font-size: 14px; 
+  text-align: center; 
+  overflow-wrap: anywhere; /* Rompe palabras largas de forma amable */
+}
+.worker-header .worker-points {
+  font-size: 13px;
+  font-weight: 600;
+  color: #667eea; /* Color morado/azul similar a la grÃ¡fica */
+  text-align: center;
+  margin: 2px 0;
+  display: block;
+}
+.worker-header .worker-role { 
+  font-size: 12px; 
+  color: var(--c-muted); 
+  white-space: normal; 
+  overflow-wrap: anywhere;
+  text-align: center; 
+}
+
+/* =========================================================
+   ESTADOS DE CELDAS DE TAREAS
+   ========================================================= */
+.status-inprogress { background: var(--c-inprogress); } /* 1 - En progreso (amarillo) */
+.status-todo       { background: var(--c-todo); }       /* 2 - Sin iniciar (gris)     */
+.status-done       { background: var(--c-done); }       /* 3 - Completada (verde)     */
+.status-overdue    { background: var(--c-overdue) !important; } /* 4 - No completada (rojo) */
+.status-extra      { background: var(--c-extras); }     /* 5 - Extras (azul)          */
+.status-available  { background: #b3d9ff; cursor: pointer; } /* Tarea disponible para completar (azul claro) */
+
+/* =========================================================
+   RELOJ
+   - Las horas/min/seg usan ::before con variables actualizadas por JS.
+   - El dÃ­a (#tasks-day) se escribe como texto desde JS (no pseudo-element).
+   ========================================================= */
+.clock-container {
+  opacity: 0; 
+  transition: opacity var(--anim-base) ease-in-out;
+  margin: 5px 0; 
+  background: var(--c-surface); 
+  border-radius: 3px; 
+  padding: 5px 8px;
+  display: flex; 
+  align-items: center;
+}
+.clock-container.show { opacity: 1; }
+
+.clock-col { 
+  text-align: center; 
+  margin: 0 10px; 
+  min-width: 20px; 
+  position: relative; 
+}
+
+/* 🔥 Columna del reloj con hora:minutos:segundos */
+.clock-col.time-col {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: auto;
+}
+
+/* 🔥 Separador de reloj (:) */
+.clock-separator {
+  font-size: 1.2rem;
+  color: #666;
+  line-height: 1;
+}
+
+/* Separadores verticales discretos entre columnas de reloj */
+.clock-col:not(:last-child)::before,
+.clock-col:not(:last-child)::after {
+  content: ""; 
+  background: rgba(0,0,0,.3); 
+  height: 2px; 
+  width: 2px; 
+  border-radius: 50%;
+  display: block; 
+  position: absolute; 
+  right: -4px;
+}
+.clock-col:not(:last-child)::before { top: 40%; }
+.clock-col:not(:last-child)::after  { top: 60%; }
+
+/* Piezas del reloj (contenido desde variables CSS) */
+.clock-hours::before   { content: var(--timer-hours); }
+.clock-minutes::before { content: var(--timer-minutes); }
+.clock-seconds::before { content: var(--timer-seconds); }
+
+/* Ocultar columnas de hora/min/seg si NO es hoy */
+.hidden { display: none !important; }
+
+/* Texto de actividad (columna 2) */
+.activity-name { font-weight: bold; margin-bottom: 4px; }
+.activity-desc { font-size: .9rem; color: #555; line-height: 1.2; }
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+/* =========================================================
+   MODAL - DISEÃ‘O MODERNO Y CONSISTENTE
+   ========================================================= */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(3px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.modal.hidden { 
+  display: none; 
+}
+
+.modal-content {
+  position: relative;
+  background: #ffffff;
+  padding: 0;
+  border-radius: 12px;
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  border: 1px solid #e0e0e0;
+  margin: auto;
+}
+
+/* Header del modal con color gris */
+.modal-header {
+  background: #f5f5f5;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 20px 24px;
+  position: relative;
+}
+
+.modal-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0;
+  color: #333333;
+  letter-spacing: 0.3px;
+}
+
+/* BotÃ³n de cerrar moderno */
+.modal-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #666666;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background: #e0e0e0;
+  color: #333333;
+}
+
+/* Body del modal */
+.modal-body {
+  padding: 24px;
+}
+
+/* Nombre de la tarea (lectura) */
+.modal-readonly-name {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #333333;
+  margin-bottom: 14px;
+  line-height: 1.4;
+}
+
+/* DescripciÃ³n de la tarea (lectura) */
+.modal-readonly-desc {
+  font-size: 0.95rem;
+  color: #555555;
+  line-height: 1.6;
+  margin-bottom: 16px;
+  padding: 14px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border-left: 3px solid #999999;
+  min-height: 50px;
+}
+
+/* Panel de informaciÃ³n de la tarea */
+.task-info-panel {
+  background: #f5f5f5 !important;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 14px;
+  margin-top: 16px;
+}
+
+.task-info-panel strong {
+  color: #333333;
+  font-weight: 600;
+}
+
+.task-info-panel span {
+  color: #666666;
+}
+
+/* Acciones del modal */
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 16px 24px;
+  background: #fafafa;
+  border-top: 1px solid #e0e0e0;
+}
+
+.modal-actions button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#modal-close-btn {
+  background: #e0e0e0;
+  color: #555555;
+}
+
+#modal-close-btn:hover {
+  background: #d0d0d0;
+}
+
+#modal-complete-btn {
+  background: #666666;
+  color: white;
+}
+
+#modal-complete-btn:hover {
+  background: #555555;
+}
+
+#modal-complete-btn:active {
+  background: #444444;
+}
+
+/* ===== ESTILOS PARA MODO EDICIÃ“N (ADMIN) ===== */
+
+/* Modal con ediciÃ³n inline */
+.modal-content.inline-edit {
+  max-width: 540px;
+}
+
+/* Inputs editables en el modal */
+.modal-inline-input,
+.modal-inline-textarea {
+  font-family: inherit;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: #ffffff;
+  transition: all 0.2s ease;
+  resize: vertical;
+}
+
+.modal-inline-input {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #333333;
+  margin-bottom: 12px;
+}
+
+.modal-inline-textarea {
+  font-size: 0.95rem;
+  color: #555555;
+  min-height: 80px;
+  line-height: 1.6;
+}
+
+.modal-inline-input:focus,
+.modal-inline-textarea:focus {
+  outline: none;
+  border-color: #999999;
+  background: #fafafa;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.05);
+}
+
+/* BotÃ³n de guardar cambios */
+.modal-save-btn {
+  background: #28a745;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.modal-save-btn:hover {
+  background: #218838;
+}
+
+.modal-save-btn:active {
+  background: #1e7e34;
+}
+
+.modal-save-btn:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Indicador de cambios pendientes */
+.modal-save-btn[data-has-changes="true"] {
+  position: relative;
+}
+
+.modal-save-btn[data-has-changes="true"]::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 10px;
+  height: 10px;
+  background: #fd7e14;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* BotÃ³n extra completar */
+.modal-extra-complete {
+  background: #777777;
+  color: white;
+}
+
+.modal-extra-complete:hover {
+  background: #666666;
+}
+
+.modal-extra-complete:active {
+  background: #555555;
+}
+
+/* Animaciones de entrada para el modal */
+.modal:not(.hidden) .modal-content {
+  animation: modalFadeIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.85) translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Responsive para el modal */
+@media (max-width: 600px) {
+  .modal-content {
+    max-width: 95%;
+    margin: 20px;
+    border-radius: 12px;
+  }
+
+  .modal-content.inline-edit {
+    max-width: 95%;
+  }
+
+  .modal-header {
+    padding: 20px;
+  }
+
+  .modal-title {
+    font-size: 1.1rem;
+  }
+
+  .modal-body {
+    padding: 20px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px 20px;
+  }
+
+  .modal-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .modal-readonly-name {
+    font-size: 1.25rem;
+  }
+}
+
+/* ===== KPI compacto (igual al de la imagen) ===== */
+.task-progress-card{
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;                      /* espacio entre donut y panel lateral */
+  padding: 6px 0;                 /* Sin padding horizontal para estar mÃ¡s pegado */
+  margin-right: -10px;            /* Mover mÃ¡s a la derecha */
+}
+
+/* Toasts (notificaciones pequeÃ±as) */
+#toast-container-actividades .toast { min-width: 180px; max-width: 320px; }
+#toast-container-actividades .toast-success { background: #eaffd6; border: 1px solid #b7f08a; }
+#toast-container-actividades .toast-error { background: #ffdede; border: 1px solid #ff9a9a; }
+
+.task-progress-placeholder{
+  font-size: .95rem;
+  color: #666;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fafafa;
+  border: 1px dashed #ddd;
+  display: inline-block;
+}
+
+/* Donut reducido: usamos el SVG 120x120 pero lo escalamos */
+.task-progress-card .chart{
+  position: relative;
+  width: 72px;                    /* tamaÃ±o visual del contenedor */
+  height: 72px;
+  transform: scale(0.60);         /* reduce el donut (incluye grosores) */
+  transform-origin: left center;
+}
+
+/* Rotar el SVG del donut para que el inicio del trazo estÃ© en las 12 (90 grados) */
+.task-progress-card .chart .progress-ring {
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+/* Texto central del donut */
+.task-progress-card .chart .chart-text{
+  padding-left: 2.6em;
+  padding-top: 2.6em;
+  position: absolute; 
+  inset: 0;
+  display: flex; 
+  flex-direction: column;
+  align-items: center; 
+  justify-content: center;
+}
+#chartCountG   { font-weight: 700; font-size: 1.5rem; color: var(--c-done); } /* verde como completadas */
+#chartPercentG { font-size: 1rem; color: #111; }
+
+/* Colores del anillo (por si no hereda de otro css) */
+.progress-ring__track             { stroke: #eeeeee; stroke-width: 10; }
+/* Donut: completadas = verde, no completadas = rojo, extras = azul */
+.progress-ring__circle.completed     { stroke: var(--c-done); stroke-width: 18; }
+.progress-ring__circle.not-completed { stroke: var(--c-overdue); stroke-width: 18; }
+.progress-ring__circle.extras        { stroke: var(--c-extras); stroke-width: 18; }
+
+/* ===== Panel lateral (leyenda + separador + extras) ===== */
+.task-progress-card .side-panel{
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+}
+
+/* Leyenda (dos filas) */
+.task-progress-card .legend{
+  display: grid;
+  row-gap: 10px;
+}
+.task-progress-card .legend-item{
+  display: inline-flex; align-items: center; gap: 8px;
+  line-height: 1.15;
+  font-size: .92rem;               /* pequeÃ±o como en la imagen */
+  color: #111;
+}
+.task-progress-card .legend-color{
+  width: 12px; height: 12px; border-radius: 3px;
+  display: inline-block;
+}
+.task-progress-card .legend-color.completed     { background: var(--c-done); }
+.task-progress-card .legend-color.not-completed { background: var(--c-overdue); }
+.task-progress-card .legend-color.extras        { background: var(--c-extras); }
+.task-progress-card .legend-color.inprogress    { background: var(--c-inprogress); }
+.task-progress-card .legend-color.proxima       { background: var(--c-todo); }
+
+/* Separador vertical fino */
+.task-progress-card .v-sep{
+  width: 1px; height: 52px;
+  background: #cfcfcf;
+}
+
+/* Bloque de â€œTareas extra realizadasâ€ (tÃ­tulo arriba, nÃºmero abajo) */
+.task-progress-card .extras-panel{
+  display: grid;
+  row-gap: 6px;
+  text-align: center;
+}
+.task-progress-card .extras-item{
+  display: inline-flex; align-items: center; gap: 8px;
+  justify-content: center;
+  font-size: .92rem;
+}
+.task-progress-card .extras-count{
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+/* ===== MENÃšS CONTEXTUALES (CELL-MENU & PROFILE-MENU) ===== */
+
+/* Encabezado de trabajador clicable */
+.worker-header {
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.worker-header:hover {
+  filter: brightness(0.95);
+}
+
+/* MenÃº contextual base */
+.cell-menu,
+.profile-menu {
+  position: fixed;
+  z-index: 10000;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 6px;
+  min-width: 180px;
+  display: none;
+}
+
+.cell-menu.hidden,
+.profile-menu.pm-hidden {
+  display: none;
+}
+
+.cell-menu:not(.hidden),
+.profile-menu.show {
+  display: block;
+}
+
+/* Items del menÃº */
+.cell-menu .menu-item,
+.profile-menu .menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.9rem;
+  color: #333333;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.cell-menu .menu-item:hover,
+.profile-menu .menu-item:hover {
+  background: #f5f5f5;
+  color: #000000;
+}
+
+.cell-menu .menu-item:active,
+.profile-menu .menu-item:active {
+  background: #e8e8e8;
+}
+
+/* Iconos opcionales en items del menÃº */
+.cell-menu .menu-item::before,
+.profile-menu .menu-item::before {
+  font-size: 1.1rem;
+  width: 20px;
+  text-align: center;
+}
+
+.cell-menu .menu-item[data-action="info"]::before {
+  content: 'â„¹ï¸';
+}
+
+.cell-menu .menu-item[data-action="edit"]::before {
+  content: 'âœï¸';
+}
+
+.profile-menu .menu-item[data-action="emp-info"]::before {
+  content: 'ðŸ‘¤';
+}
+
+.profile-menu .menu-item[data-action="emp-create"]::before {
+  content: 'âž•';
+}
+
+.profile-menu .menu-item[data-action="emp-edit"]::before {
+  content: 'âš™ï¸';
+}
+
+
+/* =========================================================
+   MODAL DE CREACIÃ“N DE TAREA - DISEÃ‘O MODERNO
+   ========================================================= */
+
+#modal-create-task {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(3px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+#modal-create-task.hidden {
+  display: none;
+}
+
+#modal-create-task .form-scope-container {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 0;
+  width: 100%;
+  max-width: 460px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e0e0e0;
+  animation: modalFadeIn 0.3s ease-out;
+  margin: auto;
+}
+
+#modal-create-task h2,
+#modal-create-task h3 {
+  margin: 0;
+  padding: 14px 20px;
+  background: #f5f5f5;
+  border-bottom: 1px solid #e0e0e0;
+  color: #333333;
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.3px;
+}
+
+#modal-create-task form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 20px;
+}
+
+/* Grupos de inputs mejorados */
+#modal-create-task .inputGroup {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+#modal-create-task .inputGroup label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #555555;
+  margin-bottom: 2px;
+}
+
+#modal-create-task .inputGroup input,
+#modal-create-task .inputGroup textarea {
+  padding: 8px 10px;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #333333;
+  font-size: 0.85rem;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+#modal-create-task .inputGroup input:focus,
+#modal-create-task .inputGroup textarea:focus {
+  outline: none;
+  border-color: #999999;
+  background: #fafafa;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.05);
+}
+
+#modal-create-task .inputGroup textarea {
+  resize: vertical;
+  min-height: 55px;
+}
+
+/* Checkbox de dÃ­as - diseÃ±o de tarjetas */
+#modal-create-task .checkbox-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
+  gap: 6px;
+  margin-top: 4px;
+}
+
+#modal-create-task .dia-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  background: #fafafa;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  padding: 6px 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+#modal-create-task .dia-checkbox:hover {
+  background: #f0f0f0;
+  border-color: #b0b0b0;
+}
+
+#modal-create-task .dia-checkbox input:checked + .checkbox-label {
+  font-weight: 600;
+}
+
+#modal-create-task .dia-checkbox:has(input:checked) {
+  background: #666666;
+  border-color: #666666;
+  color: white;
+}
+
+#modal-create-task .dia-checkbox input {
+  display: none;
+}
+
+#modal-create-task .checkbox-label {
+  color: inherit;
+  font-weight: 500;
+}
+
+/* BotÃ³n de asignar tarea */
+#modal-create-task #asignarTareaBtn {
+  background: #666666;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 9px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 4px;
+}
+
+#modal-create-task #asignarTareaBtn:hover {
+  background: #555555;
+}
+
+#modal-create-task #asignarTareaBtn:active {
+  background: #444444;
+}
+
+#modal-create-task #asignarTareaBtn:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  #modal-create-task .form-scope-container {
+    max-width: 95%;
+    margin: 20px;
+  }
+
+  #modal-create-task h2,
+  #modal-create-task h3 {
+    padding: 20px;
+    font-size: 1.1rem;
+  }
+
+  #modal-create-task form {
+    padding: 20px;
+  }
+
+  #modal-create-task .checkbox-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 🔥 ESTILOS PARA MODAL DE PIN */
+.pin-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #3498db;
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+.pin-dot.filled {
+  background: #3498db;
+  transform: scale(1.1);
+}
+
+.pin-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.pin-key {
+  padding: 20px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.pin-key:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  background: linear-gradient(135deg, #2980b9, #3498db);
+}
+
+.pin-key:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.pin-key.pin-clear {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+.pin-key.pin-clear:hover {
+  background: linear-gradient(135deg, #c0392b, #e74c3c);
+}
+
+/* =========================================================
+   MODAL DE OPCIONES DEL TRABAJADOR - DISEÑO MODERNO
+   ========================================================= */
+
+/* Contenedor del modal de opciones */
+.worker-options-modal .modal-content {
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 16px;
+  padding: 0;
+  max-width: 380px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  border: none;
+  overflow: hidden;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Header del modal con gradiente */
+.worker-options-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px 24px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.worker-options-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.worker-options-close {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.worker-options-close:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-50%) scale(1.05);
+}
+
+/* Body con los botones */
+.worker-options-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Botones de opciones */
+.worker-option-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  padding: 14px 18px;
+  border: none;
+  background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #333333;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e8eaed;
+}
+
+.worker-option-btn:hover {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
+  border-color: transparent;
+}
+
+.worker-option-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+}
+
+/* Icono del botón */
+.worker-option-btn .option-icon {
+  font-size: 1.2rem;
+  width: 28px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Botón eliminar - estilo diferenciado */
+.worker-option-btn.btn-delete {
+  background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
+  color: #dc3545;
+  border-color: #f5c6cb;
+  margin-top: 6px;
+}
+
+.worker-option-btn.btn-delete:hover {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: #ffffff;
+  box-shadow: 0 6px 20px rgba(220, 53, 69, 0.35);
+  border-color: transparent;
+}
+
+/* Botón cerrar */
+.worker-option-btn.btn-close {
+  background: #f1f3f4;
+  border-color: #dadce0;
+  color: #5f6368;
+}
+
+.worker-option-btn.btn-close:hover {
+  background: #e8eaed;
+  color: #333333;
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* =========================================================
+   MODERNIZACIÓN DE MODALES - DISEÑO UNIFICADO
+   ========================================================= */
+
+/* Modal de Crear Tarea - Modernizado */
+#modal-create-task .form-scope-container {
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25) !important;
+  border: none !important;
+  overflow: hidden !important;
+}
+
+#modal-create-task h3 {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: #ffffff !important;
+  padding: 20px 24px !important;
+  border-bottom: none !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+#modal-create-task .inputGroup input,
+#modal-create-task .inputGroup textarea {
+  border: 2px solid #e8eaed !important;
+  border-radius: 10px !important;
+  padding: 12px 14px !important;
+}
+
+#modal-create-task .inputGroup input:focus,
+#modal-create-task .inputGroup textarea:focus {
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15) !important;
+}
+
+#modal-create-task .checkbox-container label {
+  border: 2px solid #e8eaed !important;
+  border-radius: 10px !important;
+  padding: 10px 12px !important;
+  transition: all 0.2s ease !important;
+}
+
+#modal-create-task .checkbox-container label:hover {
+  border-color: #667eea !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+#modal-create-task .checkbox-container label:has(input:checked) {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border-color: transparent !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35);
+}
+
+#modal-create-task #asignarTareaBtn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border-radius: 10px !important;
+  padding: 12px 24px !important;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35);
+  transition: all 0.2s ease !important;
+}
+
+#modal-create-task #asignarTareaBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.45) !important;
+}
+
+#modal-create-task #cancelarBtn {
+  background: #f1f3f4 !important;
+  border: 2px solid #dadce0 !important;
+  border-radius: 10px !important;
+  padding: 12px 20px !important;
+  color: #5f6368 !important;
+}
+
+#modal-create-task #cancelarBtn:hover {
+  background: #e8eaed !important;
+  color: #333333 !important;
+}
+
+/* Modal de Editar Tareas - Modernizado */
+#modal-edit-task .form-scope-container {
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25) !important;
+  border: none !important;
+  overflow: hidden !important;
+  width: 95% !important;
+  max-width: 1200px !important;
+}
+
+#modal-edit-task .user-editing-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border-bottom: none !important;
+  padding: 16px 24px !important;
+}
+
+#modal-edit-task .user-editing-header span {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+#modal-edit-task .user-editing-header strong {
+  color: #ffffff !important;
+}
+
+#modal-edit-task .modal-header {
+  background: #f8f9fa !important;
+  padding: 16px 24px !important;
+  border-bottom: 1px solid #e8eaed !important;
+}
+
+#modal-edit-task .modal-header h2 {
+  color: #333333 !important;
+  font-size: 1.1rem !important;
+}
+
+#modal-edit-task .day-section h3 {
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8eaed 100%) !important;
+  padding: 12px 16px !important;
+  border-radius: 10px !important;
+  margin: 16px 0 12px 0 !important;
+  font-size: 0.95rem !important;
+  color: #444444 !important;
+}
+
+#modal-edit-task .task-form {
+  background: #ffffff !important;
+  border: 2px solid #e8eaed !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
+  margin-bottom: 12px !important;
+}
+
+#modal-edit-task .task-form .field input {
+  border: 2px solid #e8eaed !important;
+  border-radius: 8px !important;
+  padding: 10px 12px !important;
+  transition: all 0.2s ease !important;
+}
+
+#modal-edit-task .task-form .field input:focus {
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15) !important;
+  outline: none !important;
+}
+
+#modal-edit-task .btn-save {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 10px !important;
+  padding: 10px 20px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35);
+}
+
+#modal-edit-task .btn-save:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.45) !important;
+}
+
+/* ============================================
+   LAYOUT HORIZONTAL DE COLUMNAS POR DÍA
+   Modal de Editar Tareas
+   ============================================ */
+
+/* Contenedor principal de días - FORZAR FLEX ROW */
+#modal-edit-task .modal-body > div,
+#modal-edit-task .modal-body > .days-grid-container,
+#modal-edit-task .days-grid-container,
+.days-grid-container {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  gap: 12px !important;
+  align-items: stretch !important;
+  min-width: max-content !important;
+  width: auto !important;
+}
+
+/* Columnas de días - COMPACTAS para 7 días */
+#modal-edit-task .day-column,
+.day-column {
+  display: block !important;
+  width: 180px !important;
+  min-width: 180px !important;
+  max-width: 180px !important;
+  flex: 0 0 180px !important;
+  flex-shrink: 0 !important;
+  flex-grow: 0 !important;
+  background: linear-gradient(145deg, #f8f9fa 0%, #ffffff 100%) !important;
+  border: 2px solid #e8eaed !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+
+/* Modal de Ver/Editar Información - Modernizado */
+#modal-info-edit-employee .modal-content,
+#modal-info-edit-employee > div {
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25) !important;
+  border: none !important;
+  overflow: hidden !important;
+}
+
+/* Botones X de cerrar modernizados para todos los modales */
+#modal-create-task #close-create-task-x,
+#modal-edit-task #close-edit-modal {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  width: 34px !important;
+  height: 34px !important;
+}
+
+#modal-create-task #close-create-task-x:hover,
+#modal-edit-task #close-edit-modal:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+  transform: scale(1.05) !important;
+}
+
+/* ============================================
+   MODAL DE EDITAR TAREA INDIVIDUAL - MODERNO
+   ============================================ */
+
+#task-modal .modal-content {
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%) !important;
+  border-radius: 16px !important;
+  padding: 0 !important;
+  max-width: 500px !important;
+  width: 95% !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25) !important;
+  border: none !important;
+  overflow: hidden !important;
+}
+
+#task-modal .modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border-bottom: none !important;
+  padding: 18px 24px !important;
+  position: relative !important;
+}
+
+#task-modal .modal-title {
+  font-size: 1.2rem !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;
+}
+
+#task-modal .modal-close {
+  position: absolute !important;
+  top: 14px !important;
+  right: 14px !important;
+  width: 34px !important;
+  height: 34px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 22px !important;
+  cursor: pointer !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: none !important;
+  border-radius: 8px !important;
+  color: #ffffff !important;
+  transition: all 0.2s ease !important;
+}
+
+#task-modal .modal-close:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+  transform: scale(1.05) !important;
+}
+
+#task-modal .modal-body {
+  padding: 20px 24px !important;
+  max-height: 60vh !important;
+  overflow-y: auto !important;
+}
+
+#task-modal .modal-actions {
+  display: flex !important;
+  gap: 10px !important;
+  justify-content: flex-end !important;
+  flex-wrap: wrap !important;
+  padding: 16px 24px !important;
+  background: linear-gradient(180deg, #f8f9fa 0%, #f0f1f3 100%) !important;
+  border-top: 1px solid #e8eaed !important;
+}
+
+#task-modal .modal-save-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: white !important;
+  padding: 10px 20px !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35) !important;
+}
+
+#task-modal .modal-save-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.45) !important;
+}
+
+#task-modal .modal-delete-btn {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%) !important;
+  color: white !important;
+  padding: 10px 20px !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 12px rgba(238, 90, 90, 0.35) !important;
+}
+
+#task-modal .modal-delete-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(238, 90, 90, 0.45) !important;
+}
+
+#task-modal #modal-close-btn {
+  background: #e8eaed !important;
+  color: #555 !important;
+  padding: 10px 20px !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+#task-modal #modal-close-btn:hover {
+  background: #dcdfe3 !important;
+}
+
+#task-modal #modal-complete-btn {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+  color: white !important;
+  padding: 10px 20px !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.35) !important;
+}
+
+#task-modal #modal-complete-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.45) !important;
+}
+
+/* Inputs del modal de edicion - Modernos */
+#task-modal .modal-inline-input,
+#task-modal .modal-inline-textarea {
+  font-family: inherit !important;
+  width: 100% !important;
+  padding: 12px 14px !important;
+  border: 2px solid #e8eaed !important;
+  border-radius: 10px !important;
+  font-size: 14px !important;
+  background: #ffffff !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+}
+
+#task-modal .modal-name-input {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: #333 !important;
+  margin-bottom: 12px !important;
+}
+
+#task-modal .modal-desc-textarea {
+  font-size: 14px !important;
+  color: #555 !important;
+  min-height: 80px !important;
+  line-height: 1.6 !important;
+  resize: vertical !important;
+}
+
+#task-modal .modal-inline-input:focus,
+#task-modal .modal-inline-textarea:focus {
+  outline: none !important;
+  border-color: #667eea !important;
+  background: #fafbff !important;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15) !important;
+}
+
+#task-modal .modal-field-label {
+  display: block !important;
+  margin-top: 16px !important;
+  margin-bottom: 6px !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  color: #444 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+#task-modal .task-info-panel {
+  background: linear-gradient(145deg, #f8f9fa 0%, #ffffff 100%) !important;
+  border: 2px solid #e8eaed !important;
+  border-radius: 10px !important;
+  padding: 0 !important;
+  margin-top: 10px !important;
+  overflow: hidden !important;
+}
+
+#task-modal .task-info-panel > div {
+  padding: 12px 14px !important;
+  background: transparent !important;
+  border: none !important;
+}
+

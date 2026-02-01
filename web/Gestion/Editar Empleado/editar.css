@@ -1,0 +1,41 @@
+/* 🔥 Estilos para el botón de subir imagen personalizado */
+.file-upload-label {
+  display: inline-block;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer !important;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 1;
+}
+
+.file-upload-label:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.file-upload-label:active {
+  transform: translateY(0);
+}
+
+.file-upload-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.file-upload-text::before {
+  content: '📷';
+  font-size: 1.2rem;
+}
