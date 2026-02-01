@@ -128,7 +128,7 @@ class HistorialManager:
     
     def crear_registro(self, nombre: str, descripcion: str, id_dueño: int, 
                       hora_ini: str, hora_fin: str, fecha: str, puntos: int, 
-                      estatus: str = "pendiente") -> Dict[str, Any]:
+                      estatus: str = "sinIniciar") -> Dict[str, Any]:
         """
         Crea un nuevo registro en el historial
         
