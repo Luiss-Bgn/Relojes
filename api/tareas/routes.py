@@ -7,6 +7,8 @@ from database.db_tareas import TareasManager
 from .models import TareasCrear, TareasActualizar
 import logging
 
+from .utils import construir_panel
+
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/tareas", tags=["Tareas"])
 db_manager = DatabaseManager("relojes.db")  # Inicializamos manager con la db real
@@ -119,6 +121,20 @@ async def eliminar_registro(registro_id: int):
     #Elimina una tarea de TAREAS
     resultado = tareas_manager.eliminar_registro(registro_id)
     
+    if resultado.get("status") != "success":
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail= resultado.get("mensaje")
+        )
+    
+    return resultado
+
+@router.get("/panel/{fecha}", response_model=dict)
+async def obtener_panel(fecha: str):
+    print("Obteniendo panel de tareas para fecha:", fecha)
+
+    resultado = await construir_panel(fecha)
+
     if resultado.get("status") != "success":
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
