@@ -10,10 +10,7 @@ db_manager = DatabaseManager("relojes.db")
 usuario_manager = UsuarioManager(db_manager)
 tareas_manager = TareasManager(db_manager)
 
-async def construir_panel(fecha):
-
-    # fecha = datetime.strptime(fecha_str, "%Y-%m-%d")
-    # ahora = datetime.now()
+async def construir_panel():
 
     dias = {
         "Monday": "Lunes",

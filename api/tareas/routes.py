@@ -19,6 +19,9 @@ tareas_manager = TareasManager(db_manager)
 async def crear_registro(registro: TareasCrear):
     #Crea un nuevo registro en el TAREAS
     #aqui se agregaran condiciones por cada endpoint
+    for fecha in registro.fecha:
+        print("Fecha recibida para la tarea:", fecha)
+        
     resultado = tareas_manager.crear_registro(
         nombre=registro.nombre,
         descripcion=registro.descripcion,
@@ -132,7 +135,7 @@ async def eliminar_registro(registro_id: int):
 
 @router.get("/panel/{fecha}", response_model=dict)
 async def obtener_panel(fecha: str):
-    print("Obteniendo panel de tareas para fecha:", fecha)
+    # print("Obteniendo panel de tareas para fecha:", fecha)
 
     resultado = await construir_panel(fecha)
 
