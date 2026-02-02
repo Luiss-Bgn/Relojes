@@ -15,6 +15,7 @@ class TareasBase(BaseModel):
     fecha: str
     puntos: int
     estatus: str
+    disponible_para_rol: Optional[str] = "todos"
 
 
 class TareasCrear(TareasBase):
@@ -29,11 +30,13 @@ class TareasActualizar(BaseModel):
     puntos: Optional[int] = None
     estatus: Optional[str] = None
     completadaPor: Optional[int] = None
+    disponible_para_rol: Optional[str] = None
 
 
 class TareasResponse(TareasBase):
     id: int
     completadaPor: Optional[int] = None
+    disponible_para_rol: Optional[str] = "todos"
 
     class Config:
         from_attributes = True

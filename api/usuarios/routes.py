@@ -25,7 +25,8 @@ async def crear_usuario(usuario: UsuarioCrear):
         contraseña=usuario.contraseña,
         pin=usuario.pin,
         rol=usuario.rol,
-        puesto=usuario.puesto
+        puesto=usuario.puesto,
+        imagen=usuario.imagen
     )
     
     if resultado.get("status") != "success":

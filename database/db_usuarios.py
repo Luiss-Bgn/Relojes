@@ -19,15 +19,15 @@ class UsuarioDAO:
         self.db = db_manager
     
     def crear(self, nombre: str, username: str, contraseña: str, pin: int, 
-              rol: str, puesto: str) -> Dict[str, Any]:
+              rol: str, puesto: str, imagen: Optional[str] = None) -> Dict[str, Any]:
         """Crea un nuevo usuario"""
         
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT INTO usuarios (nombre, username, contraseña, pin, rol, puesto)
-                VALUES (?, ?, ?, ?, ?, ?)
-            ''', (nombre, username, contraseña, pin, rol, puesto))
+                INSERT INTO usuarios (nombre, username, contraseña, pin, rol, puesto, imagen)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (nombre, username, contraseña, pin, rol, puesto, imagen))
             conn.commit()
             
             usuario_id = cursor.lastrowid
@@ -37,14 +37,15 @@ class UsuarioDAO:
                 'username': username,
                 'pin': pin,
                 'rol': rol,
-                'puesto': puesto
+                'puesto': puesto,
+                'imagen': imagen
             }
     
     def obtener_por_id(self, usuario_id: int) -> Optional[Dict[str, Any]]:
         """Obtiene un usuario por ID"""
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute('SELECT id, nombre, username, pin, rol, puesto FROM usuarios WHERE id = ?', 
+            cursor.execute('SELECT id, nombre, username, pin, rol, puesto, imagen FROM usuarios WHERE id = ?', 
                           (usuario_id,))
             row = cursor.fetchone()
             return dict(row) if row else None
@@ -53,7 +54,7 @@ class UsuarioDAO:
         """Obtiene un usuario por username"""
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute('SELECT id, nombre, username, pin, rol, puesto FROM usuarios WHERE username = ?', 
+            cursor.execute('SELECT id, nombre, username, pin, rol, puesto, imagen FROM usuarios WHERE username = ?', 
                           (username,))
             row = cursor.fetchone()
             return dict(row) if row else None
@@ -62,7 +63,7 @@ class UsuarioDAO:
         """Obtiene todos los usuarios"""
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute('SELECT id, nombre, username, pin, rol, puesto FROM usuarios')
+            cursor.execute('SELECT id, nombre, username, pin, rol, puesto, imagen FROM usuarios')
             rows = cursor.fetchall()
             return [dict(row) for row in rows]
     
@@ -71,7 +72,7 @@ class UsuarioDAO:
         campos = []
         valores = []
         
-        campos_permitidos = ['nombre', 'contraseña', 'pin', 'rol', 'puesto']
+        campos_permitidos = ['nombre', 'contraseña', 'pin', 'rol', 'puesto', 'imagen']
         
         for campo, valor in kwargs.items():
             if campo in campos_permitidos:
@@ -116,7 +117,7 @@ class UsuarioManager:
         self.usuario_dao = UsuarioDAO(db_manager)
     
     def crear_usuario(self, nombre: str, username: str, contraseña: str, 
-                     pin: int, rol: str, puesto: str) -> Dict[str, Any]:
+                     pin: int, rol: str, puesto: str, imagen: Optional[str] = None) -> Dict[str, Any]:
         """
         Creamos un nuevo usuario
         
@@ -127,6 +128,7 @@ class UsuarioManager:
             pin: PIN de acceso
             rol: Rol del usuario (admin, supervisor o empleado)
             puesto: Puesto
+            imagen: URL o path de la imagen del usuario (opcional)
         
         Returns:
             Dict con datos del usuario creado o error
@@ -143,7 +145,7 @@ class UsuarioManager:
                     "mensaje": "El username ya existe"
                 }
             
-            usuario = self.usuario_dao.crear(nombre, username, contraseña, pin, rol, puesto)
+            usuario = self.usuario_dao.crear(nombre, username, contraseña, pin, rol, puesto, imagen)
             
             logger.info(
                 f"✓ USUARIO CREADO - Username: {username} | ID: {usuario['id']} | "
