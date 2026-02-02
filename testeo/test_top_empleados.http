@@ -1,0 +1,56 @@
+### Test Top Empleados API
+@baseUrl = http://localhost:8001
+
+### 1. Top 10 empleados - Histórico general (sin filtros de fecha)
+GET {{baseUrl}}/historial/top-empleados
+Content-Type: application/json
+
+###
+
+### 2. Top 5 empleados - Histórico general
+GET {{baseUrl}}/historial/top-empleados?limite=5
+Content-Type: application/json
+
+###
+
+### 3. Top empleados - Quincena 2 de Enero 2026 (13 enero al 27 enero)
+GET {{baseUrl}}/historial/top-empleados?año=2026&mes=1&quincena=2
+Content-Type: application/json
+
+###
+
+### 4. Top empleados - Quincena 1 de Febrero 2026 (28 enero al 12 febrero)
+GET {{baseUrl}}/historial/top-empleados?año=2026&mes=2&quincena=1
+Content-Type: application/json
+
+###
+
+### 5. Top empleados - Quincena 2 de Febrero 2026 (13 febrero al 27 febrero)
+GET {{baseUrl}}/historial/top-empleados?año=2026&mes=2&quincena=2
+Content-Type: application/json
+
+###
+
+### 6. Top empleados - Rango personalizado (todo enero 2026)
+GET {{baseUrl}}/historial/top-empleados?fecha_inicio=2026-01-01&fecha_fin=2026-01-31
+Content-Type: application/json
+
+###
+
+### 7. Top 3 empleados - Última semana de enero
+GET {{baseUrl}}/historial/top-empleados?limite=3&fecha_inicio=2026-01-24&fecha_fin=2026-01-31
+Content-Type: application/json
+
+###
+
+### 8. Error: Mezclar quincena con fechas personalizadas (debe fallar)
+GET {{baseUrl}}/historial/top-empleados?año=2026&mes=1&quincena=2&fecha_inicio=2026-01-01
+Content-Type: application/json
+
+###
+
+### 9. Error: Falta parámetro de quincena (debe fallar)
+GET {{baseUrl}}/historial/top-empleados?año=2026&mes=1
+Content-Type: application/json
+
+###
