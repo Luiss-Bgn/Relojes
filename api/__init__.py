@@ -76,7 +76,7 @@ async def endpoints_info():
                 "por_dia": "GET /tareas/fecha/{dia_semana}",
                 "actualizar": "PUT /tareas/{id}",
                 "eliminar": "DELETE /tareas/{id}",
-                "panel": "GET /tareas/panel"
+                "panel": "GET /tareas/panel/obtener"
             }
         }
     }
