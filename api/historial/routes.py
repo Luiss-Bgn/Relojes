@@ -1,11 +1,12 @@
 """
 Rutas (endpoints) para historial
 """
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Query
 from database.database import DatabaseManager
 from database.db_historial import HistorialManager
 from .models import HistorialCrear, HistorialActualizar
 from .utils import enriquecer_historial
+from typing import Optional
 import logging
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,8 @@ async def crear_registro(registro: HistorialCrear):
         hora_fin=registro.hora_fin,
         fecha=registro.fecha,
         puntos=registro.puntos,
-        estatus=registro.estatus
+        estatus=registro.estatus,
+        disponible_para_rol=registro.disponible_para_rol
     )
     
     if resultado.get("status") != "success":
@@ -52,6 +54,142 @@ async def listar_historial():
     # Enriquecer cada registro
     if "registros" in resultado:
         resultado["registros"] = [enriquecer_historial(r) for r in resultado["registros"]]
+    
+    return resultado
+
+
+@router.get("/top-empleados", response_model=dict)
+async def obtener_top_empleados(
+    limite: int = Query(default=10, ge=1, le=100, description="Número de empleados a retornar"),
+    fecha_inicio: Optional[str] = Query(default=None, description="Fecha de inicio personalizada (YYYY-MM-DD)"),
+    fecha_fin: Optional[str] = Query(default=None, description="Fecha de fin personalizada (YYYY-MM-DD)"),
+    año: Optional[int] = Query(default=None, description="Año para filtro por quincena"),
+    mes: Optional[int] = Query(default=None, ge=1, le=12, description="Mes para filtro por quincena (1-12)"),
+    quincena: Optional[int] = Query(default=None, ge=1, le=2, description="Número de quincena (1 o 2)")
+):
+    """
+    Obtiene el top de empleados con mayor puntaje en tareas regulares
+    
+    Excluye tareas con estatus '5' o 'extra'
+    
+    **Modos de uso:**
+    
+    1. **Histórico general**: No enviar ningún parámetro de fecha
+       - Ejemplo: `/historial/top-empleados?limite=10`
+    
+    2. **Por quincena**: Enviar año, mes y quincena
+       - Ejemplo: `/historial/top-empleados?año=2026&mes=1&quincena=2`
+       - Q1 de cada mes: del día 28 del mes anterior al día 12 del mes actual
+       - Q2 de cada mes: del día 13 al día 27 del mes actual
+    
+    3. **Rango personalizado**: Enviar fecha_inicio y fecha_fin
+       - Ejemplo: `/historial/top-empleados?fecha_inicio=2026-01-01&fecha_fin=2026-01-31`
+    
+    **Parámetros:**
+    - limite: Número de empleados a retornar (default: 10, máx: 100)
+    - año: Año para filtro por quincena
+    - mes: Mes para filtro por quincena (1-12)
+    - quincena: Número de quincena (1 o 2)
+    - fecha_inicio: Fecha de inicio personalizada (formato YYYY-MM-DD)
+    - fecha_fin: Fecha de fin personalizada (formato YYYY-MM-DD)
+    """
+    # Validar que no se mezclen los modos de filtro
+    if (año or mes or quincena) and (fecha_inicio or fecha_fin):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se puede combinar filtro por quincena con rango de fechas personalizado"
+        )
+    
+    # Si se usa filtro por quincena, validar que estén todos los parámetros
+    if (año or mes or quincena) and not (año and mes and quincena):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Para filtrar por quincena se requieren los parámetros: año, mes y quincena"
+        )
+    
+    # Obtener top de empleados
+    resultado = historial_manager.obtener_top_empleados(
+        fecha_inicio=fecha_inicio,
+        fecha_fin=fecha_fin,
+        año=año,
+        mes=mes,
+        quincena=quincena,
+        limite=limite
+    )
+    
+    if resultado.get("status") != "success":
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=resultado.get("mensaje")
+        )
+    
+    return resultado
+
+
+@router.get("/top-extras", response_model=dict)
+async def obtener_top_extras(
+    limite: int = Query(default=10, ge=1, le=100, description="Número de empleados a retornar"),
+    fecha_inicio: Optional[str] = Query(default=None, description="Fecha de inicio personalizada (YYYY-MM-DD)"),
+    fecha_fin: Optional[str] = Query(default=None, description="Fecha de fin personalizada (YYYY-MM-DD)"),
+    año: Optional[int] = Query(default=None, description="Año para filtro por quincena"),
+    mes: Optional[int] = Query(default=None, ge=1, le=12, description="Mes para filtro por quincena (1-12)"),
+    quincena: Optional[int] = Query(default=None, ge=1, le=2, description="Número de quincena (1 o 2)")
+):
+    """
+    Obtiene el top de empleados con mayor puntaje en tareas EXTRAS
+    
+    Solo incluye tareas con estatus '5' o 'extra'
+    
+    **Modos de uso:**
+    
+    1. **Histórico general**: No enviar ningún parámetro de fecha
+       - Ejemplo: `/historial/top-extras?limite=10`
+    
+    2. **Por quincena**: Enviar año, mes y quincena
+       - Ejemplo: `/historial/top-extras?año=2026&mes=1&quincena=2`
+       - Q1 de cada mes: del día 28 del mes anterior al día 12 del mes actual
+       - Q2 de cada mes: del día 13 al día 27 del mes actual
+    
+    3. **Rango personalizado**: Enviar fecha_inicio y fecha_fin
+       - Ejemplo: `/historial/top-extras?fecha_inicio=2026-01-01&fecha_fin=2026-01-31`
+    
+    **Parámetros:**
+    - limite: Número de empleados a retornar (default: 10, máx: 100)
+    - año: Año para filtro por quincena
+    - mes: Mes para filtro por quincena (1-12)
+    - quincena: Número de quincena (1 o 2)
+    - fecha_inicio: Fecha de inicio personalizada (formato YYYY-MM-DD)
+    - fecha_fin: Fecha de fin personalizada (formato YYYY-MM-DD)
+    """
+    # Validar que no se mezclen los modos de filtro
+    if (año or mes or quincena) and (fecha_inicio or fecha_fin):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se puede combinar filtro por quincena con rango de fechas personalizado"
+        )
+    
+    # Si se usa filtro por quincena, validar que estén todos los parámetros
+    if (año or mes or quincena) and not (año and mes and quincena):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Para filtrar por quincena se requieren los parámetros: año, mes y quincena"
+        )
+    
+    # Obtener top de empleados en extras
+    resultado = historial_manager.obtener_top_extras(
+        fecha_inicio=fecha_inicio,
+        fecha_fin=fecha_fin,
+        año=año,
+        mes=mes,
+        quincena=quincena,
+        limite=limite
+    )
+    
+    if resultado.get("status") != "success":
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=resultado.get("mensaje")
+        )
     
     return resultado
 
@@ -139,3 +277,4 @@ async def eliminar_registro(registro_id: int):
         )
     
     return resultado
+

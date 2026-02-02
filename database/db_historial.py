@@ -2,7 +2,7 @@ import sqlite3
 from contextlib import contextmanager
 from typing import Optional, List, Dict, Any
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Configurar logging pa tener loghs
 logging.basicConfig(
@@ -20,15 +20,16 @@ class HistorialDAO:
     #crear nuevo reg en la tabla historial
     def crear(self, nombre: str, descripcion: str, id_dueño: int, 
               hora_ini: str, hora_fin: str, fecha: str, puntos: int, 
-              estatus: str, completadaPor: Optional[int] = None) -> Dict[str, Any]:
+              estatus: str, completadaPor: Optional[int] = None,
+              disponible_para_rol: str = "todos") -> Dict[str, Any]:
         
         
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT INTO historial (nombre, descripcion, id_dueño, hora_ini, hora_fin, fecha, puntos, estatus, completadaPor)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (nombre, descripcion, id_dueño, hora_ini, hora_fin, fecha, puntos, estatus, completadaPor))
+                INSERT INTO historial (nombre, descripcion, id_dueño, hora_ini, hora_fin, fecha, puntos, estatus, completadaPor, disponible_para_rol)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (nombre, descripcion, id_dueño, hora_ini, hora_fin, fecha, puntos, estatus, completadaPor, disponible_para_rol))
             conn.commit()
             
             historial_id = cursor.lastrowid
@@ -42,14 +43,15 @@ class HistorialDAO:
                 'fecha': fecha,
                 'puntos': puntos,
                 'estatus': estatus,
-                'completadaPor': completadaPor
+                'completadaPor': completadaPor,
+                'disponible_para_rol': disponible_para_rol
             }
     #get por id de la tarea en custion
     def obtener_por_id(self, historial_id: int) -> Optional[Dict[str, Any]]:
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                SELECT id, nombre, descripcion, id_dueño, hora_ini, hora_fin, fecha, puntos, estatus, completadaPor 
+                SELECT id, nombre, descripcion, id_dueño, hora_ini, hora_fin, fecha, puntos, estatus, completadaPor, disponible_para_rol 
                 FROM historial WHERE id = ?
             ''', (historial_id,))
             row = cursor.fetchone()
@@ -61,7 +63,7 @@ class HistorialDAO:
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                SELECT id, nombre, descripcion, id_dueño, hora_ini, hora_fin, fecha, puntos, estatus, completadaPor 
+                SELECT id, nombre, descripcion, id_dueño, hora_ini, hora_fin, fecha, puntos, estatus, completadaPor, disponible_para_rol 
                 FROM historial WHERE id_dueño = ?
                 ORDER BY fecha DESC
             ''', (usuario_id,))
@@ -73,7 +75,7 @@ class HistorialDAO:
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                SELECT id, nombre, descripcion, id_dueño, hora_ini, hora_fin, fecha, puntos, estatus, completadaPor 
+                SELECT id, nombre, descripcion, id_dueño, hora_ini, hora_fin, fecha, puntos, estatus, completadaPor, disponible_para_rol 
                 FROM historial WHERE fecha = ?
                 ORDER BY hora_ini
             ''', (fecha,))
@@ -84,7 +86,7 @@ class HistorialDAO:
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                SELECT id, nombre, descripcion, id_dueño, hora_ini, hora_fin, fecha, puntos, estatus, completadaPor 
+                SELECT id, nombre, descripcion, id_dueño, hora_ini, hora_fin, fecha, puntos, estatus, completadaPor, disponible_para_rol 
                 FROM historial
                 ORDER BY fecha DESC
             ''')
@@ -95,7 +97,7 @@ class HistorialDAO:
     def actualizar(self, historial_id: int, **kwargs) -> bool:
         campos = []
         valores = []
-        campos_permitidos = ['nombre', 'descripcion', 'hora_ini', 'hora_fin', 'puntos', 'estatus', 'completadaPor']
+        campos_permitidos = ['nombre', 'descripcion', 'hora_ini', 'hora_fin', 'puntos', 'estatus', 'completadaPor', 'disponible_para_rol']
         
         for campo, valor in kwargs.items():
             if campo in campos_permitidos:
@@ -120,6 +122,112 @@ class HistorialDAO:
             cursor.execute('DELETE FROM historial WHERE id = ?', (historial_id,))
             conn.commit()
             return cursor.rowcount > 0
+    
+    def obtener_top_empleados(self, fecha_inicio: Optional[str] = None, 
+                               fecha_fin: Optional[str] = None, 
+                               limite: int = 10) -> List[Dict[str, Any]]:
+        """
+        Obtiene el top de empleados con mayor puntaje en tareas regulares
+        Excluye tareas con estatus '5' o 'extra'
+        
+        Args:
+            fecha_inicio: Fecha de inicio del rango (formato YYYY-MM-DD)
+            fecha_fin: Fecha de fin del rango (formato YYYY-MM-DD)
+            limite: Número de empleados a retornar (default 10)
+        
+        Returns:
+            Lista de empleados con su puntaje total
+        """
+        with self.db.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Query base - suma puntos por empleado, excluyendo estatus 5 y 'extra'
+            query = '''
+                SELECT 
+                    h.completadaPor as usuario_id,
+                    SUM(h.puntos) as total_puntos,
+                    COUNT(*) as total_tareas
+                FROM historial h
+                WHERE h.completadaPor IS NOT NULL
+                AND h.estatus NOT IN ('5', 'extra')
+            '''
+            
+            params = []
+            
+            # Agregar filtros de fecha si se proporcionan
+            if fecha_inicio and fecha_fin:
+                query += ' AND h.fecha BETWEEN ? AND ?'
+                params.extend([fecha_inicio, fecha_fin])
+            elif fecha_inicio:
+                query += ' AND h.fecha >= ?'
+                params.append(fecha_inicio)
+            elif fecha_fin:
+                query += ' AND h.fecha <= ?'
+                params.append(fecha_fin)
+            
+            query += '''
+                GROUP BY h.completadaPor
+                ORDER BY total_puntos DESC
+                LIMIT ?
+            '''
+            params.append(limite)
+            
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
+            return [dict(row) for row in rows]
+    
+    def obtener_top_extras(self, fecha_inicio: Optional[str] = None, 
+                           fecha_fin: Optional[str] = None, 
+                           limite: int = 10) -> List[Dict[str, Any]]:
+        """
+        Obtiene el top de empleados con mayor puntaje en tareas extras
+        Solo incluye tareas con estatus '5' o 'extra'
+        
+        Args:
+            fecha_inicio: Fecha de inicio del rango (formato YYYY-MM-DD)
+            fecha_fin: Fecha de fin del rango (formato YYYY-MM-DD)
+            limite: Número de empleados a retornar (default 10)
+        
+        Returns:
+            Lista de empleados con su puntaje total en extras
+        """
+        with self.db.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Query base - suma puntos por empleado, solo estatus 5 o 'extra'
+            query = '''
+                SELECT 
+                    h.completadaPor as usuario_id,
+                    SUM(h.puntos) as total_puntos,
+                    COUNT(*) as total_tareas
+                FROM historial h
+                WHERE h.completadaPor IS NOT NULL
+                AND h.estatus IN ('5', 'extra')
+            '''
+            
+            params = []
+            
+            # Agregar filtros de fecha si se proporcionan
+            if fecha_inicio and fecha_fin:
+                query += ' AND h.fecha BETWEEN ? AND ?'
+                params.extend([fecha_inicio, fecha_fin])
+            elif fecha_inicio:
+                query += ' AND h.fecha >= ?'
+                params.append(fecha_inicio)
+            elif fecha_fin:
+                query += ' AND h.fecha <= ?'
+                params.append(fecha_fin)
+            
+            query += '''
+                GROUP BY h.completadaPor
+                ORDER BY total_puntos DESC
+                LIMIT ?
+            '''
+            params.append(limite)
+            
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
+            return [dict(row) for row in rows]
 
 #Logica de negocio, aqui en un futuro debemos agregar validaciones y condiciones, asi como funciones automaticas para el cambio estatyus 
 class HistorialManager:
@@ -128,7 +236,7 @@ class HistorialManager:
     
     def crear_registro(self, nombre: str, descripcion: str, id_dueño: int, 
                       hora_ini: str, hora_fin: str, fecha: str, puntos: int, 
-                      estatus: str = "sinIniciar") -> Dict[str, Any]:
+                      estatus: str = "sinIniciar", disponible_para_rol: str = "todos") -> Dict[str, Any]:
         """
         Crea un nuevo registro en el historial
         
@@ -141,6 +249,7 @@ class HistorialManager:
             fecha: Fecha (YYYY-MM-DD)
             puntos: Puntos asociados
             estatus: Estado (pendiente, completada, cancelada)
+            disponible_para_rol: Filtro de roles para tareas extras ('todos', 'mismo_rol')
         
         Returns:
             Dict con datos del registro creado o error
@@ -148,7 +257,7 @@ class HistorialManager:
         try:
             registro = self.historial_dao.crear(
                 nombre, descripcion, id_dueño, hora_ini, hora_fin, 
-                fecha, puntos, estatus
+                fecha, puntos, estatus, disponible_para_rol=disponible_para_rol
             )
             
             logger.info(
@@ -299,3 +408,193 @@ class HistorialManager:
                 "status": "error",
                 "mensaje": f"Error al eliminar registro: {str(e)}"
             }
+    
+    def calcular_fechas_quincena(self, año: int, mes: int, quincena: int) -> Dict[str, str]:
+        """
+        Calcula las fechas de inicio y fin de una quincena específica
+        
+        Patrón de quincenas:
+        - Q1 de cada mes: del día 28 del mes anterior al día 12 del mes actual
+        - Q2 de cada mes: del día 13 al día 27 del mes actual
+        
+        Args:
+            año: Año de la quincena
+            mes: Mes de la quincena (1-12)
+            quincena: Número de quincena (1 o 2)
+        
+        Returns:
+            Dict con fecha_inicio y fecha_fin en formato YYYY-MM-DD
+        """
+        try:
+            if quincena == 1:
+                # Q1: del 28 del mes anterior al 12 del mes actual
+                if mes == 1:
+                    fecha_inicio = datetime(año - 1, 12, 28).strftime('%Y-%m-%d')
+                else:
+                    fecha_inicio = datetime(año, mes - 1, 28).strftime('%Y-%m-%d')
+                fecha_fin = datetime(año, mes, 12).strftime('%Y-%m-%d')
+            elif quincena == 2:
+                # Q2: del 13 al 27 del mes actual
+                fecha_inicio = datetime(año, mes, 13).strftime('%Y-%m-%d')
+                fecha_fin = datetime(año, mes, 27).strftime('%Y-%m-%d')
+            else:
+                raise ValueError("La quincena debe ser 1 o 2")
+            
+            return {
+                "fecha_inicio": fecha_inicio,
+                "fecha_fin": fecha_fin
+            }
+        except Exception as e:
+            logger.error(f"ERROR AL CALCULAR FECHAS DE QUINCENA: {str(e)}")
+            raise
+    
+    def obtener_top_empleados(self, fecha_inicio: Optional[str] = None, 
+                              fecha_fin: Optional[str] = None,
+                              año: Optional[int] = None,
+                              mes: Optional[int] = None,
+                              quincena: Optional[int] = None,
+                              limite: int = 10) -> Dict[str, Any]:
+        """
+        Obtiene el top de empleados con mayor puntaje en tareas regulares
+        
+        Args:
+            fecha_inicio: Fecha de inicio personalizada (formato YYYY-MM-DD)
+            fecha_fin: Fecha de fin personalizada (formato YYYY-MM-DD)
+            año: Año para filtro por quincena
+            mes: Mes para filtro por quincena (1-12)
+            quincena: Número de quincena (1 o 2)
+            limite: Número de empleados a retornar (default 10)
+        
+        Returns:
+            Dict con status, top de empleados y metadatos
+        """
+        try:
+            # Si se proporciona año, mes y quincena, calcular fechas
+            if año and mes and quincena:
+                fechas = self.calcular_fechas_quincena(año, mes, quincena)
+                fecha_inicio = fechas['fecha_inicio']
+                fecha_fin = fechas['fecha_fin']
+                periodo = f"Q{quincena} {self._nombre_mes(mes)} {año}"
+            elif fecha_inicio and fecha_fin:
+                periodo = f"{fecha_inicio} a {fecha_fin}"
+            else:
+                periodo = "Histórico general"
+            
+            # Obtener top de empleados
+            top_empleados = self.historial_dao.obtener_top_empleados(
+                fecha_inicio=fecha_inicio,
+                fecha_fin=fecha_fin,
+                limite=limite
+            )
+            
+            # Enriquecer con información del usuario
+            from database.db_usuarios import UsuarioDAO
+            usuario_dao = UsuarioDAO(self.historial_dao.db)
+            
+            empleados_enriquecidos = []
+            for empleado in top_empleados:
+                usuario_info = usuario_dao.obtener_por_id(empleado['usuario_id'])
+                if usuario_info:
+                    empleados_enriquecidos.append({
+                        'posicion': len(empleados_enriquecidos) + 1,
+                        'usuario_id': empleado['usuario_id'],
+                        'nombre': usuario_info.get('nombre', 'Desconocido'),
+                        'total_puntos': empleado['total_puntos'],
+                        'total_tareas': empleado['total_tareas']
+                    })
+            
+            logger.info(f"TOP EMPLEADOS OBTENIDO - Periodo: {periodo} | Total: {len(empleados_enriquecidos)}")
+            return {
+                "status": "success",
+                "periodo": periodo,
+                "fecha_inicio": fecha_inicio,
+                "fecha_fin": fecha_fin,
+                "top_empleados": empleados_enriquecidos,
+                "total": len(empleados_enriquecidos)
+            }
+        except Exception as e:
+            logger.error(f"ERROR AL OBTENER TOP EMPLEADOS: {str(e)}")
+            return {
+                "status": "error",
+                "mensaje": f"Error al obtener top empleados: {str(e)}"
+            }
+    
+    def _nombre_mes(self, mes: int) -> str:
+        """Retorna el nombre del mes en español"""
+        meses = [
+            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+        ]
+        return meses[mes - 1] if 1 <= mes <= 12 else str(mes)
+    
+    def obtener_top_extras(self, fecha_inicio: Optional[str] = None, 
+                           fecha_fin: Optional[str] = None,
+                           año: Optional[int] = None,
+                           mes: Optional[int] = None,
+                           quincena: Optional[int] = None,
+                           limite: int = 10) -> Dict[str, Any]:
+        """
+        Obtiene el top de empleados con mayor puntaje en tareas extras
+        
+        Args:
+            fecha_inicio: Fecha de inicio personalizada (formato YYYY-MM-DD)
+            fecha_fin: Fecha de fin personalizada (formato YYYY-MM-DD)
+            año: Año para filtro por quincena
+            mes: Mes para filtro por quincena (1-12)
+            quincena: Número de quincena (1 o 2)
+            limite: Número de empleados a retornar (default 10)
+        
+        Returns:
+            Dict con status, top de empleados en extras y metadatos
+        """
+        try:
+            # Si se proporciona año, mes y quincena, calcular fechas
+            if año and mes and quincena:
+                fechas = self.calcular_fechas_quincena(año, mes, quincena)
+                fecha_inicio = fechas['fecha_inicio']
+                fecha_fin = fechas['fecha_fin']
+                periodo = f"Q{quincena} {self._nombre_mes(mes)} {año}"
+            elif fecha_inicio and fecha_fin:
+                periodo = f"{fecha_inicio} a {fecha_fin}"
+            else:
+                periodo = "Histórico general"
+            
+            # Obtener top de empleados en extras
+            top_extras = self.historial_dao.obtener_top_extras(
+                fecha_inicio=fecha_inicio,
+                fecha_fin=fecha_fin,
+                limite=limite
+            )
+            
+            # Enriquecer con información del usuario
+            from database.db_usuarios import UsuarioDAO
+            usuario_dao = UsuarioDAO(self.historial_dao.db)
+            
+            empleados_enriquecidos = []
+            for empleado in top_extras:
+                usuario_info = usuario_dao.obtener_por_id(empleado['usuario_id'])
+                if usuario_info:
+                    empleados_enriquecidos.append({
+                        'posicion': len(empleados_enriquecidos) + 1,
+                        'usuario_id': empleado['usuario_id'],
+                        'nombre': usuario_info.get('nombre', 'Desconocido'),
+                        'total_puntos': empleado['total_puntos'],
+                        'total_tareas': empleado['total_tareas']
+                    })
+            
+            logger.info(f"TOP EXTRAS OBTENIDO - Periodo: {periodo} | Total: {len(empleados_enriquecidos)}")
+            return {
+                "status": "success",
+                "periodo": periodo,
+                "fecha_inicio": fecha_inicio,
+                "fecha_fin": fecha_fin,
+                "top_extras": empleados_enriquecidos,
+                "total": len(empleados_enriquecidos)
+            }
+        except Exception as e:
+            logger.error(f"ERROR AL OBTENER TOP EXTRAS: {str(e)}")
+            return {
+                "status": "error",
+                "mensaje": f"Error al obtener top extras: {str(e)}"
+            }
+

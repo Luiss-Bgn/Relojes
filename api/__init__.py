@@ -75,7 +75,8 @@ async def endpoints_info():
                 "por_usuario": "GET /tareas/usuario/{usuario_id}",
                 "por_dia": "GET /tareas/fecha/{dia_semana}",
                 "actualizar": "PUT /tareas/{id}",
-                "eliminar": "DELETE /tareas/{id}"
+                "eliminar": "DELETE /tareas/{id}",
+                "panel": "GET /tareas/panel/{fecha}"
             }
         }
     }
@@ -121,6 +122,15 @@ async def top_view():
 async def login_view():
     """Sirve la página de Login"""
     return FileResponse(WEB_DIR / "Login" / "login.html")
+
+
+@app.get("/logout", tags=["Vistas"], include_in_schema=False)
+async def logout_view():
+    """
+    Endpoint de logout - redirige a login
+    El localStorage ya fue limpiado en el frontend
+    """
+    return RedirectResponse(url="/login")
 
 
 # Montar archivos estáticos (CSS, JS, imágenes)
