@@ -133,7 +133,7 @@ async def eliminar_registro(registro_id: int):
     
     return resultado
 
-@router.get("/panel/{fecha}", response_model=dict)
+@router.get("/panel", response_model=dict)
 async def obtener_panel(fecha: str):
     # print("Obteniendo panel de tareas para fecha:", fecha)
 
