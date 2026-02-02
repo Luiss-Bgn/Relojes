@@ -14,6 +14,17 @@ async def construir_panel(fecha):
 
     # fecha = datetime.strptime(fecha_str, "%Y-%m-%d")
     # ahora = datetime.now()
+
+    dias = {
+        "Monday": "Lunes",
+        "Tuesday": "Martes",
+        "Wednesday": "Miércoles",
+        "Thursday": "Jueves",
+        "Friday": "Viernes",
+        "Saturday": "Sábado",
+        "Sunday": "Domingo"
+    }
+
     try:
         empleados = usuario_manager.listar_usuarios()
 
@@ -25,8 +36,7 @@ async def construir_panel(fecha):
                 "nombre": emp['nombre'],
                 "username": emp['username'],
                 "pin": emp['pin'],
-                "role": emp['rol'],
-                "role_dp": emp['rol'],
+                "rol": emp['rol'],
                 "puesto": emp['puesto'],
                 "imagen": emp.get('imagen', None),
                 "tareas_asignadas": {}
@@ -34,17 +44,16 @@ async def construir_panel(fecha):
             lista_tareas = {}
             print(tareas_manager.listar_por_usuario(int(emp['id'])))
             for tarea in tareas_manager.listar_por_usuario(int(emp['id']))['registros']:
-                lista_tareas.setdefault(tarea['fecha'], []).append({
+                fecha = datetime.strptime(tarea['fecha'], "%d-%m-%y")
+                lista_tareas.setdefault(dias[fecha.strftime("%A")], []).append({
                     "id": tarea['id'],
                     "nombre": tarea['nombre'],
                     "descripcion": tarea['descripcion'],
-                    "id_dueño": id(emp['id']),
-                    "hora": tarea['hora_ini'],
+                    "id_dueño": int(emp['id']),
+                    "hora_ini": tarea['hora_ini'],
                     "hora_fin": tarea['hora_fin'],
-                    "puntaje": tarea['puntos'],
+                    "puntos": tarea['puntos'],
                     "estatus": tarea['estatus'],
-                    "esExtra": False,
-                    "tareaOriginalId": tarea['id'],
                     "fecha": tarea['fecha'],
                     "disponible_para_rol": "todos",
                     "completadaPor": tarea.get('completadaPor', None)
