@@ -20,15 +20,16 @@ class HistorialDAO:
     #crear nuevo reg en la tabla historial
     def crear(self, nombre: str, descripcion: str, id_dueño: int, 
               hora_ini: str, hora_fin: str, fecha: str, puntos: int, 
-              estatus: str, completadaPor: Optional[int] = None) -> Dict[str, Any]:
+              estatus: str, completadaPor: Optional[int] = None,
+              disponible_para_rol: str = "todos") -> Dict[str, Any]:
         
         
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT INTO historial (nombre, descripcion, id_dueño, hora_ini, hora_fin, fecha, puntos, estatus, completadaPor)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (nombre, descripcion, id_dueño, hora_ini, hora_fin, fecha, puntos, estatus, completadaPor))
+                INSERT INTO historial (nombre, descripcion, id_dueño, hora_ini, hora_fin, fecha, puntos, estatus, completadaPor, disponible_para_rol)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (nombre, descripcion, id_dueño, hora_ini, hora_fin, fecha, puntos, estatus, completadaPor, disponible_para_rol))
             conn.commit()
             
             historial_id = cursor.lastrowid
@@ -42,14 +43,15 @@ class HistorialDAO:
                 'fecha': fecha,
                 'puntos': puntos,
                 'estatus': estatus,
-                'completadaPor': completadaPor
+                'completadaPor': completadaPor,
+                'disponible_para_rol': disponible_para_rol
             }
     #get por id de la tarea en custion
     def obtener_por_id(self, historial_id: int) -> Optional[Dict[str, Any]]:
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                SELECT id, nombre, descripcion, id_dueño, hora_ini, hora_fin, fecha, puntos, estatus, completadaPor 
+                SELECT id, nombre, descripcion, id_dueño, hora_ini, hora_fin, fecha, puntos, estatus, completadaPor, disponible_para_rol 
                 FROM historial WHERE id = ?
             ''', (historial_id,))
             row = cursor.fetchone()
@@ -61,7 +63,7 @@ class HistorialDAO:
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                SELECT id, nombre, descripcion, id_dueño, hora_ini, hora_fin, fecha, puntos, estatus, completadaPor 
+                SELECT id, nombre, descripcion, id_dueño, hora_ini, hora_fin, fecha, puntos, estatus, completadaPor, disponible_para_rol 
                 FROM historial WHERE id_dueño = ?
                 ORDER BY fecha DESC
             ''', (usuario_id,))
@@ -73,7 +75,7 @@ class HistorialDAO:
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                SELECT id, nombre, descripcion, id_dueño, hora_ini, hora_fin, fecha, puntos, estatus, completadaPor 
+                SELECT id, nombre, descripcion, id_dueño, hora_ini, hora_fin, fecha, puntos, estatus, completadaPor, disponible_para_rol 
                 FROM historial WHERE fecha = ?
                 ORDER BY hora_ini
             ''', (fecha,))
@@ -84,7 +86,7 @@ class HistorialDAO:
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                SELECT id, nombre, descripcion, id_dueño, hora_ini, hora_fin, fecha, puntos, estatus, completadaPor 
+                SELECT id, nombre, descripcion, id_dueño, hora_ini, hora_fin, fecha, puntos, estatus, completadaPor, disponible_para_rol 
                 FROM historial
                 ORDER BY fecha DESC
             ''')
@@ -95,7 +97,7 @@ class HistorialDAO:
     def actualizar(self, historial_id: int, **kwargs) -> bool:
         campos = []
         valores = []
-        campos_permitidos = ['nombre', 'descripcion', 'hora_ini', 'hora_fin', 'puntos', 'estatus', 'completadaPor']
+        campos_permitidos = ['nombre', 'descripcion', 'hora_ini', 'hora_fin', 'puntos', 'estatus', 'completadaPor', 'disponible_para_rol']
         
         for campo, valor in kwargs.items():
             if campo in campos_permitidos:
@@ -128,7 +130,7 @@ class HistorialManager:
     
     def crear_registro(self, nombre: str, descripcion: str, id_dueño: int, 
                       hora_ini: str, hora_fin: str, fecha: str, puntos: int, 
-                      estatus: str = "sinIniciar") -> Dict[str, Any]:
+                      estatus: str = "sinIniciar", disponible_para_rol: str = "todos") -> Dict[str, Any]:
         """
         Crea un nuevo registro en el historial
         
@@ -141,6 +143,7 @@ class HistorialManager:
             fecha: Fecha (YYYY-MM-DD)
             puntos: Puntos asociados
             estatus: Estado (pendiente, completada, cancelada)
+            disponible_para_rol: Filtro de roles para tareas extras ('todos', 'mismo_rol')
         
         Returns:
             Dict con datos del registro creado o error
@@ -148,7 +151,7 @@ class HistorialManager:
         try:
             registro = self.historial_dao.crear(
                 nombre, descripcion, id_dueño, hora_ini, hora_fin, 
-                fecha, puntos, estatus
+                fecha, puntos, estatus, disponible_para_rol=disponible_para_rol
             )
             
             logger.info(
