@@ -26,7 +26,8 @@ async def crear_registro(registro: HistorialCrear):
         hora_fin=registro.hora_fin,
         fecha=registro.fecha,
         puntos=registro.puntos,
-        estatus=registro.estatus
+        estatus=registro.estatus,
+        disponible_para_rol=registro.disponible_para_rol
     )
     
     if resultado.get("status") != "success":

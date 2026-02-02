@@ -59,6 +59,7 @@ class DatabaseManager:
                 pin INTEGER NOT NULL,
                 rol TEXT NOT NULL,
                 puesto TEXT NOT NULL,
+                imagen TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
@@ -76,6 +77,7 @@ class DatabaseManager:
                 puntos INTEGER,
                 estatus TEXT,
                 completadaPor INTEGER,
+                disponible_para_rol TEXT DEFAULT 'todos',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (id_dueño) REFERENCES usuarios(id),
                 FOREIGN KEY (completadaPor) REFERENCES usuarios(id)
@@ -95,6 +97,7 @@ class DatabaseManager:
                 puntos INTEGER,
                 estatus TEXT,
                 completadaPor INTEGER,
+                disponible_para_rol TEXT DEFAULT 'todos',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (id_dueño) REFERENCES usuarios(id),
                 FOREIGN KEY (completadaPor) REFERENCES usuarios(id)

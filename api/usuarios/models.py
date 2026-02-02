@@ -12,6 +12,7 @@ class UsuarioBase(BaseModel):
     pin: int
     rol: str
     puesto: str
+    imagen: Optional[str] = None
 
 
 class UsuarioCrear(UsuarioBase):
@@ -24,6 +25,7 @@ class UsuarioActualizar(BaseModel):
     pin: Optional[int] = None
     rol: Optional[str] = None
     puesto: Optional[str] = None
+    imagen: Optional[str] = None
 
 
 class UsuarioResponse(UsuarioBase):
