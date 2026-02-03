@@ -102,6 +102,7 @@ async def listar_por_fecha(fecha: str):
 
 @router.put("/{registro_id}", response_model=dict)
 async def actualizar_registro(registro_id: int, datos: TareasActualizar):
+    print("datos recibidos para actualizar tarea:", datos)
     #Update de tarea
     #Filtra los campos que vienen
     datos_dict = {k: v for k, v in datos.dict().items() if v is not None}
@@ -119,6 +120,7 @@ async def actualizar_registro(registro_id: int, datos: TareasActualizar):
             detail=resultado.get("mensaje")
         )
     
+    print("Resultado de la actualización:", resultado)
     return resultado
 
 

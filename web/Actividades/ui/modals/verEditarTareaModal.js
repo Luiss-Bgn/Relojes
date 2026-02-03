@@ -9,6 +9,7 @@ const STATUS_LABELS = {
 };
 
 export const showVerEditarTareaModal = async (tarea, userRole, targetEmployeeId = null) => {
+  console.log('Mostrando modal para tarea:', tarea);
   // Crear overlay
   const overlay = document.createElement('div');
   overlay.id = 'ver-editar-tarea-overlay';
@@ -40,7 +41,7 @@ export const showVerEditarTareaModal = async (tarea, userRole, targetEmployeeId 
   const isOriginalOwner = tarea.empleadoId === currentUserId && isExtraAvailable;
 
   // Determinar permisos
-  const canEdit = (userRole === 'admin' || userRole === 'supervisor') && !isExtraAvailable;
+  const canEdit = (userRole === 'admin' || userRole === 'supervisor');
   const canComplete = tarea.estatus === 'en_progreso' && 
                       (userRole === 'admin' || userRole === 'supervisor' || userRole === 'empleado');
   const canCompleteExtra = isExtraAvailable && targetEmployeeId && !isOriginalOwner;
@@ -72,6 +73,48 @@ function fillTaskData(modal, tarea) {
   modal.querySelector('#tarea-hora-ini').value = tarea.hora_ini || '';
   modal.querySelector('#tarea-hora-fin').value = tarea.hora_fin || '';
   modal.querySelector('#tarea-puntos').value = tarea.puntos || 1;
+  
+  // Configurar el campo disponible_para con resaltado
+  const disponibleParaSelect = modal.querySelector('#tarea-disponible-para');
+  
+  // Determinar el rol actual - priorizar el valor de la tarea
+  let currentRole = 'todos'; // valor por defecto
+  if (tarea.disponible_para_rol && tarea.disponible_para_rol !== '') {
+    currentRole = tarea.disponible_para_rol;
+  } else if (tarea.disponible_para && tarea.disponible_para !== '') {
+    currentRole = tarea.disponible_para;
+  }
+  
+  console.log('disponible_para_rol:', tarea.disponible_para_rol);
+  console.log('disponible_para:', tarea.disponible_para);
+  console.log('Rol seleccionado final:', currentRole);
+  
+  // Validar que el valor existe en las opciones del select
+  const validRoles = ['todos', 'admin', 'empleado', 'supervisor'];
+  if (!validRoles.includes(currentRole)) {
+    currentRole = 'todos';
+  }
+  
+  disponibleParaSelect.value = currentRole;
+  
+  // Aplicar estilo de resaltado según el rol actual
+  const roleColors = {
+    'todos': '#e8f5e8',      // Verde claro
+    'admin': '#fff2e8',      // Naranja claro  
+    'empleado': '#e8f0ff',   // Azul claro
+    'supervisor': '#f0e8ff'  // Morado claro
+  };
+  
+  const roleLabels = {
+    'todos': '🌟',
+    'admin': '👑', 
+    'empleado': '👤',
+    'supervisor': '👔'
+  };
+  
+  disponibleParaSelect.style.backgroundColor = roleColors[currentRole] || roleColors['todos'];
+  disponibleParaSelect.style.fontWeight = '600';
+  
   modal.querySelector('#tarea-estado').value = STATUS_LABELS[tarea.estatus] || tarea.estatus;
 
   // Colorear el campo de estado según el estado
@@ -87,6 +130,7 @@ function fillTaskData(modal, tarea) {
 
 function setupPermissions(modal, canEdit, canComplete, canCompleteExtra, tarea, showEditButton, isOriginalOwner) {
   const inputs = modal.querySelectorAll('.form-input:not(#tarea-estado), .form-textarea');
+  const disponibleParaSelect = modal.querySelector('#tarea-disponible-para');
   const btnGuardar = modal.querySelector('#btn-guardar-cambios-tarea');
   const btnEliminar = modal.querySelector('#btn-eliminar-tarea');
   const btnCompletar = modal.querySelector('#btn-completar-tarea');
@@ -94,7 +138,14 @@ function setupPermissions(modal, canEdit, canComplete, canCompleteExtra, tarea, 
 
   if (canEdit) {
     // Quitar readonly para permitir edición
-    inputs.forEach(input => input.removeAttribute('readonly'));
+    inputs.forEach(input => {
+      if (input.id !== 'tarea-disponible-para') {
+        input.removeAttribute('readonly');
+      }
+    });
+    // Habilitar el select de disponible_para
+    disponibleParaSelect.removeAttribute('disabled');
+    
     btnGuardar.style.display = 'flex';
     btnEliminar.style.display = 'flex';
     
@@ -189,6 +240,20 @@ function setupEventListeners(modal, overlay, tarea, canEdit, canComplete, canCom
   closeBtn.addEventListener('click', () => overlay.remove());
   cerrarBtn.addEventListener('click', () => overlay.remove());
 
+  // Event listener para cambiar el color del select dinámicamente
+  const disponibleParaSelect = modal.querySelector('#tarea-disponible-para');
+  const roleColors = {
+    'todos': '#e8f5e8',      // Verde claro
+    'admin': '#fff2e8',      // Naranja claro  
+    'empleado': '#e8f0ff',   // Azul claro
+    'supervisor': '#f0e8ff'  // Morado claro
+  };
+  
+  disponibleParaSelect.addEventListener('change', (e) => {
+    const selectedRole = e.target.value;
+    disponibleParaSelect.style.backgroundColor = roleColors[selectedRole] || roleColors['todos'];
+  });
+
   // Guardar cambios
   if (canEdit) {
     const btnGuardar = modal.querySelector('#btn-guardar-cambios-tarea');
@@ -236,18 +301,21 @@ async function saveTaskChanges(modal, tareaId, overlay) {
   const hora_ini = modal.querySelector('#tarea-hora-ini').value;
   const hora_fin = modal.querySelector('#tarea-hora-fin').value;
   const puntos = parseInt(modal.querySelector('#tarea-puntos').value);
+  const disponible_para_rol = modal.querySelector('#tarea-disponible-para').value;
 
   if (!nombre || !descripcion || !hora_ini || !puntos) {
     showToast('Por favor completa todos los campos obligatorios', 'warning');
     return;
   }
 
+  console.log("disponible para rol:", disponible_para_rol);
   const tareaData = {
     nombre,
     descripcion,
     hora_ini,
     hora_fin: hora_fin || null,
-    puntos
+    puntos,
+    disponible_para_rol
   };
 
   try {

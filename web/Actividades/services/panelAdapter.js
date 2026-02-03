@@ -90,7 +90,10 @@ export const adaptPanel = (payload, preferredDate) => {
     id: p.id,
     nombre: p.nombre,
     puesto: p.puesto,
-    imagen: p.imagen
+    imagen: p.imagen,
+    rol: p.rol,
+    pin: p.pin,
+    usuario: p.username,
   }));
 
   const rows = [];
@@ -106,7 +109,8 @@ export const adaptPanel = (payload, preferredDate) => {
         descripcion: task.descripcion || task.detalle || "",
         puntos: task.puntos ?? task.valor ?? 0,
         estatus: statusFromTask(task),
-        completadaPor: task.completadaPor
+        completadaPor: task.completadaPor,
+        disponible_para_rol: task.disponible_para_rol || 'todos'
       });
     });
   });

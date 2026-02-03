@@ -57,6 +57,7 @@ const renderHead = (employees) => {
     tr.appendChild(th);
   });
 
+  console.log("Renderizando encabezado para empleados:", employees);
   employees.forEach((emp) => {
     const th = document.createElement("th");
     const wrapper = document.createElement("div");
@@ -141,6 +142,7 @@ const renderRows = (rows, employees) => {
   bodyEl.innerHTML = "";
   emptyEl.hidden = rows.length > 0;
 
+  console.log("Renderizando filas:", rows);
   // Obtener hora actual
   const now = new Date();
   const currentHour = now.getHours();
@@ -370,6 +372,7 @@ function openTaskModal(row, clickedEmployeeId = null) {
   const userRole = loggedUser ? loggedUser.role : 'empleado';
   const userId = parseInt(localStorage.getItem('userId')) || null;
 
+  console.log('Abriendo modal para tarea:', row, 'Rol usuario:', userRole, 'Empleado clickeado:', clickedEmployeeId);
   // Construir objeto de tarea con todos los datos necesarios
   const tarea = {
     id: row.tareaId,
@@ -380,7 +383,8 @@ function openTaskModal(row, clickedEmployeeId = null) {
     puntos: row.puntos,
     estatus: row.estatus,
     completadaPor: row.completadaPor,
-    empleadoId: row.empleadoId
+    empleadoId: row.empleadoId,
+    disponible_para_rol: row.disponible_para_rol || 'todos'
   };
 
   // Determinar el employeeId para completar la tarea extra
