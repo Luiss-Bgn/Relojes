@@ -1,0 +1,206 @@
+.table-wrapper {
+  margin-top: 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  overflow: auto;
+  position: relative;
+}
+
+#panel-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+#panel-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #f7f8fb;
+  border-bottom: 2px solid var(--border);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+#panel-table th,
+#panel-table td {
+  padding: 10px;
+  text-align: center;
+  border: 1px solid var(--border);
+  vertical-align: middle;
+  overflow: hidden;
+}
+
+#panel-table th { 
+  font-weight: 700; 
+  color: var(--gray-900);
+  height: 120px;
+}
+
+/* Columna HORARIO - Sticky */
+#panel-table thead th:nth-child(1),
+#panel-table tbody td:nth-child(1) {
+  width: 130px;
+  min-width: 130px;
+  max-width: 130px;
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  background: #f7f8fb;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+  font-weight: 600;
+  text-align: center;
+  padding: 10px 12px;
+}
+
+#panel-table tbody td:nth-child(1) {
+  background: white;
+}
+
+/* Columna ACTIVIDAD - Sticky */
+#panel-table thead th:nth-child(2),
+#panel-table tbody td:nth-child(2) {
+  width: 50ch;
+  min-width: 50ch;
+  max-width: 50ch;
+  position: sticky;
+  left: 110px;
+  z-index: 5;
+  background: #f7f8fb;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+  text-align: left;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+#panel-table thead th:nth-child(2) {
+  text-align: center;
+}
+
+#panel-table tbody td:nth-child(2) {
+  background: white;
+  text-align: left;
+}
+
+.activity-title { 
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: #1f1f1f;
+}
+
+.activity-desc {
+  color: #8b92a6;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+/* Columna PUNTOS - Sticky */
+#panel-table thead th:nth-child(3),
+#panel-table tbody td:nth-child(3) {
+  width: 90px !important;
+  min-width: 90px !important;
+  max-width: 90px !important;
+  position: sticky;
+  left: calc(110px + 50ch);
+  z-index: 5;
+  background: #f7f8fb;
+  text-align: center;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+  font-weight: 600;
+  padding: 10px 12px;
+}
+
+#panel-table tbody td:nth-child(3) {
+  background: white;
+}
+
+/* Columnas de EMPLEADOS (desde la 4ta) */
+#panel-table thead th:nth-child(n+4),
+#panel-table tbody td:nth-child(n+4) {
+  min-width: 180px;
+  width: auto;
+}
+
+/* Header de empleado - Layout vertical */
+.employee-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 4px;
+  white-space: normal;
+}
+
+.avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #d9dcff, #f2e9ff);
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  color: var(--accent);
+  overflow: hidden;
+  border: 3px solid #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.emp-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1f1f1f;
+  line-height: 1.2;
+  text-align: center;
+  max-width: 100%;
+  word-wrap: break-word;
+}
+
+.emp-role {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.2;
+  text-align: center;
+  max-width: 100%;
+}
+
+/* Celdas de estado de empleados */
+.employee-cell {
+  text-align: center;
+  font-weight: 700;
+  font-size: 12px;
+  color: #fff;
+  padding: 8px 6px;
+  border-radius: 8px;
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 6px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  color: #2f2a2a;
+  font-weight: 700;
+}
+
+.cell-sin_iniciar { background: var(--sin-iniciar); }
+.cell-en_progreso { background: var(--en-progreso); }
+.cell-completada { background: var(--completada); }
+.cell-vencida { background: var(--vencida); }
+.cell-extra { background: var(--extra); }
+
+.empty-cell { color: #c4c7d1; text-align: center; }
+
+@media (max-width: 900px) {
+  .table-wrapper { border-radius: 12px; }
+}
