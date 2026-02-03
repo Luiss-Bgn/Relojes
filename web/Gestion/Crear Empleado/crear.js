@@ -447,14 +447,32 @@ export async function enviarFormularioEmpleado() {
   }
 
   try {
-    const response = await fetch("/empleados", {
+    // 🔥 PREPARAR DATOS EN FORMATO JSON (no FormData)
+    const datosUsuario = {
+      nombre: formData.get("nombre"),
+      username: formData.get("username"),
+      contraseña: formData.get("password"), // Se envía como "contraseña" en el JSON
+      pin: parseInt(formData.get("pin")), // Convertir a número
+      rol: formData.get("role"),
+      puesto: formData.get("puesto")
+    };
+    
+    // 🔥 Si hay imagen, se captura por separado (no incluirla en el JSON principal si se decide no enviarla)
+    const imagenFile = form.querySelector('#imagen')?.files?.[0];
+    
+    console.log("📤 Enviando datos a /usuarios:", datosUsuario);
+    
+    const response = await fetch("/usuarios", {
       method: "POST",
-      body: formData
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(datosUsuario)
     });
 
     if (response.ok) {
       const resultado = await response.json();
-      console.log("Empleado creado:", resultado);
+      console.log("✅ Empleado creado:", resultado);
       
       // 🔥 ÉXITO: Botón verde y mensaje
       if (submitBtn) {
@@ -464,7 +482,7 @@ export async function enviarFormularioEmpleado() {
       }
       
       if (validationSpan) {
-        validationSpan.textContent = '✅ ' + (resultado.message || 'Empleado creado exitosamente');
+        validationSpan.textContent = '✅ Empleado creado exitosamente';
         validationSpan.style.color = '#4caf50';
       }
       
@@ -474,11 +492,11 @@ export async function enviarFormularioEmpleado() {
       }, 2000);
     } else {
       const error = await response.json();
-      console.error("Error del servidor:", error);
+      console.error("❌ Error del servidor:", error);
       
       // 🔥 ERROR: Mostrar mensaje debajo del username
       if (validationSpan) {
-        validationSpan.textContent = '❌ ' + (error.error || error.detail || 'Error al crear empleado');
+        validationSpan.textContent = '❌ ' + (error.detail || error.error || 'Error al crear empleado');
         validationSpan.style.color = '#ff0000';
       }
       
@@ -490,10 +508,10 @@ export async function enviarFormularioEmpleado() {
       }
     }
   } catch (error) {
-    console.error("Error al enviar:", error);
+    console.error("❌ Error al enviar:", error);
     
     if (validationSpan) {
-      validationSpan.textContent = '❌ Error de conexión';
+      validationSpan.textContent = '❌ Error de conexión: ' + error.message;
       validationSpan.style.color = '#ff0000';
     }
     

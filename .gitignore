@@ -1,6 +1,9 @@
 # Ignorar el pycache y archivos compilados de Python
 __pycache__/
 *.py[cod]
+*.db
+*.sqlite
+*.sqlite3
 
 .vscode/
 firmware/.pio
