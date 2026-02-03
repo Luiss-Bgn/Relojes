@@ -141,15 +141,17 @@ class HistorialDAO:
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
             
-            # Query base - suma puntos por empleado, excluyendo estatus 5 y 'extra'
+            # Query mejorado - incluye completadas, vencidas y porcentaje
             query = '''
                 SELECT 
-                    h.completadaPor as usuario_id,
-                    SUM(h.puntos) as total_puntos,
-                    COUNT(*) as total_tareas
+                    h.id_dueño as usuario_id,
+                    SUM(CASE WHEN h.estatus IN ('3', 'completada', 'completado') THEN h.puntos ELSE 0 END) as total_puntos,
+                    COUNT(*) as total_tareas,
+                    SUM(CASE WHEN h.estatus IN ('3', 'completada', 'completado') THEN 1 ELSE 0 END) as completadas,
+                    SUM(CASE WHEN h.estatus IN ('1', '2', '4', 'sin iniciar', 'en progreso', 'no completado', 'vencida') THEN 1 ELSE 0 END) as vencidas
                 FROM historial h
-                WHERE h.completadaPor IS NOT NULL
-                AND h.estatus NOT IN ('5', 'extra')
+                WHERE h.id_dueño IS NOT NULL
+                AND h.estatus NOT IN ('5', 'extra', 'extras')
             '''
             
             params = []
@@ -166,7 +168,8 @@ class HistorialDAO:
                 params.append(fecha_fin)
             
             query += '''
-                GROUP BY h.completadaPor
+                GROUP BY h.id_dueño
+                HAVING total_tareas > 0
                 ORDER BY total_puntos DESC
                 LIMIT ?
             '''
@@ -174,7 +177,18 @@ class HistorialDAO:
             
             cursor.execute(query, params)
             rows = cursor.fetchall()
-            return [dict(row) for row in rows]
+            
+            # Calcular porcentaje para cada empleado
+            resultados = []
+            for row in rows:
+                data = dict(row)
+                total = data.get('total_tareas', 0)
+                completadas = data.get('completadas', 0)
+                porcentaje = (completadas / total * 100) if total > 0 else 0
+                data['porcentaje'] = round(porcentaje, 1)
+                resultados.append(data)
+            
+            return resultados
     
     def obtener_top_extras(self, fecha_inicio: Optional[str] = None, 
                            fecha_fin: Optional[str] = None, 
@@ -499,8 +513,12 @@ class HistorialManager:
                         'posicion': len(empleados_enriquecidos) + 1,
                         'usuario_id': empleado['usuario_id'],
                         'nombre': usuario_info.get('nombre', 'Desconocido'),
+                        'puesto': usuario_info.get('puesto', 'N/A'),
                         'total_puntos': empleado['total_puntos'],
-                        'total_tareas': empleado['total_tareas']
+                        'total_tareas': empleado['total_tareas'],
+                        'completadas': empleado.get('completadas', 0),
+                        'vencidas': empleado.get('vencidas', 0),
+                        'porcentaje': empleado.get('porcentaje', 0)
                     })
             
             logger.info(f"TOP EMPLEADOS OBTENIDO - Periodo: {periodo} | Total: {len(empleados_enriquecidos)}")
