@@ -133,3 +133,16 @@ async def autenticar(datos: AutenticarRequest):
         )
     
     return resultado
+
+@router.get("/pin/{pin}", response_model=dict)
+async def buscar_usuario_por_pin(pin: str):
+    
+    resultado = usuario_manager.buscar_por_pin(pin)
+    
+    if not resultado or resultado.get("status") != "success":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail= resultado.get("mensaje")
+        )
+    
+    return resultado

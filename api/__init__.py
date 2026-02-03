@@ -54,6 +54,7 @@ async def endpoints_info():
             "usuarios": {
                 "crear": "POST /usuarios",
                 "listar": "GET /usuarios",
+                "buscar_pin": "GET /usuarios/pin/{pin}",
                 "obtener": "GET /usuarios/{id}",
                 "actualizar": "PUT /usuarios/{id}",
                 "eliminar": "DELETE /usuarios/{id}",

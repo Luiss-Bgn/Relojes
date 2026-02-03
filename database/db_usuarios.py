@@ -58,6 +58,15 @@ class UsuarioDAO:
                           (username,))
             row = cursor.fetchone()
             return dict(row) if row else None
+        
+    def obtener_por_pin(self, pin: int) -> Optional[Dict[str, Any]]:
+        """Obtiene un usuario por PIN"""
+        with self.db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT id, nombre, username, pin, rol, puesto, imagen FROM usuarios WHERE pin = ?', 
+                          (pin,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
     
     def obtener_todos(self) -> List[Dict[str, Any]]:
         """Obtiene todos los usuarios"""
@@ -292,4 +301,28 @@ class UsuarioManager:
             return {
                 "status": "error",
                 "mensaje": f"Error en autenticación: {str(e)}"
+            }
+        
+
+    def buscar_por_pin(self, pin: str) -> Dict[str, Any]:
+        try:
+            usuario = self.usuario_dao.obtener_por_pin(pin)
+            
+            if usuario:
+                logger.info(f"✓ USUARIO OBTENIDO - PIN: {pin}")
+                return {
+                    "status": "success",
+                    "usuario": usuario
+                }
+            else:
+                logger.warning(f"✗ USUARIO NO ENCONTRADO - PIN: {pin}")
+                return {
+                    "status": "error",
+                    "mensaje": "Usuario no encontrado"
+                }
+        except Exception as e:
+            logger.error(f"✗ ERROR AL OBTENER USUARIO: {str(e)}")
+            return {
+                "status": "error",
+                "mensaje": f"Error al obtener usuario: {str(e)}"
             }
