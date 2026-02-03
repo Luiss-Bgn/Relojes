@@ -6,6 +6,7 @@ class Manager():
             "usuarios": funciones.Usuarios(),
             "relojes": funciones.Relojes(),
             "tareas": funciones.Tareas(),
+            "extras": funciones.Extras(),
         }
 
     async def AnalizarMensaje(self, data, uuid):

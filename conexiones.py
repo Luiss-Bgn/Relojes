@@ -3,11 +3,14 @@ class Conexiones():
     def __init__(self):
         self.conexiones_activas = {}
 
-    def agregar_conexion(self, uuid, conexion):
+    def agregar_conexion(self, uuid, conexion, tipo):
         if uuid in self.conexiones_activas:
             print("La conexión ya existe.")
             return
-        self.conexiones_activas[uuid] = conexion
+        self.conexiones_activas[uuid] = {
+            "ws": conexion,
+            "tipo": tipo
+        }
         print(f"Conexión agregada. Total conexiones: {len(self.conexiones_activas)}")
 
     def eliminar_conexion(self, uuid):
@@ -21,5 +24,12 @@ class Conexiones():
     def obtener_conexion(self, uuid):
         """Obtiene una conexión específica por UUID"""
         return self.conexiones_activas.get(uuid)
+    
+    def obtener_web(self):
+        """Obtiene todas las conexiones web"""
+        return [c["ws"] for c in self.conexiones_activas.values() if c["tipo"] == "web"]
+    
+    def obtener_relojes(self):
+        return [c["ws"] for c in self.conexiones_activas.values() if c["tipo"] == "arduino"]
     
 conexiones = Conexiones()

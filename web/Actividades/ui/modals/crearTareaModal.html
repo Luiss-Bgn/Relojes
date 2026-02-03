@@ -1,0 +1,102 @@
+<div class="modal-header">
+  <h2 class="modal-title">
+    <span>➕</span>
+    Crear Nueva Tarea
+  </h2>
+  <p class="modal-subtitle">Para: <span id="modal-employee-name"></span></p>
+  <button class="close-modal-btn" id="close-crear-tarea">✕</button>
+</div>
+<div class="modal-body">
+  <form id="crear-tarea-form">
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">
+          Nombre de la tarea <span class="required">*</span>
+        </label>
+        <input type="text" class="form-input" name="nombre" required placeholder="Ej: Revisar inventario">
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">
+          Descripción <span class="required">*</span>
+        </label>
+        <input type="text" class="form-input" name="descripcion" required placeholder="Breve descripción">
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">
+          Hora de inicio <span class="required">*</span>
+        </label>
+        <input type="time" class="form-input" name="hora_ini" required>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">
+          Hora fin <span class="optional">(opcional)</span>
+        </label>
+        <input type="time" class="form-input" name="hora_fin">
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">
+          Puntaje (1-10) <span class="required">*</span>
+        </label>
+        <input type="number" class="form-input" name="puntos" required min="1" max="10" placeholder="5">
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">
+          🔒 Disponible para <span class="required">*</span>
+        </label>
+        <select class="form-select" name="disponible_para_rol" required>
+          <option value="todos">👥 Todos los empleados</option>
+          <option value="empleado">👤 Solo Empleados</option>
+          <option value="supervisor">👨‍💼 Supervisores</option>
+          <option value="admin">👨‍💻 Administradores</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="days-section">
+      <label class="form-label">
+        📅 Días de la Semana <span class="required">*</span>
+      </label>
+      <div class="days-grid">
+        <input type="checkbox" id="day-dom" name="dias" value="Domingo" class="day-checkbox">
+        <label for="day-dom" class="day-label">Dom</label>
+        
+        <input type="checkbox" id="day-lun" name="dias" value="Lunes" class="day-checkbox">
+        <label for="day-lun" class="day-label">Lun</label>
+        
+        <input type="checkbox" id="day-mar" name="dias" value="Martes" class="day-checkbox">
+        <label for="day-mar" class="day-label">Mar</label>
+        
+        <input type="checkbox" id="day-mie" name="dias" value="Miércoles" class="day-checkbox">
+        <label for="day-mie" class="day-label">Mié</label>
+        
+        <input type="checkbox" id="day-jue" name="dias" value="Jueves" class="day-checkbox">
+        <label for="day-jue" class="day-label">Jue</label>
+        
+        <input type="checkbox" id="day-vie" name="dias" value="Viernes" class="day-checkbox">
+        <label for="day-vie" class="day-label">Vie</label>
+        
+        <input type="checkbox" id="day-sab" name="dias" value="Sábado" class="day-checkbox">
+        <label for="day-sab" class="day-label">Sáb</label>
+      </div>
+    </div>
+    
+    <div class="warning-box">
+      * Campos obligatorios. Si la tarea expira, aparecerá como 'extra' solo a quienes selecciones
+    </div>
+    
+    <div class="modal-actions">
+      <button type="button" class="btn btn-cancel" id="cancel-crear-tarea">
+        Cancelar
+      </button>
+      <button type="submit" class="btn btn-submit">
+        <span>✓</span>
+        Asignar Tarea
+      </button>
+    </div>
+  </form>
+</div>

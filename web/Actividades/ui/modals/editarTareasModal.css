@@ -1,0 +1,230 @@
+/* Editar Tareas Modal Overlay */
+.editar-tareas-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+  overflow-y: auto;
+}
+
+/* Editar Tareas Modal */
+.editar-tareas-modal {
+  background: #ffffff;
+  border-radius: 16px;
+  width: 95%;
+  max-width: 1200px;
+  max-height: 90vh;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  animation: modalSlideIn 0.3s ease;
+  margin: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Tabs Container */
+.tabs-container {
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid #e3e5ed;
+  padding: 0 32px;
+  overflow-x: auto;
+  flex-wrap: nowrap;
+}
+
+.tab-btn {
+  padding: 14px 24px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #6c7080;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.tab-btn:hover {
+  color: #667eea;
+  background: #f7f7fb;
+}
+
+.tab-btn.active {
+  color: #667eea;
+  border-bottom-color: #667eea;
+  background: #f7f7fb;
+}
+
+/* Tasks Content */
+.tasks-content {
+  padding: 24px 32px;
+  overflow-y: auto;
+  max-height: calc(90vh - 200px);
+}
+
+.no-tasks-message {
+  text-align: center;
+  padding: 48px 20px;
+  color: #6c7080;
+  font-size: 16px;
+}
+
+.no-tasks-message p {
+  margin: 0;
+}
+
+/* Task Grid */
+.tasks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 20px;
+}
+
+/* Task Card */
+.task-card {
+  background: #f7f7fb;
+  border: 2px solid #e3e5ed;
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s;
+}
+
+.task-card:hover {
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+}
+
+.task-field {
+  margin-bottom: 16px;
+}
+
+.task-field:last-of-type {
+  margin-bottom: 20px;
+}
+
+.task-field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6c7080;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.task-field-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid #e3e5ed;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background: white;
+  transition: all 0.2s;
+}
+
+.task-field-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.task-field-input[type="number"] {
+  width: 100px;
+}
+
+.task-field-input[type="time"] {
+  width: 140px;
+}
+
+/* Task Actions */
+.task-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.btn-save-task {
+  flex: 1;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: "Space Grotesk", sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-save-task:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
+}
+
+.btn-delete-task {
+  flex: 1;
+  padding: 12px 20px;
+  background: #ef6c73;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: "Space Grotesk", sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-delete-task:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(239, 108, 115, 0.3);
+  background: #e63946;
+}
+
+/* Time Fields Container */
+.time-fields {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.time-field-group {
+  flex: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tasks-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .tabs-container {
+    padding: 0 16px;
+  }
+  
+  .tasks-content {
+    padding: 16px;
+  }
+  
+  .tab-btn {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+}

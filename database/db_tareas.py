@@ -275,6 +275,34 @@ class TareasManager:
                 "status": "error",
                 "mensaje": f"Error al actualizar registro: {str(e)}"
             }
+        
+    def actualizar_varios(self, tareas: list[dict]) -> Dict[str, Any]:
+        actualizados = []
+        errores = []
+
+        for tarea in tareas:
+            tarea_id = tarea.get("id")
+            if not tarea_id:
+                errores.append({"tarea": tarea, "error": "Sin ID"})
+                continue
+
+            # Quitamos campos que no se deben actualizar
+            datos_actualizar = tarea.copy()
+            datos_actualizar.pop("id", None)
+
+            resultado = self.actualizar_registro(tarea_id, **datos_actualizar)
+
+            if resultado["status"] == "success":
+                actualizados.append(tarea_id)
+            else:
+                errores.append({"id": tarea_id, "error": resultado["mensaje"]})
+
+        return {
+            "status": "success" if not errores else "partial",
+            "actualizados": actualizados,
+            "errores": errores
+        }
+
     
     def eliminar_registro(self, tareas_semana_id: int) -> Dict[str, Any]:
         """Elimina un registro del tareas_semana"""

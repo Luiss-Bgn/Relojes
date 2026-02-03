@@ -1,0 +1,232 @@
+.ver-editar-tarea-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(4px);
+}
+
+.ver-editar-tarea-modal {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+.ver-editar-tarea-modal .modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 24px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 16px 16px 0 0;
+}
+
+.ver-editar-tarea-modal .modal-header h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.ver-editar-tarea-modal .close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 28px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  line-height: 1;
+  padding: 0;
+}
+
+.ver-editar-tarea-modal .close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.ver-editar-tarea-modal .modal-body {
+  padding: 28px;
+}
+
+.ver-editar-tarea-modal .form-field {
+  margin-bottom: 20px;
+}
+
+.ver-editar-tarea-modal .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.ver-editar-tarea-modal .form-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.ver-editar-tarea-modal .form-input,
+.ver-editar-tarea-modal .form-textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e3e5ed;
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.2s;
+  background: #f7f7fb;
+  color: #2f2a5d;
+  font-weight: 600;
+}
+
+.ver-editar-tarea-modal .form-input:focus,
+.ver-editar-tarea-modal .form-textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  background: white;
+}
+
+.ver-editar-tarea-modal .form-input:read-only,
+.ver-editar-tarea-modal .form-textarea:read-only {
+  background: #f7f7fb;
+  cursor: default;
+}
+
+.ver-editar-tarea-modal .form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.ver-editar-tarea-modal .form-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: #fff8e1;
+  border-left: 3px solid #ffd54f;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #6b5b00;
+  margin-bottom: 20px;
+}
+
+.ver-editar-tarea-modal .warning-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: #fff3e0;
+  border-left: 3px solid #ff9800;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #e65100;
+  margin-top: 16px;
+  font-weight: 600;
+}
+
+.ver-editar-tarea-modal .estado-display {
+  font-weight: 700;
+  text-align: center;
+}
+
+.ver-editar-tarea-modal .modal-footer {
+  padding: 20px 28px;
+  background: #f7f7fb;
+  border-top: 1px solid #e3e5ed;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  border-radius: 0 0 16px 16px;
+}
+
+.ver-editar-tarea-modal .btn-primary,
+.ver-editar-tarea-modal .btn-secondary,
+.ver-editar-tarea-modal .btn-danger,
+.ver-editar-tarea-modal .btn-success {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.ver-editar-tarea-modal .btn-primary {
+  background: #667eea;
+  color: white;
+}
+
+.ver-editar-tarea-modal .btn-primary:hover {
+  background: #5568d3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.ver-editar-tarea-modal .btn-success {
+  background: #10b981;
+  color: white;
+}
+
+.ver-editar-tarea-modal .btn-success:hover {
+  background: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.ver-editar-tarea-modal .btn-secondary {
+  background: #e3e5ed;
+  color: #2f2a5d;
+}
+
+.ver-editar-tarea-modal .btn-secondary:hover {
+  background: #d1d5db;
+}
+
+.ver-editar-tarea-modal .btn-danger {
+  background: #ef4444;
+  color: white;
+}
+
+.ver-editar-tarea-modal .btn-danger:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
   buildMenu();
   attachMenuListeners();
   highlightActiveTab();
+  createUserCard();
 });
 
 /**
@@ -301,4 +302,56 @@ function mostrarConfirmacionLogout() {
       overlay.remove();
     }
   });
+}
+
+/**
+ * Crea la tarjeta de usuario en la esquina superior izquierda
+ */
+function createUserCard() {
+  const loggedUserString = localStorage.getItem("loggedUser");
+  const loggedUser = loggedUserString ? JSON.parse(loggedUserString) : null;
+
+  let userNameDisplay = document.getElementById('user-name-display');
+  if (!userNameDisplay) {
+    userNameDisplay = document.createElement('div');
+    userNameDisplay.id = 'user-name-display';
+    userNameDisplay.style.cssText = `
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    `;
+    document.body.appendChild(userNameDisplay);
+  }
+
+  // Crear estructura con ícono, nombre y rol
+  let username, roleDisplay;
+  
+  if (!loggedUser) {
+    // Usuario visitante
+    username = 'usuario';
+    roleDisplay = 'visitante';
+  } else {
+    username = loggedUser.username || loggedUser.nombre || 'Usuario';
+    const role = loggedUser.role || 'empleado';
+    roleDisplay = role === 'admin' ? 'Administrador' : role === 'supervisor' ? 'Supervisor' : 'Empleado';
+  }
+  
+  userNameDisplay.innerHTML = `
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+      <circle cx="12" cy="7" r="4"></circle>
+    </svg>
+    <span>${username} (${roleDisplay})</span>
+  `;
 }

@@ -1,0 +1,108 @@
+<div class="modal-header-info">
+  <h2 class="modal-title-info">
+    <span>👤</span>
+    Información del Empleado
+  </h2>
+  <div class="header-actions">
+    <button class="btn-edit-toggle" id="btn-toggle-edit">
+      <span>✏️</span>
+      Editar
+    </button>
+    <button class="close-modal-btn" id="close-ver-info">✕</button>
+  </div>
+</div>
+<div class="modal-body-info">
+  <div class="employee-info-container">
+    <!-- Foto del empleado -->
+    <div class="employee-photo-section">
+      <div class="photo-wrapper">
+        <img src="/web/Images/default-user.png" alt="Foto" class="employee-photo" id="employee-photo">
+        <div class="photo-overlay" id="photo-overlay">
+          <span>📷</span>
+          <p>Cambiar foto</p>
+        </div>
+      </div>
+      <input type="file" id="photo-input" accept="image/*" style="display: none;">
+    </div>
+
+    <!-- Campos de información -->
+    <div class="employee-fields">
+      <div class="info-grid">
+        <div class="info-field">
+          <label class="info-label">NOMBRE:</label>
+          <input type="text" class="info-input" id="field-nombre" readonly>
+        </div>
+        
+        <div class="info-field">
+          <label class="info-label">PUESTO:</label>
+          <input type="text" class="info-input" id="field-puesto" readonly>
+        </div>
+        
+        <div class="info-field">
+          <label class="info-label">USUARIO:</label>
+          <input type="text" class="info-input" id="field-usuario" readonly>
+        </div>
+        
+        <div class="info-field">
+          <label class="info-label">ROL:</label>
+          <select class="info-select" id="field-rol" disabled>
+            <option value="empleado">👤 Empleado</option>
+            <option value="supervisor">👔 Supervisor</option>
+            <option value="admin">👑 Administrador</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="info-grid secondary-grid">
+        <div class="info-field">
+          <label class="info-label">RELOJ ASIGNADO:</label>
+          <input type="text" class="info-input" id="field-reloj" readonly placeholder="Sin reloj asignado">
+        </div>
+        
+        <div class="info-field">
+          <label class="info-label">ID EMPLEADO:</label>
+          <input type="text" class="info-input" id="field-id" readonly>
+        </div>
+      </div>
+
+      <!-- Credenciales (solo visible para admin) -->
+      <div class="credentials-section" id="credentials-section" style="display: none;">
+        <div class="credentials-header">
+          <span>🔒</span>
+          <h3>CREDENCIALES (ADMIN)</h3>
+        </div>
+        
+        <div class="credential-field">
+          <label class="credential-label">PIN:</label>
+          <div class="credential-input-wrapper">
+            <input type="password" class="credential-input" id="field-pin" readonly value="****">
+            <button class="btn-toggle-visibility" data-target="field-pin">
+              <span class="eye-icon">👁️</span>
+            </button>
+          </div>
+        </div>
+        
+        <div class="credential-field">
+          <label class="credential-label">CONTRASEÑA:</label>
+          <div class="credential-input-wrapper">
+            <input type="password" class="credential-input" id="field-password" readonly value="************">
+            <button class="btn-toggle-visibility" data-target="field-password">
+              <span class="eye-icon">👁️</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones de acción (ocultos por defecto) -->
+      <div class="action-buttons" id="action-buttons" style="display: none;">
+        <button class="btn-cancel-edit" id="btn-cancel-edit">
+          Cancelar
+        </button>
+        <button class="btn-save-changes" id="btn-save-changes">
+          <span>💾</span>
+          Guardar Cambios
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

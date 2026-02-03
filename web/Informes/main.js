@@ -283,40 +283,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       fechaDiv.textContent = `${diaNombre} ${diaNumero} DE ${mesNombre}`;
     }
     
-    // 🔥 MOSTRAR NOMBRE DEL USUARIO en esquina superior izquierda
-    const userName = usuario.nombre || usuario.name || usuario.username || 'Usuario';
-    let userNameDisplay = document.getElementById('user-name-display');
-    if (!userNameDisplay) {
-      userNameDisplay = document.createElement('div');
-      userNameDisplay.id = 'user-name-display';
-      userNameDisplay.style.cssText = `
-        position: fixed;
-        top: 20px;
-        left: 20px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 10px 16px;
-        border-radius: 8px;
-        font-weight: 600;
-        font-size: 14px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        z-index: 1000;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      `;
-      document.body.appendChild(userNameDisplay);
-    }
-    
-    // Actualizar contenido según el rol
-    const rolDisplay = usuario.role === 'admin' ? 'Administrador' : 
-                       usuario.role === 'supervisor' ? 'Supervisor' : 
-                       'Empleado';
-    userNameDisplay.innerHTML = `
-      <span style="font-size: 16px;">👤</span>
-      <span>${userName} (${rolDisplay})</span>
-    `;
-    
     // 1. Descargamos ambos JSON en paralelo
     const [emps, backup] = await Promise.all([
       obtenerEmpleados(),

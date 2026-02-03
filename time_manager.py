@@ -3,8 +3,7 @@ from datetime import datetime
 
 
 async def chequeo_hora(Manager):
-    print("Iniciando chequeo de hora...")
-
+    # print("Iniciando chequeo de hora...")
     ultimo_minuto = None
 
     while True:

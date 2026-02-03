@@ -29,7 +29,7 @@ async def construir_panel():
                 "tareas_asignadas": {}
             }
             lista_tareas = {}
-            print(tareas_manager.listar_por_usuario(int(emp['id'])))
+            # print(tareas_manager.listar_por_usuario(int(emp['id'])))
             for tarea in tareas_manager.listar_por_usuario(int(emp['id']))['registros']:
                 lista_tareas.setdefault(tarea['fecha'], []).append({
                     "id": tarea['id'],
@@ -41,7 +41,7 @@ async def construir_panel():
                     "puntos": tarea['puntos'],
                     "estatus": tarea['estatus'],
                     "fecha": tarea['fecha'],
-                    "disponible_para_rol": "todos",
+                    "disponible_para_rol": tarea.get('disponible_para_rol', 'todos'),
                     "completadaPor": tarea.get('completadaPor', None)
                 })
             

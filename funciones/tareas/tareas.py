@@ -1,5 +1,4 @@
 from datetime import datetime
-from database import db_tareas
 from database.database import DatabaseManager
 from database.db_historial import HistorialManager
 from database.db_tareas import TareasManager
@@ -8,6 +7,12 @@ from conexiones import conexiones
 class Tareas():
     def __init__(self):
         self.tareas_del_dia = []
+
+        self.dias = [
+            "Lunes", "Martes", "Miércoles",
+            "Jueves", "Viernes", "Sábado", "Domingo"
+        ]
+
         
         # Inicializar DB para historial
         try:
@@ -57,6 +62,8 @@ class Tareas():
     
     async def ObtenerTareas(self,mensaje = None, uuid = None):
         conectados = conexiones.obtener_conexiones()
+
+        print(self.tareas_manager.listar_todos())
 
         tareas = {"tipo": "tareas","tareas": self.tareas_del_dia}
 
@@ -193,26 +200,43 @@ class Tareas():
             print(f"Error al eliminar tarea: {e}")
         return
 
-        print("Actualizando Tareas...")
-        hora_actual = datetime.now().strftime('%H:%M')
+    async def Actualizar(self):
 
-        # Revisar tareas y actualizar su estado
-        for tarea in self.tareas_del_dia:
-            # print(f"Revisando tarea: {tarea['titulo']} - Estado: {tarea['estado']}")
-            hora_inicio = datetime.strptime(tarea['hora_inicio'], "%H:%M").replace(year=hora_actual.year, month=hora_actual.month, day=hora_actual.day)
-            hora_fin = datetime.strptime(tarea['hora_fin'], "%H:%M").replace(year=hora_actual.year, month=hora_actual.month, day=hora_actual.day)
-            
-            if tarea['estado'] == 'completada' or tarea['estado'] == 'extra' or tarea['estado'] == 'vencida':
-                # Ignorar tareas ya completadas, extras o vencidas
+        ahora = datetime.now()
+        dia = self.dias[ahora.weekday()]
+
+        lista_tareas = self.tareas_manager.listar_por_fecha(dia)
+        hubo_cambios = False
+
+        for tarea in lista_tareas['registros']:
+
+            hora_inicio = datetime.strptime(tarea['hora_ini'], "%H:%M").replace(
+                year=ahora.year, month=ahora.month, day=ahora.day
+            )
+
+            hora_fin = datetime.strptime(tarea['hora_fin'], "%H:%M").replace(
+                year=ahora.year, month=ahora.month, day=ahora.day
+            )
+
+
+            if tarea['estatus'] in ['completada', 'extra', 'vencida']:
                 continue
-            else:
-                # Tarea vencida
-                if hora_actual > hora_fin and tarea['estado'] != 'vencida':
-                    tarea['estado'] = 'vencida'
-                    print(f"Tarea vencida: {tarea['titulo']}")
-                    
-                # Tarea en progreso
-                elif hora_actual >= hora_inicio and hora_actual <= hora_fin and tarea['estado'] == 'sin_iniciar':
-                    tarea['estado'] = 'en_progreso'
-                    print(f"Tarea en progreso: {tarea['titulo']}")
-        return
+
+            # Tarea vencida
+            if ahora > hora_fin:
+                tarea['estatus'] = 'vencida'
+                hubo_cambios = True
+                # print(f"Tarea vencida: {tarea['nombre']}")
+
+            # En progreso
+            elif hora_inicio <= ahora <= hora_fin and tarea['estatus'] == 'sin_iniciar':
+                tarea['estatus'] = 'en_progreso'
+                hubo_cambios = True
+                # print(f"Tarea en progreso: {tarea['nombre']}")
+
+        resultado = self.tareas_manager.actualizar_varios(lista_tareas['registros'])
+
+        if hubo_cambios:
+            webs = conexiones.obtener_web()
+            for ws in webs:
+                await ws.send_json({"status": "update_tareas"})
