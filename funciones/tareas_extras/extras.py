@@ -8,6 +8,12 @@ from conexiones import conexiones
 class Extras():
     def __init__(self):
         self.tareas_del_dia = []
+        self.tiempo_para_extra = timedelta(minutes=5)
+
+        self.dias = [
+            "Lunes", "Martes", "Miércoles",
+            "Jueves", "Viernes", "Sábado", "Domingo"
+        ]
         
         # Inicializar DB para historial
         try:
@@ -19,8 +25,6 @@ class Extras():
             self.tareas_manager = None
 
         self.comandos = {
-            "crear_tarea": self.CrearTarea, 
-            "obtener_tareas": self.ObtenerTareas,
             "completar_tarea": self.actualizar_tarea,
         }
         pass
@@ -141,3 +145,36 @@ class Extras():
                 if conexion:
                     await conexion.send_json(respuesta)
         return
+    
+    async def Actualizar(self):
+        # print("Actualizando estado de tareas extras...")
+        ahora = datetime.now()
+        dia = self.dias[ahora.weekday()]
+
+        lista_tareas = self.tareas_manager.listar_por_fecha(dia)
+        hubo_cambios = False
+
+        for tarea in lista_tareas['registros']:
+
+            hora_fin = datetime.strptime(tarea['hora_fin'], "%H:%M").replace(
+                year=ahora.year, month=ahora.month, day=ahora.day
+            )
+
+            if tarea['estatus'] in ['completada', 'en_progreso', 'sin_iniciar']:
+                continue
+
+            if ahora >= hora_fin and tarea['estatus'] == 'vencida' and ahora < hora_fin + self.tiempo_para_extra:
+                tarea['estatus'] = 'extra'
+                hubo_cambios = True
+                # print(f"Tarea extra: {tarea['nombre']}")
+        
+            elif ahora >= hora_fin + self.tiempo_para_extra and tarea['estatus'] == 'extra' and tarea['completadaPor'] is None:
+                tarea['estatus'] = 'vencida'
+                hubo_cambios = True
+                # print(f"Tarea caduco: {tarea['nombre']}")
+
+        if hubo_cambios:
+            resultado = self.tareas_manager.actualizar_varios(lista_tareas['registros'])
+            webs = conexiones.obtener_web()
+            for ws in webs:
+                await ws.send_json({"status": "update_tareas"})

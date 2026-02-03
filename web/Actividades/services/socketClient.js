@@ -25,10 +25,10 @@ export const createSocketClient = ({ onMessage, onStatus }) => {
       notifyStatus("online");
     };
 
-    socket.onmessage = (event) => {
+    socket.onmessage = async (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (onMessage) onMessage(data);
+        if (onMessage) await onMessage(data);
       } catch (err) {
         console.error("Mensaje WS inválido", err);
       }

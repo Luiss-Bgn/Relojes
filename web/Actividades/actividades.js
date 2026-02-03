@@ -69,10 +69,30 @@ const setConnection = (state) => {
   connectionLabel.textContent = cfg.text;
 };
 
-const handleMessage = (payload) => {
-  console.log("📨 Actualización WebSocket:", payload);
-  // Aquí se procesarán actualizaciones en tiempo real de tareas
-  // Por ahora solo logueamos para debug
+let lastUpdateTime = 0;
+const THROTTLE_MS = 3000;
+const handleMessage = async (payload) => {
+  if (payload.status !== "update_tareas") return;
+
+  const now = Date.now();
+
+  // 🚦 Si aún no han pasado 3s desde la última actualización → ignorar
+  if (now - lastUpdateTime < THROTTLE_MS) {
+    console.log("⏳ Update ignorado (throttle activo)");
+    return;
+  }
+
+  lastUpdateTime = now;
+
+  console.log("🔄 Actualizando tareas desde WS");
+
+  const refreshedData = await loadPanelData();
+  panelDataCache = refreshedData;
+
+  const selectedDay = DIAS_SEMANA[currentDayIndex];
+  viewState = adaptPanel(refreshedData, selectedDay);
+
+  renderPanel(viewState);
 };
 
 const initSocket = () => {

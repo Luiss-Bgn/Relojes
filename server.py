@@ -5,6 +5,7 @@ Iniciar ambos servidores:
 
 """
 
+import uuid
 from aiohttp import web
 import asyncio
 import json
@@ -37,18 +38,27 @@ async def detener_chequeo_hora(app):
 async def ws_handler(request):
     ws = web.WebSocketResponse(protocols=['arduino', 'web-client'])
     await ws.prepare(request)
-    
-    uuid_cliente = None  
+
+    # Detectar si es cliente web o dispositivo
+    user_agent = request.headers.get("User-Agent", "")
+    es_web = "Mozilla" in user_agent
+
+    if es_web:
+        uuid_cliente = f"web_{uuid.uuid4().hex[:8]}"
+    else:
+        uuid_cliente = None 
 
     try:
         async for msg in ws:
             if msg.type == web.WSMsgType.TEXT:
                 data = msg.json()
-                uuid = data.get("uuid", "desconocido")
+                if not es_web:
+                    uuid_cliente = data.get("uuid", "desconocido")
                 
                 # Si es la primera vez que recibimos el UUID, registrar la conexión
                 conectados = conexiones.obtener_conexiones()
-                await Manager.AnalizarMensaje(data, uuid)
+                conexiones.agregar_conexion(uuid_cliente, ws, "web" if es_web else "reloj")
+                await Manager.AnalizarMensaje(data, uuid_cliente)
 
                 print(f"Conexiones activas: {list(conectados.keys())}")
     finally:
