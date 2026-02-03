@@ -29,7 +29,7 @@ async def construir_panel():
                 "tareas_asignadas": {}
             }
             lista_tareas = {}
-            print(tareas_manager.listar_por_usuario(int(emp['id'])))
+            # print(tareas_manager.listar_por_usuario(int(emp['id'])))
             for tarea in tareas_manager.listar_por_usuario(int(emp['id']))['registros']:
                 lista_tareas.setdefault(tarea['fecha'], []).append({
                     "id": tarea['id'],

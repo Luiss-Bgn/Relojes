@@ -1,0 +1,28 @@
+<div class="modal-header">
+  <h2 class="modal-title">
+    <span>✏️</span>
+    Editar Tareas
+  </h2>
+  <p class="modal-subtitle">Empleado: <span id="modal-employee-name-editar"></span></p>
+  <button class="close-modal-btn" id="close-editar-tareas">✕</button>
+</div>
+<div class="modal-body">
+  <!-- Tabs de días de la semana -->
+  <div class="tabs-container">
+    <button class="tab-btn active" data-day="Lunes">Lunes</button>
+    <button class="tab-btn" data-day="Martes">Martes</button>
+    <button class="tab-btn" data-day="Miércoles">Miércoles</button>
+    <button class="tab-btn" data-day="Jueves">Jueves</button>
+    <button class="tab-btn" data-day="Viernes">Viernes</button>
+    <button class="tab-btn" data-day="Sábado">Sábado</button>
+    <button class="tab-btn" data-day="Domingo">Domingo</button>
+  </div>
+
+  <!-- Contenedor de tareas -->
+  <div class="tasks-content" id="tasks-content-editar">
+    <!-- Las tarjetas de tareas se generarán dinámicamente aquí -->
+    <div class="no-tasks-message">
+      <p>📋 No hay tareas asignadas para este día</p>
+    </div>
+  </div>
+</div>

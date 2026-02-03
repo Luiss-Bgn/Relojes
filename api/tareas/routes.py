@@ -22,17 +22,19 @@ async def crear_registro(registro: TareasCrear):
     for fecha in registro.fecha:
         print("Fecha recibida para la tarea:", fecha)
         
-    resultado = tareas_manager.crear_registro(
-        nombre=registro.nombre,
-        descripcion=registro.descripcion,
-        id_dueño=registro.id_dueño,
-        hora_ini=registro.hora_ini,
-        hora_fin=registro.hora_fin,
-        fecha=registro.fecha,
-        puntos=registro.puntos,
-        estatus=registro.estatus,
-        disponible_para_rol=registro.disponible_para_rol
-    )
+        print("Datos de la tarea:", registro)
+        print("Creando tarea de:", registro.nombre)
+        resultado = tareas_manager.crear_registro(
+            nombre=registro.nombre,
+            descripcion=registro.descripcion,
+            id_dueño=registro.id_dueño,
+            hora_ini=registro.hora_ini,
+            hora_fin=registro.hora_fin,
+            fecha=fecha,
+            puntos=registro.puntos,
+            estatus=registro.estatus,
+            disponible_para_rol=registro.disponible_para_rol
+        )
     
     if resultado.get("status") != "success":
         raise HTTPException(
@@ -135,7 +137,7 @@ async def eliminar_registro(registro_id: int):
 
 @router.get("/panel/obtener", response_model=dict)
 async def obtener_panel():
-    print("Obteniendo panel de tareas para fecha:")
+    # print("Obteniendo panel de tareas para fecha:")
 
     resultado = await construir_panel()
 
