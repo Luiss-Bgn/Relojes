@@ -1,0 +1,61 @@
+<div class="modal-header">
+  <h2>Editar Tarea</h2>
+  <button class="close-btn" id="close-ver-editar-tarea">&times;</button>
+</div>
+
+<div class="modal-body">
+  <div class="form-field">
+    <input type="text" id="tarea-nombre" class="form-input" readonly />
+  </div>
+
+  <div class="form-field">
+    <textarea id="tarea-descripcion" class="form-textarea" rows="3" readonly></textarea>
+  </div>
+
+  <div class="form-row">
+    <div class="form-field">
+      <label class="form-label">HORA DE INICIO:</label>
+      <input type="time" id="tarea-hora-ini" class="form-input" readonly />
+    </div>
+
+    <div class="form-field">
+      <label class="form-label">HORA DE FINALIZACIÓN (OPCIONAL):</label>
+      <input type="time" id="tarea-hora-fin" class="form-input" readonly />
+    </div>
+  </div>
+
+  <div class="form-hint">
+    <span>💡</span> La hora de finalización es opcional y sirve para mostrar un rango visual en el tablero
+  </div>
+
+  <div class="form-field">
+    <label class="form-label">PUNTOS:</label>
+    <input type="number" id="tarea-puntos" class="form-input" min="1" max="10" readonly />
+  </div>
+
+  <div class="form-field">
+    <label class="form-label">ESTADO:</label>
+    <input type="text" id="tarea-estado" class="form-input estado-display" readonly />
+  </div>
+
+  <div id="warning-box" class="warning-box" style="display: none;">
+    <span>⚠️</span>
+    <span id="warning-text"></span>
+  </div>
+</div>
+
+<div class="modal-footer">
+  <button class="btn-secondary" id="btn-cerrar-tarea">Cerrar</button>
+  <button class="btn-primary" id="btn-editar-tarea" style="display: none;">
+    <span>✏️</span> Editar Tarea
+  </button>
+  <button class="btn-danger" id="btn-eliminar-tarea" style="display: none;">
+    <span>🗑️</span> Eliminar Tarea
+  </button>
+  <button class="btn-primary" id="btn-guardar-cambios-tarea" style="display: none;">
+    <span>💾</span> Guardar Cambios
+  </button>
+  <button class="btn-success" id="btn-completar-tarea" style="display: none;">
+    <span>✓</span> Completar Tarea
+  </button>
+</div>

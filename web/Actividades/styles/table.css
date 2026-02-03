@@ -11,7 +11,7 @@
 #panel-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
+  table-layout: auto;
 }
 
 #panel-table thead {
@@ -41,9 +41,9 @@
 /* Columna HORARIO - Sticky */
 #panel-table thead th:nth-child(1),
 #panel-table tbody td:nth-child(1) {
-  width: 110px;
-  min-width: 110px;
-  max-width: 110px;
+  width: 130px;
+  min-width: 130px;
+  max-width: 130px;
   position: sticky;
   left: 0;
   z-index: 5;
@@ -51,6 +51,8 @@
   box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
   white-space: nowrap;
   font-weight: 600;
+  text-align: center;
+  padding: 10px 12px;
 }
 
 #panel-table tbody td:nth-child(1) {
@@ -60,9 +62,9 @@
 /* Columna ACTIVIDAD - Sticky */
 #panel-table thead th:nth-child(2),
 #panel-table tbody td:nth-child(2) {
-  width: 220px;
-  min-width: 220px;
-  max-width: 220px;
+  width: 50ch;
+  min-width: 50ch;
+  max-width: 50ch;
   position: sticky;
   left: 110px;
   z-index: 5;
@@ -73,17 +75,23 @@
   overflow-wrap: break-word;
 }
 
+#panel-table thead th:nth-child(2) {
+  text-align: center;
+}
+
 #panel-table tbody td:nth-child(2) {
   background: white;
+  text-align: left;
 }
 
-#panel-table td.activity-title { 
-  font-weight: 600;
+.activity-title { 
+  font-weight: 700;
   margin-bottom: 4px;
+  color: #1f1f1f;
 }
 
-#panel-table td.activity-desc {
-  color: var(--muted);
+.activity-desc {
+  color: #8b92a6;
   font-size: 12px;
   margin-top: 2px;
 }
@@ -91,15 +99,17 @@
 /* Columna PUNTOS - Sticky */
 #panel-table thead th:nth-child(3),
 #panel-table tbody td:nth-child(3) {
-  width: 70px;
-  min-width: 70px;
-  max-width: 70px;
+  width: 90px !important;
+  min-width: 90px !important;
+  max-width: 90px !important;
   position: sticky;
-  left: 330px;
+  left: calc(110px + 50ch);
   z-index: 5;
   background: #f7f8fb;
+  text-align: center;
   box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
   font-weight: 600;
+  padding: 10px 12px;
 }
 
 #panel-table tbody td:nth-child(3) {
@@ -109,8 +119,8 @@
 /* Columnas de EMPLEADOS (desde la 4ta) */
 #panel-table thead th:nth-child(n+4),
 #panel-table tbody td:nth-child(n+4) {
-  min-width: 140px;
-  width: 140px;
+  min-width: 180px;
+  width: auto;
 }
 
 /* Header de empleado - Layout vertical */

@@ -131,6 +131,15 @@ const init = async () => {
     renderPanel(viewState);
     socketRef?.reconnect();
   });
+
+  // Listener para actualizar panel cuando se editan tareas desde modales
+  window.addEventListener("refreshPanel", async () => {
+    const refreshedData = await loadPanelData();
+    panelDataCache = refreshedData;
+    const selectedDay = DIAS_SEMANA[currentDayIndex];
+    viewState = adaptPanel(refreshedData, selectedDay);
+    renderPanel(viewState);
+  });
 };
 
 document.addEventListener("DOMContentLoaded", init);

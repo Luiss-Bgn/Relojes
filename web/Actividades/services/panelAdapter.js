@@ -99,12 +99,14 @@ export const adaptPanel = (payload, preferredDate) => {
     assigned.forEach((task) => {
       rows.push({
         id: `${emp.id}-${task.id}`,
+        tareaId: task.id,
         empleadoId: emp.id,
         hora: buildTimeRange(task),
         titulo: task.nombre || task.titulo || "Tarea",
         descripcion: task.descripcion || task.detalle || "",
         puntos: task.puntos ?? task.valor ?? 0,
-        estatus: statusFromTask(task)
+        estatus: statusFromTask(task),
+        completadaPor: task.completadaPor
       });
     });
   });

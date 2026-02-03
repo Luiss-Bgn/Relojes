@@ -2253,7 +2253,7 @@ function calculateEmployeePoints(empleado, dayName, now) {
             // Guardar que la tarea original fue completada
             tareasCompletadasComoExtras.set(Number(tarea.tareaOriginalId), {
               puntaje: parseInt(tarea.puntaje) || 0,
-              completadoPor: emp.id
+              completadaPor: emp.id
             });
           }
         });
