@@ -41,7 +41,7 @@ async def construir_panel():
                     "puntos": tarea['puntos'],
                     "estatus": tarea['estatus'],
                     "fecha": tarea['fecha'],
-                    "disponible_para_rol": "todos",
+                    "disponible_para_rol": tarea.get('disponible_para_rol', 'todos'),
                     "completadaPor": tarea.get('completadaPor', None)
                 })
             

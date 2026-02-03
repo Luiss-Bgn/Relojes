@@ -3,6 +3,7 @@ import { showEditarTareasModal } from './modals/editarTareasModal.js';
 import { showVerInfoModal } from './modals/verInfoModal.js';
 
 export const showEmployeeMenu = (emp, event) => {
+
   // Cerrar menú anterior si existe
   const existingMenu = document.getElementById('employee-menu-overlay');
   if (existingMenu) existingMenu.remove();

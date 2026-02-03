@@ -2,6 +2,7 @@ import { loadModalHTML } from './modalLoader.js';
 import { showToast } from '../toast.js';
 
 export const showVerInfoModal = async (emp) => {
+  console.log('Mostrando modal de información para el empleado:', emp);
   // Crear overlay
   const overlay = document.createElement('div');
   overlay.id = 'ver-info-overlay';
@@ -43,18 +44,35 @@ export const showVerInfoModal = async (emp) => {
 };
 
 function fillEmployeeInfo(emp, modal, userRole) {
+  console.log('Llenando información del empleado:', emp);
   // Campos básicos
   modal.querySelector('#field-nombre').value = emp.nombre || '';
   modal.querySelector('#field-puesto').value = emp.puesto || '';
-  modal.querySelector('#field-usuario').value = emp.usuario || '';
-  modal.querySelector('#field-rol').value = emp.rol ? emp.rol.toLowerCase() : 'empleado';
+  modal.querySelector('#field-usuario').value = emp.usuario || '';  // Cambio: username en lugar de usuario
+  modal.querySelector('#field-pin').value = emp.pin || '';  // Cambio: username en lugar de usuario
+  
+  // Campo de rol con estilos visuales
+  const rolSelect = modal.querySelector('#field-rol');
+  const empleadoRol = emp.rol ? emp.rol.toLowerCase() : 'empleado';
+  rolSelect.value = empleadoRol;
+  
+  // Aplicar colores según el rol
+  const roleColors = {
+    'empleado': '#e8f0ff',   // Azul claro
+    'supervisor': '#f0e8ff', // Morado claro
+    'admin': '#fff2e8'       // Naranja claro
+  };
+  
+  rolSelect.style.backgroundColor = roleColors[empleadoRol] || roleColors['empleado'];
+  rolSelect.style.fontWeight = '600';
+  
   modal.querySelector('#field-reloj').value = emp.reloj_id || '';
   modal.querySelector('#field-id').value = emp.id || '';
 
   // Foto del empleado (si existe)
   const photo = modal.querySelector('#employee-photo');
-  if (emp.foto) {
-    photo.src = emp.foto;
+  if (emp.imagen) {  // Cambio: imagen en lugar de foto
+    photo.src = emp.imagen;
   }
 
   // Mostrar credenciales solo para admin
@@ -62,7 +80,7 @@ function fillEmployeeInfo(emp, modal, userRole) {
     const credentialsSection = modal.querySelector('#credentials-section');
     credentialsSection.style.display = 'block';
     
-    // Cargar credenciales (normalmente desde API)
+    // Cargar credenciales del JSON
     modal.querySelector('#field-pin').value = emp.pin || '****';
     modal.querySelector('#field-password').value = emp.password || '************';
   }
