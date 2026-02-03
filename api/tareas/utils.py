@@ -12,16 +12,6 @@ tareas_manager = TareasManager(db_manager)
 
 async def construir_panel():
 
-    dias = {
-        "Monday": "Lunes",
-        "Tuesday": "Martes",
-        "Wednesday": "Miércoles",
-        "Thursday": "Jueves",
-        "Friday": "Viernes",
-        "Saturday": "Sábado",
-        "Sunday": "Domingo"
-    }
-
     try:
         empleados = usuario_manager.listar_usuarios()
 
@@ -41,8 +31,7 @@ async def construir_panel():
             lista_tareas = {}
             print(tareas_manager.listar_por_usuario(int(emp['id'])))
             for tarea in tareas_manager.listar_por_usuario(int(emp['id']))['registros']:
-                fecha = datetime.strptime(tarea['fecha'], "%d-%m-%y")
-                lista_tareas.setdefault(dias[fecha.strftime("%A")], []).append({
+                lista_tareas.setdefault(tarea['fecha'], []).append({
                     "id": tarea['id'],
                     "nombre": tarea['nombre'],
                     "descripcion": tarea['descripcion'],

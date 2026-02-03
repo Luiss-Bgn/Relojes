@@ -12,7 +12,7 @@ class TareasBase(BaseModel):
     id_dueño: int
     hora_ini: str
     hora_fin: str
-    fecha: str
+    fecha: list[str]
     puntos: int
     estatus: str
     disponible_para_rol: Optional[str] = "todos"
