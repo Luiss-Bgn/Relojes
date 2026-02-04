@@ -2,31 +2,81 @@
 Rutas  para usuarios 
 """
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, File, UploadFile, Form
 from database.database import DatabaseManager
 from database.db_usuarios import UsuarioManager
 from .models import UsuarioCrear, UsuarioActualizar, AutenticarRequest
 from .utils import notificar_relojes_async
+from pathlib import Path
+from typing import Optional
+import shutil
 
 router = APIRouter(prefix="/usuarios", tags=["Usuarios"])
 # Inicializamos db
 db_manager = DatabaseManager("relojes.db")
 usuario_manager = UsuarioManager(db_manager)
 
+# Ruta donde se guardan las imágenes
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+IMAGES_DIR = BASE_DIR / "web" / "Images"
+IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+
 
 # ENdpoints crud
 
-@router.post("" , response_model=dict, status_code=status.HTTP_201_CREATED)
-async def crear_usuario(usuario: UsuarioCrear):
-
+@router.post("", response_model=dict, status_code=status.HTTP_201_CREATED)
+async def crear_usuario(
+    nombre: str = Form(...),
+    username: str = Form(...),
+    contraseña: str = Form(...),
+    pin: int = Form(...),
+    rol: str = Form(...),
+    puesto: str = Form(...),
+    imagen: Optional[UploadFile] = File(None)
+):
+    """
+    Crea un nuevo usuario.
+    Acepta FormData con campos de texto y archivo de imagen opcional.
+    """
+    
+    # 🔥 Si hay imagen, guardarla en /web/Images/
+    imagen_filename = None
+    if imagen and imagen.filename:
+        # Validar que sea imagen
+        if not imagen.content_type.startswith('image/'):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="El archivo debe ser una imagen"
+            )
+        
+        # 🔥 Usar formato canónico: <username>.<extension>
+        ext = Path(imagen.filename).suffix  # Obtener extensión (.jpg, .png, etc.)
+        if not ext:
+            ext = '.jpg'  # Extensión por defecto si no se detecta
+        
+        filename = f"{username}{ext}"  # Ejemplo: adrian.jpg
+        file_path = IMAGES_DIR / filename
+        
+        # Guardar archivo (sobrescribe si ya existe)
+        try:
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(imagen.file, buffer)
+            imagen_filename = filename
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error al guardar imagen: {str(e)}"
+            )
+    
+    # Crear usuario con el nombre de la imagen
     resultado = usuario_manager.crear_usuario(
-        nombre=usuario.nombre,
-        username=usuario.username,
-        contraseña=usuario.contraseña,
-        pin=usuario.pin,
-        rol=usuario.rol,
-        puesto=usuario.puesto,
-        imagen=usuario.imagen
+        nombre=nombre,
+        username=username,
+        contraseña=contraseña,
+        pin=pin,
+        rol=rol,
+        puesto=puesto,
+        imagen=imagen_filename
     )
     
     if resultado.get("status") != "success":
@@ -41,7 +91,7 @@ async def crear_usuario(usuario: UsuarioCrear):
     return resultado
 
 
-@router.get("" , response_model=dict)
+@router.get("", response_model=dict)
 async def listar_usuarios():
 #    Listae todos los usuarios
     resultado = usuario_manager.listar_usuarios()
@@ -55,7 +105,7 @@ async def listar_usuarios():
     return resultado
 
 
-@router.get("/{usuario_id}" , response_model=dict)
+@router.get("/{usuario_id}", response_model=dict)
 async def obtener_usuario(usuario_id: int):
     #usuaerio en especifico
     resultado = usuario_manager.obtener_usuario(usuario_id)

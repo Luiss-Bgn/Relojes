@@ -311,8 +311,14 @@ body {
   min-height: 0;
 }
 
+/* Override específico para #informes-content cuando tiene .fade-in */
+#informes-content.fade-in {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
 
-.fade-in.show {
+#informes-content.fade-in.show {
   animation: fadeUp 0.8s ease forwards;
 }
 
