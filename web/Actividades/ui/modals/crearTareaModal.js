@@ -107,7 +107,7 @@ export const showCrearTareaModal = async (emp) => {
         // Actualizar panel sin recargar página
         const event = new CustomEvent('refreshPanel');
 
-        createNotificationMessage(NOTIFICATION_TYPES.TAREA_CREADA );
+        createNotificationMessage(NOTIFICATION_TYPES.TAREA_CREADA,{id_dueño:emp.id});
         window.dispatchEvent(event);
       } else {
         showToast('Error al crear la tarea: ' + (result.message || 'Error desconocido'), 'error');
