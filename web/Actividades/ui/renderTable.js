@@ -374,7 +374,6 @@ function openTaskModal(row, clickedEmployeeId = null) {
   const loggedUserString = localStorage.getItem("loggedUser");
   const loggedUser = loggedUserString ? JSON.parse(loggedUserString) : null;
   const userRole = loggedUser ? loggedUser.role : null;
-  const userId = parseInt(localStorage.getItem('userId')) || null;
 
   // console.log('Abriendo modal para tarea:', row, 'Rol usuario:', userRole, 'Empleado clickeado:', clickedEmployeeId);
   // Construir objeto de tarea con todos los datos necesarios
@@ -391,48 +390,7 @@ function openTaskModal(row, clickedEmployeeId = null) {
     disponible_para_rol: row.disponible_para_rol || 'todos'
   };
 
-  // Determinar el employeeId para completar la tarea extra
-  let targetEmployeeId = null;
-  if (row.estatus === 'extra' && row.completadaPor ==null) {
-    if (userRole === 'empleado') {
-      targetEmployeeId = userId;
-    } else if (userRole === 'admin' || userRole === 'supervisor') {
-      targetEmployeeId = clickedEmployeeId || null;
-    }
-  }
-
-  showVerEditarTareaModal(tarea, userRole, targetEmployeeId);
-}
-
-// Función para completar una tarea extra
-async function completeExtraTask(tareaId, employeeId) {
-  try {
-    const response = await fetch(`http://localhost:8001/tareas/${tareaId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        estatus: 'extra',
-        completadaPor: employeeId
-      })
-    });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      showToast('✓ Tarea extra completada exitosamente', 'success');
-
-      // Actualizar panel
-      const event = new CustomEvent('refreshPanel');
-      window.dispatchEvent(event);
-    } else {
-      showToast('Error al completar la tarea: ' + (result.message || 'Error desconocido'), 'error');
-    }
-  } catch (error) {
-    console.error('Error:', error);
-    showToast('Error al completar la tarea. Verifica tu conexión.', 'error');
-  }
+  showVerEditarTareaModal(tarea, userRole, clickedEmployeeId);
 }
 
 export const renderPanel = (view) => {
