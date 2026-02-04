@@ -222,7 +222,7 @@ class Tareas():
             )
 
 
-            if tarea['estatus'] in ['completada', 'extra', 'vencida']:
+            if tarea['estatus'] in ['completada', 'extra', 'vencida', 'futura']:
                 continue
 
             # Tarea vencida

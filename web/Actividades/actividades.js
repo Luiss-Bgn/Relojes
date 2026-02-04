@@ -69,20 +69,21 @@ const setConnection = (state) => {
   connectionLabel.textContent = cfg.text;
 };
 
-let lastUpdateTime = 0;
-const THROTTLE_MS = 3000;
+// let lastUpdateTime = 0;
+// const THROTTLE_MS = 3000;
 const handleMessage = async (payload) => {
-  if (payload.status !== "update_tareas") return;
+  console.log(payload)
+  if (payload.comando !== "update_tareas") return;
 
-  const now = Date.now();
+  // const now = Date.now();
 
   // 🚦 Si aún no han pasado 3s desde la última actualización → ignorar
-  if (now - lastUpdateTime < THROTTLE_MS) {
-    console.log("⏳ Update ignorado (throttle activo)");
-    return;
-  }
+  // if (now - lastUpdateTime < THROTTLE_MS) {
+  //   console.log("⏳ Update ignorado (throttle activo)");
+  //   return;
+  // }
 
-  lastUpdateTime = now;
+  // lastUpdateTime = now;
 
   console.log("🔄 Actualizando tareas desde WS");
 

@@ -160,7 +160,7 @@ class Extras():
                 year=ahora.year, month=ahora.month, day=ahora.day
             )
 
-            if tarea['estatus'] in ['completada', 'en_progreso', 'sin_iniciar']:
+            if tarea['estatus'] in ['completada', 'en_progreso', 'sin_iniciar', 'futura']:
                 continue
 
             if ahora >= hora_fin and tarea['estatus'] == 'vencida' and ahora < hora_fin + self.tiempo_para_extra:

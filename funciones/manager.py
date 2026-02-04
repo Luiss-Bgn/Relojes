@@ -72,12 +72,13 @@ class Manager():
                     for ws in conexiones.obtener_conexiones().values():
                         await ws['ws'].send_json(mensaje)
 
-                # Siempre notificar a la web
-                for ws in conexiones.obtener_web():
-                        await ws.send_json(mensaje)
-
             except Exception as e:
                 print(f"Error enviando evento {tipo}: {e}")
+
+            # Siempre notificar a la web
+            print(mensaje)
+            for ws in conexiones.obtener_web():
+                await ws.send_json(mensaje)
 
 
     
