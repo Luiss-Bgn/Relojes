@@ -8,7 +8,7 @@ from conexiones import conexiones
 class Extras():
     def __init__(self):
         self.tareas_del_dia = []
-        self.tiempo_para_extra = timedelta(minutes=5)
+        self.tiempo_para_extra = timedelta(minutes=20)
 
         self.dias = [
             "Lunes", "Martes", "Miércoles",

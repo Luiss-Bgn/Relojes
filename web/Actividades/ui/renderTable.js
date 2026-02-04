@@ -57,7 +57,7 @@ const renderHead = (employees) => {
     tr.appendChild(th);
   });
 
-  console.log("Renderizando encabezado para empleados:", employees);
+  // console.log("Renderizando encabezado para empleados:", employees);
   employees.forEach((emp) => {
     const th = document.createElement("th");
     const wrapper = document.createElement("div");
@@ -142,7 +142,7 @@ const renderRows = (rows, employees) => {
   bodyEl.innerHTML = "";
   emptyEl.hidden = rows.length > 0;
 
-  console.log("Renderizando filas:", rows);
+  // console.log("Renderizando filas:", rows);
   // Obtener hora actual
   const now = new Date();
   const currentHour = now.getHours();
@@ -180,7 +180,7 @@ const renderRows = (rows, employees) => {
   }
 
 
-  console.log("Grupo de horario actual:", currentTimeGroup);
+  // console.log("Grupo de horario actual:", currentTimeGroup);
   // Si no encontramos ningún grupo activo, buscar el más cercano que ya debería haber iniciado
   if (!currentTimeGroup) {
     let maxInitTime = -1;
@@ -223,9 +223,12 @@ const renderRows = (rows, employees) => {
       // Determinar el cursor según el rol y tipo de tarea
       const loggedUserString = localStorage.getItem("loggedUser");
       const loggedUser = loggedUserString ? JSON.parse(loggedUserString) : null;
-      const userRole = loggedUser ? loggedUser.role : 'empleado';
+      const userRole = loggedUser ? loggedUser.role : null; // No asumir rol si no hay sesión
 
-      if (!isExtraAvailable || userRole === 'empleado') {
+      // Permitir click en tareas extra si hay sesión activa (empleado/supervisor/admin)
+      const canInteractWithExtra = loggedUser && (userRole === 'empleado' || userRole === 'supervisor' || userRole === 'admin');
+
+      if (!isExtraAvailable || canInteractWithExtra) {
         tr.style.cursor = "pointer";
       } else {
         tr.style.cursor = "default";
@@ -244,8 +247,8 @@ const renderRows = (rows, employees) => {
         if (isExtraAvailable) time.style.backgroundColor = "rgba(96, 165, 250, 0.15)";
         if (isExtraCompleted && !isExtraCompletedPastDue) time.style.backgroundColor = "rgba(255, 213, 79, 0.2)";
 
-        // Agregar click listener solo si no es extra disponible o si es empleado
-        if (!isExtraAvailable || userRole === 'empleado') {
+        // Agregar click listener para tareas normales o extra (si hay sesión activa)
+        if (!isExtraAvailable || canInteractWithExtra) {
           time.style.cursor = "pointer";
           time.addEventListener("click", (e) => {
             e.stopPropagation();
@@ -269,14 +272,13 @@ const renderRows = (rows, employees) => {
         activity.style.backgroundColor = "rgba(96, 165, 250, 0.15)";
       }
 
-      // Agregar click listener solo si no es extra disponible o si es empleado
-      if (!isExtraAvailable || userRole === 'empleado') {
-        activity.style.cursor = "pointer";
-        activity.addEventListener("click", (e) => {
-          e.stopPropagation();
-          handleTaskClick(row, null);
+      // Agregar click listener (permitir tanto visitantes como usuarios autenticados)
+      activity.style.cursor = "pointer";
+      activity.addEventListener("click", (e) => {
+        e.stopPropagation();
+        handleTaskClick(row, null);
         });
-      }
+      
 
       tr.appendChild(activity);
 
@@ -296,14 +298,12 @@ const renderRows = (rows, employees) => {
         points.style.backgroundColor = "rgba(96, 165, 250, 0.15)";
       }
 
-      // Agregar click listener solo si no es extra disponible o si es empleado
-      if (!isExtraAvailable || userRole === 'empleado') {
-        points.style.cursor = "pointer";
-        points.addEventListener("click", (e) => {
-          e.stopPropagation();
-          handleTaskClick(row, null);
-        });
-      }
+      // Agregar click listener (permitir tanto visitantes como usuarios autenticados)
+      points.style.cursor = "pointer";
+      points.addEventListener("click", (e) => {
+        e.stopPropagation();
+        handleTaskClick(row, null);
+      });
 
       tr.appendChild(points);
 
@@ -347,16 +347,20 @@ const renderRows = (rows, employees) => {
 function handleTaskClick(row, clickedEmployeeId) {
   const loggedUserString = localStorage.getItem("loggedUser");
   const loggedUser = loggedUserString ? JSON.parse(loggedUserString) : null;
-  const userRole = loggedUser ? loggedUser.role : 'empleado';
+  const userRole = loggedUser ? loggedUser.role : null; // No asumir rol si no hay sesión
+  const userId = parseInt(localStorage.getItem('userId')) || null;
 
   // Si es una tarea extra disponible
   if (row.estatus === 'extra' && !row.completadaPor) {
-    // Para admin/supervisor: solo abrir modal si clickearon en columna de empleado
-    if ((userRole === 'admin' || userRole === 'supervisor') && !clickedEmployeeId) {
+    // Si hay sesión activa y no se especificó empleado, usar el usuario actual
+    if (loggedUser && !clickedEmployeeId) {
+      clickedEmployeeId = userId;
+    }
+    // Si no hay sesión activa y no se especificó empleado, mostrar mensaje
+    else if (!loggedUser && !clickedEmployeeId) {
       showToast('Haz click en la columna de un empleado para completar esta tarea extra', 'info', 4000);
       return;
     }
-    // Para empleado: abrir modal siempre
     openTaskModal(row, clickedEmployeeId);
   } else {
     // Tarea normal o extra completada - abrir modal sin employeeId
@@ -369,10 +373,10 @@ function openTaskModal(row, clickedEmployeeId = null) {
   // Obtener rol del usuario desde localStorage o sessionStorage
   const loggedUserString = localStorage.getItem("loggedUser");
   const loggedUser = loggedUserString ? JSON.parse(loggedUserString) : null;
-  const userRole = loggedUser ? loggedUser.role : 'empleado';
+  const userRole = loggedUser ? loggedUser.role : null;
   const userId = parseInt(localStorage.getItem('userId')) || null;
 
-  console.log('Abriendo modal para tarea:', row, 'Rol usuario:', userRole, 'Empleado clickeado:', clickedEmployeeId);
+  // console.log('Abriendo modal para tarea:', row, 'Rol usuario:', userRole, 'Empleado clickeado:', clickedEmployeeId);
   // Construir objeto de tarea con todos los datos necesarios
   const tarea = {
     id: row.tareaId,

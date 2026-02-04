@@ -1,5 +1,7 @@
 import { loadModalHTML } from './modalLoader.js';
 import { showToast, showConfirm } from '../toast.js';
+import { showPinKeypadModal } from '../pinKeypadModal.js';
+import { completeTaskWithPin, hasActiveSession } from '../pinAuth.js';
 
 const STATUS_LABELS = {
   'sin_iniciar': 'Sin Iniciar',
@@ -8,8 +10,20 @@ const STATUS_LABELS = {
   'vencida': 'Vencida'
 };
 
+const ROLE_COLORS = {
+  'todos': '#e8f5e8',      // Verde claro
+  'admin': '#fff2e8',      // Naranja claro
+  'empleado': '#e8f0ff',   // Azul claro
+  'supervisor': '#f0e8ff'  // Morado claro
+};
+
+const VALID_ROLES = ['todos', 'admin', 'empleado', 'supervisor'];
+const AUTH_ROLES = ['admin', 'supervisor', 'empleado'];
+
 export const showVerEditarTareaModal = async (tarea, userRole, targetEmployeeId = null) => {
   console.log('Mostrando modal para tarea:', tarea);
+  console.log('Rol de usuario:', userRole);
+  // console.log('targetEmployeeId:', targetEmployeeId);
   // Crear overlay
   const overlay = document.createElement('div');
   overlay.id = 'ver-editar-tarea-overlay';
@@ -34,30 +48,63 @@ export const showVerEditarTareaModal = async (tarea, userRole, targetEmployeeId 
   // Determinar si es tarea extra disponible
   const isExtraAvailable = tarea.estatus === 'extra' && !tarea.completadaPor;
   
+  const user = localStorage.getItem('loggedUser') ? JSON.parse(localStorage.getItem('loggedUser')) : null;
   // Obtener userId actual
-  const currentUserId = parseInt(localStorage.getItem('userId')) || null;
+  const currentUserId = user ? user.id : null;
   
   // Si es el dueño original de una tarea extra vencida, no puede completarla
   const isOriginalOwner = tarea.empleadoId === currentUserId && isExtraAvailable;
 
+  const sessionActive = hasActiveSession();
+
   // Determinar permisos
-  const canEdit = (userRole === 'admin' || userRole === 'supervisor');
+  // Solo usuarios autenticados pueden editar
+  const canEdit = userRole && (userRole === 'admin' || userRole === 'supervisor');
+  
+  // Solo usuarios autenticados pueden completar tareas normales en progreso
   const canComplete = tarea.estatus === 'en_progreso' && 
-                      (userRole === 'admin' || userRole === 'supervisor' || userRole === 'empleado');
-  const canCompleteExtra = isExtraAvailable && targetEmployeeId && !isOriginalOwner;
-  const showEditButton = (userRole === 'admin' || userRole === 'supervisor');
+                     ((sessionActive && userRole && AUTH_ROLES.includes(userRole)) ||
+                      (!sessionActive && userRole === null)); // También visitantes pueden usar PIN
+                    
+  
+  // Para tareas extra: 
+  // - Usuarios autenticados (empleado/supervisor/admin) pueden completar directamente
+  // - Visitantes (userRole === null) pueden completar usando PIN
+  const canCompleteExtra = isExtraAvailable && !isOriginalOwner && 
+                           ((sessionActive && userRole && AUTH_ROLES.includes(userRole)) ||
+                            (!sessionActive && !userRole)); // Visitantes sin sesión pueden usar PIN
+  
+  // Solo usuarios autenticados con permisos pueden ver botón editar
+  const showEditButton = userRole && (userRole === 'admin' || userRole === 'supervisor');
+
+  // // Logging para depuración
+  // console.log('🔍 Permisos calculados:', {
+  //   userRole: userRole || 'VISITANTE',
+  //   hasActiveSession: sessionActive,
+  //   isExtraAvailable,
+  //   canEdit,
+  //   canComplete,
+  //   canCompleteExtra,
+  //   showEditButton,
+  //   currentUserId,
+  // });
+
+  // Condiciones para mostrar botones de completar
+  const showCompletarTareaBtn = canComplete && sessionActive && userRole;
+  const showCompletarPinBtn = (canComplete || canCompleteExtra) && !sessionActive;
+  const showButtonExtra = canCompleteExtra && sessionActive && userRole;
 
   // Rellenar datos de la tarea
   fillTaskData(modal, tarea);
 
   // Configurar modo edición o solo lectura
-  setupPermissions(modal, canEdit, canComplete, canCompleteExtra, tarea, showEditButton, isOriginalOwner);
+  setupPermissions(modal, canEdit, canComplete, canCompleteExtra, tarea, showEditButton, isOriginalOwner, userRole, showCompletarTareaBtn, showCompletarPinBtn, showButtonExtra);
 
   // Mostrar advertencias si aplica
   showWarnings(modal, tarea, targetEmployeeId, isOriginalOwner);
 
   // Event listeners
-  setupEventListeners(modal, overlay, tarea, canEdit, canComplete, canCompleteExtra, targetEmployeeId, showEditButton);
+  setupEventListeners(modal, overlay, tarea, canEdit, canComplete, canCompleteExtra, targetEmployeeId, showEditButton, userRole, sessionActive);
 
   // Cerrar al hacer clic fuera
   overlay.addEventListener('click', (e) => {
@@ -85,34 +132,19 @@ function fillTaskData(modal, tarea) {
     currentRole = tarea.disponible_para;
   }
   
-  console.log('disponible_para_rol:', tarea.disponible_para_rol);
-  console.log('disponible_para:', tarea.disponible_para);
-  console.log('Rol seleccionado final:', currentRole);
+  // console.log('disponible_para_rol:', tarea.disponible_para_rol);
+  // console.log('disponible_para:', tarea.disponible_para);
+  // console.log('Rol seleccionado final:', currentRole);
   
   // Validar que el valor existe en las opciones del select
-  const validRoles = ['todos', 'admin', 'empleado', 'supervisor'];
-  if (!validRoles.includes(currentRole)) {
+  if (!VALID_ROLES.includes(currentRole)) {
     currentRole = 'todos';
   }
   
   disponibleParaSelect.value = currentRole;
   
   // Aplicar estilo de resaltado según el rol actual
-  const roleColors = {
-    'todos': '#e8f5e8',      // Verde claro
-    'admin': '#fff2e8',      // Naranja claro  
-    'empleado': '#e8f0ff',   // Azul claro
-    'supervisor': '#f0e8ff'  // Morado claro
-  };
-  
-  const roleLabels = {
-    'todos': '🌟',
-    'admin': '👑', 
-    'empleado': '👤',
-    'supervisor': '👔'
-  };
-  
-  disponibleParaSelect.style.backgroundColor = roleColors[currentRole] || roleColors['todos'];
+  disponibleParaSelect.style.backgroundColor = ROLE_COLORS[currentRole] || ROLE_COLORS['todos'];
   disponibleParaSelect.style.fontWeight = '600';
   
   modal.querySelector('#tarea-estado').value = STATUS_LABELS[tarea.estatus] || tarea.estatus;
@@ -128,12 +160,13 @@ function fillTaskData(modal, tarea) {
   estadoInput.style.background = colors[tarea.estatus] || '#f7f7fb';
 }
 
-function setupPermissions(modal, canEdit, canComplete, canCompleteExtra, tarea, showEditButton, isOriginalOwner) {
+function setupPermissions(modal, canEdit, canComplete, canCompleteExtra, tarea, showEditButton, isOriginalOwner, userRole, showCompletarTareaBtn, showCompletarPinBtn, showButtonExtra) {
   const inputs = modal.querySelectorAll('.form-input:not(#tarea-estado), .form-textarea');
   const disponibleParaSelect = modal.querySelector('#tarea-disponible-para');
   const btnGuardar = modal.querySelector('#btn-guardar-cambios-tarea');
   const btnEliminar = modal.querySelector('#btn-eliminar-tarea');
   const btnCompletar = modal.querySelector('#btn-completar-tarea');
+  const btnCompletarPin = modal.querySelector('#btn-completar-pin');
   const btnEditar = modal.querySelector('#btn-editar-tarea');
 
   if (canEdit) {
@@ -161,20 +194,33 @@ function setupPermissions(modal, canEdit, canComplete, canCompleteExtra, tarea, 
     }
   }
 
-  if (canComplete) {
+  // Mostrar botón completar tarea normal (con sesión activa)
+  if (showCompletarTareaBtn) {
+    btnCompletar.textContent = 'Completar Tarea';
     btnCompletar.style.display = 'flex';
   }
 
-  if (canCompleteExtra) {
-    // Cambiar texto del botón para tarea extra
+  // Mostrar botón completar tarea extra (con sesión activa)
+  if (showButtonExtra) {
     btnCompletar.textContent = '⭐ Completar Tarea Extra';
     btnCompletar.style.display = 'flex';
     btnCompletar.style.background = '#3b82f6';
   }
+
+  // Mostrar botón PIN (sin sesión, solo visitantes)
+  if (showCompletarPinBtn) {
+    if (canCompleteExtra) {
+      btnCompletarPin.textContent = '🔑 Usar PIN para Tarea Extra';
+    } else {
+      btnCompletarPin.textContent = '🔑 Usar PIN para Completar';
+    }
+    btnCompletarPin.style.display = 'flex';
+  }
   
-  // Si es el dueño original de una tarea vencida convertida en extra, ocultar botón de completar
+  // Si es el dueño original de una tarea vencida convertida en extra, ocultar botones de completar
   if (isOriginalOwner) {
     btnCompletar.style.display = 'none';
+    btnCompletarPin.style.display = 'none';
   }
 }
 
@@ -208,7 +254,7 @@ function showWarnings(modal, tarea, targetEmployeeId = null, isOriginalOwner = f
     warningBox.style.display = 'flex';
     warningBox.style.background = '#dbeafe';
     warningBox.style.borderLeftColor = '#3b82f6';
-    warningText.textContent = `✓ Tarea extra completada por empleado ID: ${tarea.completadaPor}`;
+    warningText.textContent = `Tarea extra completada por empleado ID: ${tarea.completadaPor}`;
     warningText.style.color = '#1e40af';
   } else if (tarea.estatus === 'sin_iniciar') {
     // Calcular tiempo faltante
@@ -232,7 +278,7 @@ function showWarnings(modal, tarea, targetEmployeeId = null, isOriginalOwner = f
   }
 }
 
-function setupEventListeners(modal, overlay, tarea, canEdit, canComplete, canCompleteExtra, targetEmployeeId = null, showEditButton = false) {
+function setupEventListeners(modal, overlay, tarea, canEdit, canComplete, canCompleteExtra, targetEmployeeId = null, showEditButton = false, userRole, sessionActive) {
   // Cerrar modal
   const closeBtn = modal.querySelector('#close-ver-editar-tarea');
   const cerrarBtn = modal.querySelector('#btn-cerrar-tarea');
@@ -242,16 +288,9 @@ function setupEventListeners(modal, overlay, tarea, canEdit, canComplete, canCom
 
   // Event listener para cambiar el color del select dinámicamente
   const disponibleParaSelect = modal.querySelector('#tarea-disponible-para');
-  const roleColors = {
-    'todos': '#e8f5e8',      // Verde claro
-    'admin': '#fff2e8',      // Naranja claro  
-    'empleado': '#e8f0ff',   // Azul claro
-    'supervisor': '#f0e8ff'  // Morado claro
-  };
-  
   disponibleParaSelect.addEventListener('change', (e) => {
     const selectedRole = e.target.value;
-    disponibleParaSelect.style.backgroundColor = roleColors[selectedRole] || roleColors['todos'];
+    disponibleParaSelect.style.backgroundColor = ROLE_COLORS[selectedRole] || ROLE_COLORS['todos'];
   });
 
   // Guardar cambios
@@ -280,17 +319,27 @@ function setupEventListeners(modal, overlay, tarea, canEdit, canComplete, canCom
     });
   }
 
-  // Completar tarea (normal o extra)
-  if (canComplete || canCompleteExtra) {
+  // Completar tarea normal (con sesión activa)
+  if ((canComplete || canCompleteExtra) && sessionActive) {
     const btnCompletar = modal.querySelector('#btn-completar-tarea');
     btnCompletar.addEventListener('click', async () => {
       if (canCompleteExtra) {
-        // Completar tarea extra
-        await completeExtraTask(tarea.id, targetEmployeeId, overlay);
+        // Completar tarea extra con el usuario actual de la sesión
+        const currentUserId = parseInt(localStorage.getItem('userId'));
+        await completeExtraTask(tarea.id, currentUserId, overlay);
       } else {
         // Completar tarea normal
         await completeTask(tarea.id, overlay);
       }
+    });
+  }
+
+  // Completar tarea con PIN (sin sesión activa)
+  if ((canComplete || canCompleteExtra) && !sessionActive) {
+    const btnCompletarPin = modal.querySelector('#btn-completar-pin');
+    btnCompletarPin.addEventListener('click', async () => {
+      // Usar sistema de PIN
+      await handleCompleteTaskWithPin(tarea, overlay);
     });
   }
 }
@@ -440,5 +489,34 @@ async function completeExtraTask(tareaId, employeeId, overlay) {
   } catch (error) {
     console.error('Error:', error);
     showToast('Error al completar la tarea extra. Verifica tu conexión.', 'error');
+  }
+}
+
+
+/**
+ * Maneja el completar tarea usando sistema de PIN
+ */
+async function handleCompleteTaskWithPin(tarea, overlay) {
+  try {
+    const pin = await showPinKeypadModal(tarea);
+    if (pin === null || pin === undefined) {
+      // Usuario canceló la entrada de PIN
+      return;
+    }
+
+    const result = await completeTaskWithPin(tarea, pin);
+    if (result.success) {
+      showToast(result.message, 'success');
+      overlay.remove();
+      
+      // Actualizar panel
+      const event = new CustomEvent('refreshPanel');
+      window.dispatchEvent(event);
+    } else {
+      showToast(result.message, 'error');
+    }
+  } catch (error) {
+    console.error('Error al completar tarea con PIN:', error);
+    showToast('Error interno del sistema', 'error');
   }
 }

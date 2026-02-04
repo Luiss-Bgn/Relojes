@@ -383,7 +383,7 @@ class HistorialManager:
             self.historial_dao.actualizar(historial_id, **datos)
             registro_actualizado = self.historial_dao.obtener_por_id(historial_id)
             
-            logger.info(f"REGISTRO ACTUALIZADO - ID: {historial_id} | Campos: {list(datos.keys())}")
+            # logger.info(f"REGISTRO ACTUALIZADO - ID: {historial_id} | Campos: {list(datos.keys())}")
             return {
                 "status": "success",
                 "registro": registro_actualizado,

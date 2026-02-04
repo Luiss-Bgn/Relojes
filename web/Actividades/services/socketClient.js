@@ -20,7 +20,7 @@ export const createSocketClient = ({ onMessage, onStatus }) => {
     socket = new WebSocket(WS_URL, ["web-client"]);
 
     socket.onopen = () => {
-      console.log("🔌 WebSocket conectado");
+      // console.log("🔌 WebSocket conectado");
       socket.send(JSON.stringify({ tipo: "auth", token: localStorage.getItem("authToken") || "" }));
       notifyStatus("online");
     };

@@ -263,7 +263,7 @@ class TareasManager:
             self.tareas_dao.actualizar(tareas_semana_id, **datos)
             registro_actualizado = self.tareas_dao.obtener_por_id(tareas_semana_id)
             
-            logger.info(f"REGISTRO ACTUALIZADO - ID: {tareas_semana_id} | Campos: {list(datos.keys())}")
+            # logger.info(f"REGISTRO ACTUALIZADO - ID: {tareas_semana_id} | Campos: {list(datos.keys())}")
             return {
                 "status": "success",
                 "registro": registro_actualizado,

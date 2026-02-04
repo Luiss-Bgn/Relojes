@@ -41,7 +41,7 @@ function buildMenu() {
       ];
     } else if (userRole === "supervisor") {
       // Supervisores NO tienen acceso a Historial
-      console.log("✅ [Menu] Acceso limitado - Supervisor");
+      // console.log("✅ [Menu] Acceso limitado - Supervisor");
       menuItems = [
         { tabId: 'tab-1', label: 'Actividades Diarias', href: '/actividades', defaultChecked: true },
         { tabId: 'tab-2', label: 'Informes'     , href: '/informes' },
@@ -342,7 +342,7 @@ function createUserCard() {
     username = 'usuario';
     roleDisplay = 'visitante';
   } else {
-    username = loggedUser.username || loggedUser.nombre || 'Usuario';
+    username = loggedUser.nombre || loggedUser.username  || 'Usuario';
     const role = loggedUser.role || 'empleado';
     roleDisplay = role === 'admin' ? 'Administrador' : role === 'supervisor' ? 'Supervisor' : 'Empleado';
   }
