@@ -1,6 +1,7 @@
 import { showCrearTareaModal } from './modals/crearTareaModal.js';
 import { showEditarTareasModal } from './modals/editarTareasModal.js';
 import { showVerInfoModal } from './modals/verInfoModal.js';
+import { showToast, showConfirm } from './toast.js';
 
 export const showEmployeeMenu = (emp, event) => {
 
@@ -77,9 +78,8 @@ export const showEmployeeMenu = (emp, event) => {
         showVerInfoModal(emp);
         break;
       case 'eliminar':
-        console.log('Eliminar empleado:', emp.nombre);
         overlay.remove();
-        // TODO: Implementar confirmación y eliminación
+        eliminarEmpleado(emp);
         break;
       case 'cerrar':
         overlay.remove();
@@ -94,3 +94,36 @@ export const showEmployeeMenu = (emp, event) => {
     }
   });
 };
+
+// Función para eliminar un empleado
+async function eliminarEmpleado(emp) {
+  const confirmed = await showConfirm(
+    `Se eliminarán todas las tareas asignadas a ${emp.nombre}. Esta acción no se puede deshacer.`,
+    `¿Eliminar a ${emp.nombre}?`
+  );
+  
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`http://localhost:8001/usuarios/${emp.id}`, {
+      method: 'DELETE'
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      showToast(`Empleado ${emp.nombre} eliminado exitosamente`, 'success');
+      
+      // Actualizar panel
+      const event = new CustomEvent('refreshPanel');
+      window.dispatchEvent(event);
+    } else {
+      showToast('Error al eliminar empleado: ' + (result.detail || result.mensaje || 'Error desconocido'), 'error');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    showToast('Error al eliminar empleado. Verifica tu conexión.', 'error');
+  }
+}

@@ -130,7 +130,7 @@ const init = async () => {
   viewState = adaptPanel(panelData, selectedDay);
   renderPanel(viewState);
   
-  console.log("datos view", viewState)
+  // console.log("datos view", viewState)
   updateClock();
   setInterval(updateClock, 1000);
   

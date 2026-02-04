@@ -86,7 +86,25 @@ export const adaptPanel = (payload, preferredDate) => {
   const panelArray = derivePanelArray(payload);
   const dateKey = findDateKey(panelArray, preferredDate);
 
-  const employees = panelArray.filter((p) => p.rol !== "admin").map((p) => ({
+  // Obtener rol del usuario logueado
+  const loggedUserString = localStorage.getItem("loggedUser");
+  const loggedUser = loggedUserString ? JSON.parse(loggedUserString) : null;
+  const userRole = loggedUser ? loggedUser.role.toLowerCase() : null;
+
+  // Filtrar empleados según rol del usuario
+  let employees;
+  if (!userRole || userRole === 'empleado') {
+    // Sin sesión o empleado: solo mostrar empleados
+    employees = panelArray.filter((p) => p.rol === "empleado");
+  } else if (userRole === 'supervisor' || userRole === 'admin') {
+    // Supervisor o admin: mostrar empleados y supervisores
+    employees = panelArray.filter((p) => p.rol === "empleado" || p.rol === "supervisor");
+  } else {
+    // Fallback: mostrar solo empleados
+    employees = panelArray.filter((p) => p.rol === "empleado");
+  }
+
+  employees = employees.map((p) => ({
     id: p.id,
     nombre: p.nombre,
     puesto: p.puesto,
@@ -100,6 +118,13 @@ export const adaptPanel = (payload, preferredDate) => {
   employees.forEach((emp) => {
     const assigned = (panelArray.find((p) => p.id === emp.id)?.tareas_asignadas || {})[dateKey] || [];
     assigned.forEach((task) => {
+      const taskStatus = statusFromTask(task);
+      
+      // Filtrar tareas con estatus "proximo" - no mostrarlas en la tabla principal
+      if (taskStatus === 'proximo') {
+        return;
+      }
+      
       rows.push({
         id: `${emp.id}-${task.id}`,
         tareaId: task.id,
@@ -108,7 +133,7 @@ export const adaptPanel = (payload, preferredDate) => {
         titulo: task.nombre || task.titulo || "Tarea",
         descripcion: task.descripcion || task.detalle || "",
         puntos: task.puntos ?? task.valor ?? 0,
-        estatus: statusFromTask(task),
+        estatus: taskStatus,
         completadaPor: task.completadaPor,
         disponible_para_rol: task.disponible_para_rol || 'todos'
       });

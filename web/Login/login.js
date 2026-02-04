@@ -26,7 +26,8 @@ if (loginForm) {
                     username: usuario.username,
                     role: usuario.rol,
                     empleado_id: usuario.id,
-                    tipo: usuario.puesto
+                    tipo: usuario.puesto,
+                    nombre: usuario.nombre
                 };
                 localStorage.setItem("loggedUser", JSON.stringify(loggedUserData));
                 window.location.href = "/actividades";
