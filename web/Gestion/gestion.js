@@ -28,7 +28,7 @@ export function abrirModal(id) {
 
 /* -------- restricción de rol -------- */
 const usuario = JSON.parse(localStorage.getItem("loggedUser"));
-if (!usuario || (usuario.role !== "admin" && usuario.role !== "supervisor")) {
+if (!usuario || (usuario.role !== "admin" && usuario.role !== "administrador" && usuario.role !== "supervisor")) {
   window.location.href = "/actividades";
 }
 
@@ -144,12 +144,12 @@ function cargarCrearEmpleado() {
   
   // Generar opciones del select según rol del usuario actual
   let opcionesRol = '';
-  if (rolUsuarioActual === "admin") {
+  if (rolUsuarioActual === "admin" || rolUsuarioActual === "administrador") {
     opcionesRol = `
       <option value="" disabled selected></option>
       <option value="empleado">Empleado</option>
       <option value="supervisor">Supervisor</option>
-      <option value="admin">Administrador</option>`;
+      <option value="administrador">Administrador</option>`;
   } else if (rolUsuarioActual === "supervisor") {
     opcionesRol = `
       <option value="" disabled selected></option>
@@ -596,18 +596,21 @@ async function cargarRegistrarEquipo() {
     return;
   }
   
-  // Hacer ping a los relojes y cargar la lista inicial
-  try {
-    await fetch('/ping_relojes');
-  } catch (error) {
-    console.error('Error al hacer ping a relojes:', error);
-  }
+  // 🔴 DESACTIVADO: Hacer ping a los relojes y cargar la lista inicial
+  // try {
+  //   await fetch('/ping_relojes');
+  // } catch (error) {
+  //   console.error('Error al hacer ping a relojes:', error);
+  // }
   
-  // Cargar y mostrar tarjetas
-  await actualizarTarjetasRelojes();
+  // 🔴 DESACTIVADO: Cargar y mostrar tarjetas
+  // await actualizarTarjetasRelojes();
   
-  // Configurar polling cada 10 segundos
-  setInterval(actualizarTarjetasRelojes, 10000);
+  // 🔴 DESACTIVADO: Configurar polling cada 10 segundos
+  // setInterval(actualizarTarjetasRelojes, 10000);
+  
+  // Mostrar mensaje de función desactivada
+  container.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">📱 Función de relojes conectados desactivada</p>';
   
   console.log('✅ Sección Registrar Equipo cargada');
 }
@@ -615,68 +618,12 @@ async function cargarRegistrarEquipo() {
 /**
  * actualizarTarjetasRelojes()
  * Obtiene relojes sin asignar y actualiza las tarjetas
+ * 🔴 FUNCIÓN DESACTIVADA
  */
 async function actualizarTarjetasRelojes() {
-  const container = document.getElementById('contenedor-relojes');
-  if (!container) {
-    console.warn('⚠️ Contenedor de relojes no encontrado');
-    return;
-  }
-  
-  try {
-    console.log('🔄 Obteniendo lista de relojes...');
-    const response = await fetch('/relojes_conectados.json'); // 👈 Ruta correcta
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    
-    const datos = await response.json();
-    console.log('📦 Relojes recibidos:', datos);
-    
-    // Filtrar solo relojes sin empleado asignado
-    const relojesSinAsignar = (Array.isArray(datos) ? datos : []).filter(
-      r => !r.empleado_id || r.empleado_id.trim() === ''
-    );
-    
-    console.log(`✅ Relojes sin asignar: ${relojesSinAsignar.length}`);
-    
-    if (relojesSinAsignar.length === 0) {
-      container.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">📱 No hay relojes disponibles para asignar</p>';
-      return;
-    }
-    
-    // Generar HTML de las tarjetas
-    container.innerHTML = relojesSinAsignar.map((r, i) => `
-      <div class="reloj ${r.estatus === 'conectado' ? 'conectado' : 'desconectado'}"
-           data-reloj-id="${r.reloj_id}"
-           data-idx="${i}">
-        <strong>ID:</strong> ${r.reloj_id}<br>
-        <strong>Empleado:</strong> ${r.empleado_id || 'Sin asignar'}<br>
-        <strong>IP:</strong> ${r.ip}<br>
-        <strong>UUID:</strong> ${r.uuid || 'N/A'}<br>
-        <strong>Estado:</strong> ${r.estatus}
-      </div>
-    `).join('');
-    
-    // Agregar evento click a las tarjetas
-    container.querySelectorAll('.reloj').forEach(card => {
-      card.addEventListener('click', () => {
-        const relojId = card.dataset.relojId;
-        console.log('🖱️ Click en reloj:', relojId);
-        abrirModalAsignarReloj(relojId);
-      });
-    });
-    
-  } catch (error) {
-    console.error('❌ Error al actualizar tarjetas de relojes:', error);
-    container.innerHTML = `
-      <p style="text-align: center; color: #e74c3c; padding: 40px;">
-        ❌ Error al cargar relojes<br>
-        <small style="color: #999;">${error.message}</small>
-      </p>
-    `;
-  }
+  // Función desactivada - no se usa
+  console.log('⚠️ Función actualizarTarjetasRelojes desactivada');
+  return;
 }
 
 /**

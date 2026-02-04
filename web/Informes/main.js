@@ -15,7 +15,7 @@ console.log("Usuario desde localStorage:", usuario);
 console.log("Rol del usuario:", usuario?.role);
 console.log("Cookies del navegador:", document.cookie);
 
-if (!usuario || !["admin", "supervisor", "empleado"].includes(usuario.role)) {
+if (!usuario || !["admin", "administrador", "supervisor", "empleado"].includes(usuario.role)) {
   console.log("❌ ACCESO DENEGADO - Redirigiendo a actividades");
   console.log("Razón:", !usuario ? "No hay usuario" : `Rol no permitido: ${usuario.role}`);
   window.location.href = "/actividades";
@@ -145,9 +145,14 @@ function stopAutoRefresh() {
 
 /* ----------------- ADMIN ----------------------- */
 async function generarItinerarios() {
+  console.log("🚀 [generarItinerarios] INICIANDO...");
+  console.log("🚀 [generarItinerarios] empleadosData.length:", empleadosData.length);
+  
   const tarjetasContainer = document.getElementById("tarjetas-container");
+  console.log("🚀 [generarItinerarios] tarjetasContainer:", tarjetasContainer);
+  
   if (!tarjetasContainer) {
-    console.error("No existe contenedor con ID 'tarjetas-container'.");
+    console.error("❌ No existe contenedor con ID 'tarjetas-container'.");
     return;
   }
 
@@ -205,7 +210,8 @@ async function generarItinerarios() {
   
   // 🔥 Filtrar según rol del usuario
   empleadosFiltrados = empleadosData.filter(emp => {
-    const empRole = emp.role ? emp.role.toLowerCase() : (emp.role_dp ? emp.role_dp.toLowerCase() : 'empleado');
+    // 🔥 CORREGIDO: La propiedad se llama 'rol' (no 'role')
+    const empRole = emp.rol ? emp.rol.toLowerCase() : 'empleado';
     
     // NUNCA mostrar admin
     if (empRole === 'admin' || empRole === 'administrador') {
@@ -219,7 +225,7 @@ async function generarItinerarios() {
       const mostrar = empRole === 'empleado';
       console.log(`   ${mostrar ? '✅' : '❌'} ${emp.nombre} (rol=${empRole}) → ${userRole} solo ve empleados`);
       return mostrar;
-    } else if (userRole === 'supervisor' || userRole === 'admin') {
+    } else if (userRole === 'supervisor' || userRole === 'admin' || userRole === 'administrador') {
       // Ver empleados + supervisores
       const mostrar = empRole === 'empleado' || empRole === 'supervisor';
       console.log(`   ${mostrar ? '✅' : '❌'} ${emp.nombre} (rol=${empRole}) → ${userRole} ve empleados + supervisores`);
@@ -312,6 +318,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const { role, empleado_id } = usuario;
 
+    console.log("📍 [DOMContentLoaded] Rol del usuario:", role);
+    console.log("📍 [DOMContentLoaded] Empleados cargados:", empleadosData.length);
 
     // Restaurar el título principal sin header derecho
     const tituloInformes = document.getElementById("titulo-informes");
@@ -324,9 +332,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       tituloInformes.style.display = 'block';
     }
 
-    if (role === "admin" || role === "supervisor") {
+    if (role === "admin" || role === "administrador" || role === "supervisor") {
+      console.log("✅ [DOMContentLoaded] Llamando a generarItinerarios()...");
       await generarItinerarios();
+      console.log("✅ [DOMContentLoaded] generarItinerarios() completado");
     } else if (role === "empleado") {
+      console.log("✅ [DOMContentLoaded] Llamando a mostrarPanelDerecho()...");
       await mostrarPanelDerecho(parseInt(empleado_id, 10));
     }
     

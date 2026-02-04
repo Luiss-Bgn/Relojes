@@ -447,27 +447,28 @@ export async function enviarFormularioEmpleado() {
   }
 
   try {
-    // 🔥 PREPARAR DATOS EN FORMATO JSON (no FormData)
-    const datosUsuario = {
-      nombre: formData.get("nombre"),
-      username: formData.get("username"),
-      contraseña: formData.get("password"), // Se envía como "contraseña" en el JSON
-      pin: parseInt(formData.get("pin")), // Convertir a número
-      rol: formData.get("role"),
-      puesto: formData.get("puesto")
-    };
+    // 🔥 USAR FormData para enviar datos + imagen
+    const formDataToSend = new FormData();
+    formDataToSend.append('nombre', formData.get("nombre"));
+    formDataToSend.append('username', formData.get("username"));
+    formDataToSend.append('contraseña', formData.get("password"));
+    formDataToSend.append('pin', formData.get("pin"));
+    formDataToSend.append('rol', formData.get("role"));
+    formDataToSend.append('puesto', formData.get("puesto"));
     
-    // 🔥 Si hay imagen, se captura por separado (no incluirla en el JSON principal si se decide no enviarla)
+    // 🔥 Si hay imagen, agregarla al FormData
     const imagenFile = form.querySelector('#imagen')?.files?.[0];
+    if (imagenFile) {
+      formDataToSend.append('imagen', imagenFile);
+      console.log("📸 Imagen adjunta:", imagenFile.name);
+    }
     
-    console.log("📤 Enviando datos a /usuarios:", datosUsuario);
+    console.log("📤 Enviando datos a /usuarios con FormData");
     
     const response = await fetch("/usuarios", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(datosUsuario)
+      body: formDataToSend
+      // 🔥 NO incluir Content-Type header - el navegador lo configura automáticamente para FormData
     });
 
     if (response.ok) {

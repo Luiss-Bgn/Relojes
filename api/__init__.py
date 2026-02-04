@@ -93,6 +93,97 @@ async def health():
     }
 
 
+# ==================== UTILIDADES ====================
+
+@app.get("/check-username", tags=["Utilidades"])
+async def verificar_username(username: str):
+    """Verifica si un username ya está registrado"""
+    from database.database import DatabaseManager
+    from database.db_usuarios import UsuarioManager
+    
+    db_manager = DatabaseManager("relojes.db")
+    usuario_manager = UsuarioManager(db_manager)
+    
+    usuario = usuario_manager.dao.obtener_por_username(username)
+    return {
+        "exists": usuario is not None,
+        "username": username
+    }
+
+
+# ==================== ENDPOINTS PARA INFORMES ====================
+
+@app.get("/empleados-con-tareas", tags=["Informes"])
+async def obtener_empleados_con_tareas():
+    """Alias de /usuarios para compatibilidad con frontend de Informes"""
+    from api.usuarios.routes import listar_usuarios
+    return await listar_usuarios()
+
+
+@app.get("/tareas-vencidas", tags=["Informes"])
+async def obtener_tareas_vencidas(quincena_actual: bool = True):
+    """Obtiene tareas vencidas (no completadas) con fecha pasada"""
+    from database.database import DatabaseManager
+    from database.db_tareas import TareasManager
+    from database.db_usuarios import UsuarioManager
+    from datetime import datetime, timedelta
+    
+    db_manager = DatabaseManager("relojes.db")
+    tareas_manager = TareasManager(db_manager)
+    usuario_manager = UsuarioManager(db_manager)
+    
+    resultado_tareas = tareas_manager.listar_todos()
+    if resultado_tareas.get("status") != "success":
+        return []
+    
+    todas_tareas = resultado_tareas.get("registros", [])
+    tareas_vencidas = []
+    hoy = datetime.now().date()
+    
+    # Calcular quincena si es necesario
+    if quincena_actual:
+        dia_actual = hoy.day
+        if dia_actual <= 15:
+            inicio_quincena = hoy.replace(day=1)
+            fin_quincena = hoy.replace(day=15)
+        else:
+            inicio_quincena = hoy.replace(day=16)
+            siguiente_mes = hoy.replace(day=28) + timedelta(days=4)
+            fin_quincena = siguiente_mes - timedelta(days=siguiente_mes.day)
+    
+    for tarea in todas_tareas:
+        # Saltar completadas
+        if tarea.get("estatus") == 3 or tarea.get("estatus") == "3":
+            continue
+        
+        try:
+            fecha_tarea = datetime.strptime(tarea.get("fecha"), "%Y-%m-%d").date()
+        except:
+            continue
+        
+        # Solo vencidas
+        if fecha_tarea >= hoy:
+            continue
+        
+        # Filtrar por quincena
+        if quincena_actual and not (inicio_quincena <= fecha_tarea <= fin_quincena):
+            continue
+        
+        # Agregar info del usuario
+        usuario_id = tarea.get("id_dueño")
+        resultado_usuario = usuario_manager.obtener_usuario(usuario_id)
+        
+        if resultado_usuario.get("status") == "success":
+            usuario = resultado_usuario.get("usuario", {})
+            tareas_vencidas.append({
+                **tarea,
+                "empleado_nombre": usuario.get("nombre"),
+                "empleado_puesto": usuario.get("puesto")
+            })
+    
+    return tareas_vencidas
+
+
 # ==================== RUTAS DE VISTAS HTML ====================
 
 @app.get("/actividades", tags=["Vistas"], include_in_schema=False)

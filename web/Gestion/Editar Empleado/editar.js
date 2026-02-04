@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
           card.dataset.puesto = puesto;
 
           card.innerHTML = `
-            <img class="empleado-img" src="/web/assets/empleados/${emp.imagen}" alt="${emp.nombre}">
+            <img class="empleado-img" src="/web/Images/${emp.imagen || 'default.jpg'}" alt="${emp.nombre}">
             <div class="empleado-info">
               <p class="empleado-nombre">${emp.nombre}</p>
               <p class="empleado-puesto">${puesto}</p>

@@ -30,7 +30,7 @@ function buildMenu() {
     console.log(`🔍 [Menu] Usuario: ${loggedUser.username}, Rol: ${userRole}`);
     
     // Solo administradores tienen acceso completo (incluyendo Historial)
-    if (userRole === "admin") {
+    if (userRole === "admin" || userRole === "administrador") {
       console.log("✅ [Menu] Acceso completo - Administrador");
       menuItems = [
         { tabId: 'tab-1', label: 'Actividades Diarias', href: '/actividades', defaultChecked: true },

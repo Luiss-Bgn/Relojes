@@ -15,10 +15,10 @@ POST {{baseUrl}}/usuarios
 Content-Type: {{contentType}}
 
 {
-  "nombre": "Adrian",
-  "username": "adrian",
+  "nombre": "emir",
+  "username": "emir",
   "contraseña": "123456",
-  "pin": 1234,
+  "pin": 1224,
   "rol": "empleado",
   "puesto": "Ingeniero"
 }
@@ -74,7 +74,7 @@ Content-Type: {{contentType}}
 
 
 ### Eliminar usuario con ID 2
-DELETE {{baseUrl}}/usuarios/2
+DELETE {{baseUrl}}/usuarios/7
 
 ### Intentar eliminar usuario que no existe
 DELETE {{baseUrl}}/usuarios/999

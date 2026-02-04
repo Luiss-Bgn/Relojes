@@ -980,6 +980,12 @@ export function mostrarTareasEmpleado(empleado) {
 }
 // 🔥 NUEVA FUNCIÓN: Mostrar tabla resumen agregado de TODOS los empleados
 export function mostrarResumenAgregado() {
+  // 🔥 ASEGURAR que el panel izquierdo sea visible
+  const leftPanel = document.querySelector('.left-panel');
+  if (leftPanel) {
+    leftPanel.style.display = 'flex';
+  }
+  
   // 🔥 CAMBIO: Mostrar panel de tareas vencidas (en lugar de ocultarlo)
   mostrarPanelTareasVencidas();
   
