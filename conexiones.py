@@ -30,6 +30,6 @@ class Conexiones():
         return [c["ws"] for c in self.conexiones_activas.values() if c["tipo"] == "web"]
     
     def obtener_relojes(self):
-        return [c["ws"] for c in self.conexiones_activas.values() if c["tipo"] == "arduino"]
+        return [c["ws"] for c in self.conexiones_activas.values() if c["tipo"] == "reloj"]
     
 conexiones = Conexiones()

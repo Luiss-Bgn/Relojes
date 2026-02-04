@@ -15,12 +15,14 @@ import uvicorn
 from funciones import manager
 from database import db_manager
 from conexiones import conexiones
+from funciones.eventos import EventManager
 import time_manager
 
 # Importar API REST (ahora ambos: usuarios + historial )
 from api import app as api_app
 
-Manager = manager.Manager()
+event_Manager = EventManager()
+Manager = manager.Manager(event_Manager)
 
 # Manejar base de datos
 iniciar_db = db_manager.IniciarDB()
@@ -33,6 +35,10 @@ async def iniciar_chequeo_hora(app):
 async def detener_chequeo_hora(app):
     app['tiempo_task'].cancel()
     await app['tiempo_task']
+
+async def inicar_eventListener(app):
+    app['event_task'] = asyncio.create_task(Manager.event_listener())
+
 
 
 async def ws_handler(request):
@@ -78,6 +84,7 @@ app.router.add_get('/ws', ws_handler)
 # Arrancar manejo de tiempo
 app.on_startup.append(iniciar_chequeo_hora)
 app.on_cleanup.append(detener_chequeo_hora)
+app.on_startup.append(inicar_eventListener)
 
 
 #funciones para correr ambos servidores

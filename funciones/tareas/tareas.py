@@ -5,8 +5,9 @@ from database.db_tareas import TareasManager
 from conexiones import conexiones
 
 class Tareas():
-    def __init__(self):
+    def __init__(self, eventManager):
         self.tareas_del_dia = []
+        self.eventManager = eventManager
 
         self.dias = [
             "Lunes", "Martes", "Miércoles",
@@ -201,14 +202,16 @@ class Tareas():
         return
 
     async def Actualizar(self):
+        lista_modificaciones = []
+        lista_notificaciones = []
 
         ahora = datetime.now()
         dia = self.dias[ahora.weekday()]
 
         lista_tareas = self.tareas_manager.listar_por_fecha(dia)
-        hubo_cambios = False
 
         for tarea in lista_tareas['registros']:
+            hubo_cambios = False
 
             hora_inicio = datetime.strptime(tarea['hora_ini'], "%H:%M").replace(
                 year=ahora.year, month=ahora.month, day=ahora.day
@@ -234,9 +237,18 @@ class Tareas():
                 hubo_cambios = True
                 # print(f"Tarea en progreso: {tarea['nombre']}")
 
-        resultado = self.tareas_manager.actualizar_varios(lista_tareas['registros'])
+            if hubo_cambios:
+                lista_modificaciones.append(tarea)
+                lista_notificaciones.append(tarea['id_dueño'])
 
-        if hubo_cambios:
-            webs = conexiones.obtener_web()
-            for ws in webs:
-                await ws.send_json({"status": "update_tareas"})
+            
+        if lista_modificaciones:
+            resultado = self.tareas_manager.actualizar_varios(lista_modificaciones)
+            print(resultado)
+            await self.eventManager.emit("tareas_actualizadas", {
+                "source": "tareas",
+                "target": "individual",
+                "action": "update_tareas",
+                "notification": lista_notificaciones,
+                "data": resultado
+            })
