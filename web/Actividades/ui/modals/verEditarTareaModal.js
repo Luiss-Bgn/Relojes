@@ -2,6 +2,7 @@ import { loadModalHTML } from './modalLoader.js';
 import { showToast, showConfirm } from '../toast.js';
 import { showPinKeypadModal } from '../pinKeypadModal.js';
 import { completeTaskWithPin, hasActiveSession } from '../pinAuth.js';
+import { createNotificationMessage, NOTIFICATION_TYPES } from '../../services/notificationTypes.js';
 
 const STATUS_LABELS = {
   'sin_iniciar': 'Sin Iniciar',
@@ -23,6 +24,7 @@ const AUTH_ROLES = ['admin', 'supervisor', 'empleado'];
 export const showVerEditarTareaModal = async (tarea, userRole, targetEmployeeId = null) => {
   console.log('Mostrando modal para tarea:', tarea);
   console.log('Rol de usuario:', userRole);
+  console.log("idu")
   // console.log('targetEmployeeId:', targetEmployeeId);
   // Crear overlay
   const overlay = document.createElement('div');
@@ -35,7 +37,7 @@ export const showVerEditarTareaModal = async (tarea, userRole, targetEmployeeId 
 
   // Cargar HTML del modal
   const modalHTML = await loadModalHTML('/web/Actividades/ui/modals/verEditarTareaModal.html');
-  
+
   if (!modalHTML) {
     showToast('Error al cargar el modal', 'error');
     return;
@@ -47,11 +49,11 @@ export const showVerEditarTareaModal = async (tarea, userRole, targetEmployeeId 
 
   // Determinar si es tarea extra disponible
   const isExtraAvailable = tarea.estatus === 'extra' && !tarea.completadaPor;
-  
+
   const user = localStorage.getItem('loggedUser') ? JSON.parse(localStorage.getItem('loggedUser')) : null;
   // Obtener userId actual
   const currentUserId = user ? user.id : null;
-  
+
   // Si es el dueño original de una tarea extra vencida, no puede completarla
   const isOriginalOwner = tarea.empleadoId === currentUserId && isExtraAvailable;
 
@@ -60,20 +62,20 @@ export const showVerEditarTareaModal = async (tarea, userRole, targetEmployeeId 
   // Determinar permisos
   // Solo usuarios autenticados pueden editar
   const canEdit = userRole && (userRole === 'admin' || userRole === 'supervisor');
-  
+
   // Solo usuarios autenticados pueden completar tareas normales en progreso
-  const canComplete = tarea.estatus === 'en_progreso' && 
-                     ((sessionActive && userRole && AUTH_ROLES.includes(userRole)) ||
-                      (!sessionActive && userRole === null)); // También visitantes pueden usar PIN
-                    
-  
+  const canComplete = tarea.estatus === 'en_progreso' &&
+    ((sessionActive && userRole && AUTH_ROLES.includes(userRole)) ||
+      (!sessionActive && userRole === null)); // También visitantes pueden usar PIN
+
+
   // Para tareas extra: 
   // - Usuarios autenticados (empleado/supervisor/admin) pueden completar directamente
   // - Visitantes (userRole === null) pueden completar usando PIN
-  const canCompleteExtra = isExtraAvailable && !isOriginalOwner && 
-                           ((sessionActive && userRole && AUTH_ROLES.includes(userRole)) ||
-                            (!sessionActive && !userRole)); // Visitantes sin sesión pueden usar PIN
-  
+  const canCompleteExtra = isExtraAvailable && !isOriginalOwner &&
+    ((sessionActive && userRole && AUTH_ROLES.includes(userRole)) ||
+      (!sessionActive && !userRole)); // Visitantes sin sesión pueden usar PIN
+
   // Solo usuarios autenticados con permisos pueden ver botón editar
   const showEditButton = userRole && (userRole === 'admin' || userRole === 'supervisor');
 
@@ -92,7 +94,7 @@ export const showVerEditarTareaModal = async (tarea, userRole, targetEmployeeId 
   // Condiciones para mostrar botones de completar
   const showCompletarTareaBtn = canComplete && sessionActive && userRole;
   const showCompletarPinBtn = (canComplete || canCompleteExtra) && !sessionActive;
-  const showButtonExtra = canCompleteExtra && sessionActive && userRole;
+  const showButtonExtra = canCompleteExtra && sessionActive && userRole && (targetEmployeeId !== tarea.empleadoId);
 
   // Rellenar datos de la tarea
   fillTaskData(modal, tarea);
@@ -120,10 +122,10 @@ function fillTaskData(modal, tarea) {
   modal.querySelector('#tarea-hora-ini').value = tarea.hora_ini || '';
   modal.querySelector('#tarea-hora-fin').value = tarea.hora_fin || '';
   modal.querySelector('#tarea-puntos').value = tarea.puntos || 1;
-  
+
   // Configurar el campo disponible_para con resaltado
   const disponibleParaSelect = modal.querySelector('#tarea-disponible-para');
-  
+
   // Determinar el rol actual - priorizar el valor de la tarea
   let currentRole = 'todos'; // valor por defecto
   if (tarea.disponible_para_rol && tarea.disponible_para_rol !== '') {
@@ -131,22 +133,22 @@ function fillTaskData(modal, tarea) {
   } else if (tarea.disponible_para && tarea.disponible_para !== '') {
     currentRole = tarea.disponible_para;
   }
-  
+
   // console.log('disponible_para_rol:', tarea.disponible_para_rol);
   // console.log('disponible_para:', tarea.disponible_para);
   // console.log('Rol seleccionado final:', currentRole);
-  
+
   // Validar que el valor existe en las opciones del select
   if (!VALID_ROLES.includes(currentRole)) {
     currentRole = 'todos';
   }
-  
+
   disponibleParaSelect.value = currentRole;
-  
+
   // Aplicar estilo de resaltado según el rol actual
   disponibleParaSelect.style.backgroundColor = ROLE_COLORS[currentRole] || ROLE_COLORS['todos'];
   disponibleParaSelect.style.fontWeight = '600';
-  
+
   modal.querySelector('#tarea-estado').value = STATUS_LABELS[tarea.estatus] || tarea.estatus;
 
   // Colorear el campo de estado según el estado
@@ -178,16 +180,16 @@ function setupPermissions(modal, canEdit, canComplete, canCompleteExtra, tarea, 
     });
     // Habilitar el select de disponible_para
     disponibleParaSelect.removeAttribute('disabled');
-    
+
     btnGuardar.style.display = 'flex';
     btnEliminar.style.display = 'flex';
-    
+
     // Cambiar título
     modal.querySelector('.modal-header h2').textContent = 'Editar Tarea';
   } else {
     // Solo lectura
     modal.querySelector('.modal-header h2').textContent = 'Ver Tarea';
-    
+
     // Mostrar botón de editar si es admin/supervisor y no está en modo edición
     if (showEditButton && !canEdit) {
       btnEditar.style.display = 'flex';
@@ -216,7 +218,7 @@ function setupPermissions(modal, canEdit, canComplete, canCompleteExtra, tarea, 
     }
     btnCompletarPin.style.display = 'flex';
   }
-  
+
   // Si es el dueño original de una tarea vencida convertida en extra, ocultar botones de completar
   if (isOriginalOwner) {
     btnCompletar.style.display = 'none';
@@ -231,7 +233,7 @@ function showWarnings(modal, tarea, targetEmployeeId = null, isOriginalOwner = f
   if (tarea.estatus === 'extra' && !tarea.completadaPor) {
     // Tarea extra disponible
     warningBox.style.display = 'flex';
-    
+
     if (isOriginalOwner) {
       // Es el dueño original - mostrar advertencia en rojo
       warningBox.style.background = '#fee2e2';
@@ -241,7 +243,7 @@ function showWarnings(modal, tarea, targetEmployeeId = null, isOriginalOwner = f
     } else {
       warningBox.style.background = '#e0f2fe';
       warningBox.style.borderLeftColor = '#60a5fa';
-      
+
       if (targetEmployeeId) {
         warningText.textContent = `⭐ Presiona el botón para completar esta tarea extra.`;
       } else {
@@ -262,12 +264,12 @@ function showWarnings(modal, tarea, targetEmployeeId = null, isOriginalOwner = f
     const [horaIni, minIni] = tarea.hora_ini.split(':').map(Number);
     const inicio = new Date();
     inicio.setHours(horaIni, minIni, 0);
-    
+
     const diffMs = inicio - now;
     const diffMins = Math.floor(diffMs / 60000);
     const hours = Math.floor(diffMins / 60);
     const mins = diffMins % 60;
-    
+
     if (diffMins > 0) {
       warningBox.style.display = 'flex';
       warningBox.style.background = '#fff8e1';
@@ -282,7 +284,7 @@ function setupEventListeners(modal, overlay, tarea, canEdit, canComplete, canCom
   // Cerrar modal
   const closeBtn = modal.querySelector('#close-ver-editar-tarea');
   const cerrarBtn = modal.querySelector('#btn-cerrar-tarea');
-  
+
   closeBtn.addEventListener('click', () => overlay.remove());
   cerrarBtn.addEventListener('click', () => overlay.remove());
 
@@ -306,7 +308,7 @@ function setupEventListeners(modal, overlay, tarea, canEdit, canComplete, canCom
       await deleteTask(tarea.id, overlay);
     });
   }
-  
+
   // Botón de editar (para admin/supervisor en modo solo lectura)
   if (showEditButton && !canEdit) {
     const btnEditar = modal.querySelector('#btn-editar-tarea');
@@ -314,8 +316,9 @@ function setupEventListeners(modal, overlay, tarea, canEdit, canComplete, canCom
       // Cerrar modal actual y abrir en modo edición
       overlay.remove();
       // Re-abrir el modal pero forzando modo edición
-      const userRole = localStorage.getItem('userRole');
-      showVerEditarTareaModal(tarea, userRole, null);
+        const loggedUserString = localStorage.getItem("loggedUser");
+        const user = loggedUserString ? JSON.parse(loggedUserString) : null;
+      showVerEditarTareaModal(tarea, user.role, null);
     });
   }
 
@@ -324,9 +327,15 @@ function setupEventListeners(modal, overlay, tarea, canEdit, canComplete, canCom
     const btnCompletar = modal.querySelector('#btn-completar-tarea');
     btnCompletar.addEventListener('click', async () => {
       if (canCompleteExtra) {
-        // Completar tarea extra con el usuario actual de la sesión
-        const currentUserId = parseInt(localStorage.getItem('userId'));
-        await completeExtraTask(tarea.id, currentUserId, overlay);
+        const loggedUserString = localStorage.getItem("loggedUser");
+        const user = loggedUserString ? JSON.parse(loggedUserString) : null;
+        // Completar tarea extra
+        // Si hay targetEmployeeId (admin/supervisor haciendo clic en columna), usar ese
+        // Si no, usar el userId actual (empleado completando su propia tarea)
+        const employeeIdToComplete = targetEmployeeId || user.id;
+
+        
+        await completeExtraTask(tarea.id, employeeIdToComplete, overlay);
       } else {
         // Completar tarea normal
         await completeTask(tarea.id, overlay);
@@ -381,9 +390,14 @@ async function saveTaskChanges(modal, tareaId, overlay) {
     if (response.ok) {
       showToast('Tarea actualizada exitosamente', 'success');
       overlay.remove();
-      
+
       // Actualizar panel
       const event = new CustomEvent('refreshPanel');
+
+      createNotificationMessage(NOTIFICATION_TYPES.TAREA_ACTUALIZADA, {
+        taskId: tareaId,
+        updatedFields: tareaData
+      });
       window.dispatchEvent(event);
     } else {
       showToast('Error al actualizar la tarea: ' + (result.message || 'Error desconocido'), 'error');
@@ -410,9 +424,13 @@ async function deleteTask(tareaId, overlay) {
     if (response.ok) {
       showToast('Tarea eliminada exitosamente', 'success');
       overlay.remove();
-      
+
       // Actualizar panel
       const event = new CustomEvent('refreshPanel');
+
+      createNotificationMessage(NOTIFICATION_TYPES.TAREA_ELIMINADA, {
+        taskId: tareaId
+      });
       window.dispatchEvent(event);
     } else {
       showToast('Error al eliminar la tarea: ' + (result.message || 'Error desconocido'), 'error');
@@ -443,9 +461,14 @@ async function completeTask(tareaId, overlay) {
     if (response.ok) {
       showToast('✓ Tarea completada exitosamente', 'success');
       overlay.remove();
-      
+
       // Actualizar panel
       const event = new CustomEvent('refreshPanel');
+
+      createNotificationMessage(NOTIFICATION_TYPES.TAREA_COMPLETADA, {
+        taskId: tareaId
+      });
+
       window.dispatchEvent(event);
     } else {
       showToast('Error al completar la tarea: ' + (result.message || 'Error desconocido'), 'error');
@@ -461,16 +484,15 @@ async function completeExtraTask(tareaId, employeeId, overlay) {
   if (!confirmed) {
     return;
   }
-
   try {
     const response = await fetch(`http://localhost:8001/tareas/${tareaId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         estatus: 'extra',
-        completadaPor: employeeId 
+        completadaPor: employeeId
       })
     });
 
@@ -479,9 +501,13 @@ async function completeExtraTask(tareaId, employeeId, overlay) {
     if (response.ok) {
       showToast('⭐ Tarea extra completada exitosamente', 'success');
       overlay.remove();
-      
+
       // Actualizar panel
       const event = new CustomEvent('refreshPanel');
+      createNotificationMessage(NOTIFICATION_TYPES.TAREA_EXTRA_COMPLETADA, {
+        taskId: tareaId
+      });
+
       window.dispatchEvent(event);
     } else {
       showToast('Error al completar la tarea extra: ' + (result.message || 'Error desconocido'), 'error');
@@ -508,7 +534,7 @@ async function handleCompleteTaskWithPin(tarea, overlay) {
     if (result.success) {
       showToast(result.message, 'success');
       overlay.remove();
-      
+
       // Actualizar panel
       const event = new CustomEvent('refreshPanel');
       window.dispatchEvent(event);

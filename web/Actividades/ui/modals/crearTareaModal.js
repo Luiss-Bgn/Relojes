@@ -1,5 +1,6 @@
 import { loadModalHTML } from './modalLoader.js';
 import { showToast } from '../toast.js';
+import { createNotificationMessage, NOTIFICATION_TYPES } from '../../services/notificationTypes.js';
 
 export const showCrearTareaModal = async (emp) => {
   // Crear overlay
@@ -65,6 +66,9 @@ export const showCrearTareaModal = async (emp) => {
       return;
     }
     
+    // Determinar estatus según si la hora ya pasó
+    const estatus = determinarEstatus(diasSeleccionados, hora_ini);
+    
     const tareaData = {
       nombre: formData.get('nombre'),
       descripcion: formData.get('descripcion'),
@@ -74,13 +78,13 @@ export const showCrearTareaModal = async (emp) => {
       disponible_para_rol: formData.get('disponible_para_rol'),
       fecha: diasSeleccionados,
       id_dueño: emp.id,
-      estatus: 'sin_iniciar',
+      estatus: estatus,
     };
     
     // Validación 2: verificar solapamiento de horarios
-    const hasConflict = await checkTimeConflict(emp.id, diasSeleccionados, hora_ini, hora_fin);
-    if (hasConflict) {
-      showToast('Ya existe una tarea en ese horario para este empleado', 'error');
+    const conflictInfo = await checkTimeConflict(emp.id, diasSeleccionados, hora_ini, hora_fin);
+    if (conflictInfo) {
+      showToast(`Ya existe "${conflictInfo.nombre}" el ${conflictInfo.dia} de ${conflictInfo.hora_ini} a ${conflictInfo.hora_fin}`, 'error', 5000);
       return;
     }
     
@@ -102,6 +106,8 @@ export const showCrearTareaModal = async (emp) => {
         overlay.remove();
         // Actualizar panel sin recargar página
         const event = new CustomEvent('refreshPanel');
+
+        createNotificationMessage(NOTIFICATION_TYPES.TAREA_CREADA );
         window.dispatchEvent(event);
       } else {
         showToast('Error al crear la tarea: ' + (result.message || 'Error desconocido'), 'error');
@@ -127,6 +133,26 @@ function timeToMinutes(timeStr) {
   return h * 60 + m;
 }
 
+// Función para determinar el estatus según si la hora ya pasó
+function determinarEstatus(dias, hora_ini) {
+  const ahora = new Date();
+  const diaActual = ahora.toLocaleDateString("es-ES", { weekday: "long" });
+  const diaActualCapitalizado = diaActual.charAt(0).toUpperCase() + diaActual.slice(1);
+  
+  const horaActualMinutos = ahora.getHours() * 60 + ahora.getMinutes();
+  const horaIniMinutos = timeToMinutes(hora_ini);
+  
+  // Verificar si alguno de los días seleccionados es hoy
+  const incluyeHoy = dias.includes(diaActualCapitalizado);
+  
+  if (incluyeHoy && horaIniMinutos < horaActualMinutos) {
+    // La tarea es para hoy pero la hora ya pasó
+    return 'proximo';
+  }
+  
+  return 'sin_iniciar';
+}
+
 // Función para verificar conflicto de horarios
 async function checkTimeConflict(empleadoId, dias, hora_ini, hora_fin) {
   try {
@@ -135,13 +161,13 @@ async function checkTimeConflict(empleadoId, dias, hora_ini, hora_fin) {
     const result = await response.json();
     
     if (result.status !== 'success' || !result.panel) {
-      return false; // Si no se pueden obtener las tareas, permitir continuar
+      return null; // Si no se pueden obtener las tareas, permitir continuar
     }
     
     // Buscar el empleado en el panel
     const empleado = result.panel.find(u => u.id === empleadoId);
     if (!empleado || !empleado.tareas_asignadas) {
-      return false; // No hay tareas asignadas, no hay conflicto
+      return null; // No hay tareas asignadas, no hay conflicto
     }
     
     const nuevaInicio = timeToMinutes(hora_ini);
@@ -159,14 +185,20 @@ async function checkTimeConflict(empleadoId, dias, hora_ini, hora_fin) {
         // Verificar si hay solapamiento
         // Dos rangos se solapan si: inicio1 < fin2 AND inicio2 < fin1
         if (nuevaInicio < tareaFin && tareaInicio < nuevaFin) {
-          return true; // Hay conflicto
+          // Retornar información del conflicto
+          return {
+            nombre: tarea.nombre,
+            dia: dia,
+            hora_ini: tarea.hora_ini,
+            hora_fin: tarea.hora_fin || tarea.hora_ini
+          };
         }
       }
     }
     
-    return false; // No hay conflicto
+    return null; // No hay conflicto
   } catch (error) {
     console.error('Error verificando conflictos:', error);
-    return false; // En caso de error, permitir continuar
+    return null; // En caso de error, permitir continuar
   }
 }

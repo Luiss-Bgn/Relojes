@@ -1,3 +1,5 @@
+import { createNotificationMessage, NOTIFICATION_TYPES } from "../services/notificationTypes.js";
+
 /**
  * Valida un PIN contra la base de datos y devuelve el usuario correspondiente
  * @param {string} pin - PIN a validar
@@ -199,6 +201,11 @@ export const completeTaskWithPin = async (task, pin) => {
 
         const serverResult = await response.json();
         console.log('✅ Tarea completada exitosamente:', serverResult);
+
+        createNotificationMessage(NOTIFICATION_TYPES.TAREA_COMPLETADA, {
+            taskId: task.id,
+            completedBy: user.nombre
+        });
 
         return {
             success: true,

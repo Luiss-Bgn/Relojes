@@ -2,7 +2,7 @@ import { showCrearTareaModal } from './modals/crearTareaModal.js';
 import { showEditarTareasModal } from './modals/editarTareasModal.js';
 import { showVerInfoModal } from './modals/verInfoModal.js';
 import { showToast, showConfirm } from './toast.js';
-
+import { NOTIFICATION_TYPES, createNotificationMessage } from '../services/notificationTypes.js';
 export const showEmployeeMenu = (emp, event) => {
 
   // Cerrar menú anterior si existe
@@ -115,6 +115,12 @@ async function eliminarEmpleado(emp) {
 
     if (response.ok) {
       showToast(`Empleado ${emp.nombre} eliminado exitosamente`, 'success');
+      
+      // Enviar notificación WebSocket
+      createNotificationMessage(NOTIFICATION_TYPES.EMPLEADO_ELIMINADO, {
+        employeeId: emp.id,
+        employeeName: emp.nombre
+      });
       
       // Actualizar panel
       const event = new CustomEvent('refreshPanel');

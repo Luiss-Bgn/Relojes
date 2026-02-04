@@ -1,5 +1,6 @@
 import { loadModalHTML } from './modalLoader.js';
 import { showToast } from '../toast.js';
+import { createNotificationMessage, NOTIFICATION_TYPES } from '../../services/notificationTypes.js';
 
 export const showVerInfoModal = async (emp) => {
   console.log('Mostrando modal de información para el empleado:', emp);
@@ -288,6 +289,11 @@ async function saveEmployeeChanges(emp, modal, overlay) {
       setTimeout(() => {
         window.location.reload();
       }, 1000);
+
+      createNotificationMessage(NOTIFICATION_TYPES.EMPLEADO_ACTUALIZADO, {
+        employeeId: emp.id,
+        updatedFields: updatedData
+      });
     } else {
       showToast('Error al actualizar: ' + (result.message || 'Error desconocido'), 'error');
     }

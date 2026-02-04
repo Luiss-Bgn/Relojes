@@ -1,5 +1,6 @@
 import { loadModalHTML } from './modalLoader.js';
 import { showToast, showConfirm } from '../toast.js';
+import { createNotificationMessage, NOTIFICATION_TYPES } from '../../services/notificationTypes.js';
 
 export const showEditarTareasModal = async (emp) => {
   // Crear overlay
@@ -212,6 +213,10 @@ async function saveTaskChanges(card, tareaId, day) {
         card.style.borderColor = '#e3e5ed';
       }, 2000);
       
+      createNotificationMessage(NOTIFICATION_TYPES.TAREA_ACTUALIZADA, {
+        taskId: tareaId,
+        updatedFields: tareaData
+      });
       // Actualizar la tabla principal sin recargar
       await refreshMainPanel();
     } else {
@@ -252,6 +257,10 @@ async function deleteTask(card, tareaId, emp) {
         }
       }, 300);
       
+      createNotificationMessage(NOTIFICATION_TYPES.TAREA_ELIMINADA, {
+        taskId: tareaId,
+        assignedTo: emp.nombre
+      });
       // Actualizar la tabla principal sin recargar
       await refreshMainPanel();
     } else {
