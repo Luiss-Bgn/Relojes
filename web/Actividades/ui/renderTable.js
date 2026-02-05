@@ -16,7 +16,7 @@ const initials = (name = "") => {
 
 const avatar = (employee) => {
   const wrapper = document.createElement("div");
-  console.log("employee avatar", employee)
+  // console.log("employee avatar", employee)
   wrapper.className = "avatar";
   if (employee.imagen) {
     const img = document.createElement("img");
@@ -232,15 +232,21 @@ const renderLegend = () => {
 const renderHead = (employees, rows = []) => {
   const base = ["Horario", "Actividad", "Puntos"];
   const tr = document.createElement("tr");
-  base.forEach((title) => {
+  base.forEach((title, index) => {
     const th = document.createElement("th");
     th.textContent = title;
+
+    if (index === 0) th.classList.add("col-hora");
+    if (index === 1) th.classList.add("col-actividad");
+    if (index === 2) th.classList.add("col-puntos");
+
     tr.appendChild(th);
   });
 
   // console.log("Renderizando encabezado para empleados:", employees);
   employees.forEach((emp) => {
     const th = document.createElement("th");
+    th.classList.add("col-emp");
     const wrapper = document.createElement("div");
     wrapper.className = "employee-header";
     wrapper.style.cursor = "pointer";
@@ -344,6 +350,11 @@ const makeStatusCell = (row, employeeId) => {
   return td;
 };
 
+const ROW_COLORS = Object.freeze({
+  highlightCurrentGroup: "rgba(255, 213, 79, 0.2)", // amarillo
+  highlightExtraAvailable: "rgba(96, 165, 250, 0.15)", // azul
+});
+
 const renderRows = (rows, employees) => {
   bodyEl.innerHTML = "";
   emptyEl.hidden = rows.length > 0;
@@ -423,7 +434,7 @@ const renderRows = (rows, employees) => {
 
       // Aplicar color azul a toda la fila solo si es extra disponible (sin completar)
       if (isExtraAvailable) {
-        tr.style.backgroundColor = "rgba(96, 165, 250, 0.15)";
+        tr.style.backgroundColor = ROW_COLORS.highlightExtraAvailable; // azul
       }
 
       // Determinar el cursor según el rol y tipo de tarea
@@ -444,14 +455,21 @@ const renderRows = (rows, employees) => {
       // Solo agregar celda de horario en la primera fila del grupo (con rowspan)
       if (groupIndex === 0) {
         const time = document.createElement("td");
+        time.classList.add("col-hora");
         time.textContent = hora;
         time.rowSpan = grupo.length;
         time.style.width = "130px";
         time.style.minWidth = "130px";
         time.style.maxWidth = "130px";
-        if (isCurrentGroup && !isExtraAvailable && !isExtraCompleted) time.style.backgroundColor = "rgba(255, 213, 79, 0.2)";
-        if (isExtraAvailable) time.style.backgroundColor = "rgba(96, 165, 250, 0.15)";
-        if (isExtraCompleted && !isExtraCompletedPastDue) time.style.backgroundColor = "rgba(255, 213, 79, 0.2)";
+
+        // Aplicar colores según el estado de la tarea (sticky, usando CSS var para que no se vea nada por debajo)
+        if (isExtraCompleted && !isExtraCompletedPastDue) {
+          time.style.setProperty("--sticky-highlight", ROW_COLORS.highlightCurrentGroup);
+        } else if (isCurrentGroup && !isExtraAvailable) {
+          time.style.setProperty("--sticky-highlight", ROW_COLORS.highlightCurrentGroup);
+        } else if (isExtraAvailable) {
+          time.style.setProperty("--sticky-highlight", ROW_COLORS.highlightExtraAvailable);
+        }
 
         // Agregar click listener para tareas normales o extra (si hay sesión activa)
         if (!isExtraAvailable || canInteractWithExtra) {
@@ -466,16 +484,17 @@ const renderRows = (rows, employees) => {
       }
 
       const activity = document.createElement("td");
+      activity.classList.add("col-actividad");
       activity.innerHTML = `<div class="activity-title">${row.titulo}</div>${row.descripcion ? `<div class="activity-desc">${row.descripcion}</div>` : ""}`;
       activity.style.textAlign = "left";
       
       // Aplicar colores según el estado de la tarea
       if (isExtraCompleted && !isExtraCompletedPastDue) {
-        activity.style.backgroundColor = "rgba(255, 213, 79, 0.2)";
+        activity.style.setProperty("--sticky-highlight", ROW_COLORS.highlightCurrentGroup);
       } else if (isCurrentGroup && !isExtraAvailable) {
-        activity.style.backgroundColor = "rgba(255, 213, 79, 0.2)";
+        activity.style.setProperty("--sticky-highlight", ROW_COLORS.highlightCurrentGroup);
       } else if (isExtraAvailable) {
-        activity.style.backgroundColor = "rgba(96, 165, 250, 0.15)";
+        activity.style.setProperty("--sticky-highlight", ROW_COLORS.highlightExtraAvailable);
       }
 
       // Agregar click listener (permitir tanto visitantes como usuarios autenticados)
@@ -489,6 +508,7 @@ const renderRows = (rows, employees) => {
       tr.appendChild(activity);
 
       const points = document.createElement("td");
+      points.classList.add("col-puntos");
       points.textContent = row.puntos ?? 0;
       points.style.width = "90px";
       points.style.minWidth = "90px";
@@ -496,12 +516,13 @@ const renderRows = (rows, employees) => {
       points.style.textAlign = "center";
       
 
+      // Aplicar colores según el estado de la tarea
       if (isExtraCompleted && !isExtraCompletedPastDue) {
-        points.style.backgroundColor = "rgba(255, 213, 79, 0.2)";
-      } else if (isCurrentGroup && !isExtraAvailable && !isExtraCompleted) {
-        points.style.backgroundColor = "rgba(255, 213, 79, 0.2)";
+        points.style.setProperty("--sticky-highlight", ROW_COLORS.highlightCurrentGroup);
+      } else if (isCurrentGroup && !isExtraAvailable) {
+        points.style.setProperty("--sticky-highlight", ROW_COLORS.highlightCurrentGroup);
       } else if (isExtraAvailable) {
-        points.style.backgroundColor = "rgba(96, 165, 250, 0.15)";
+        points.style.setProperty("--sticky-highlight", ROW_COLORS.highlightExtraAvailable);
       }
 
       // Agregar click listener (permitir tanto visitantes como usuarios autenticados)
@@ -515,6 +536,7 @@ const renderRows = (rows, employees) => {
 
       employees.forEach((emp) => {
         const td = makeStatusCell(row, emp.id);
+        td.classList.add("col-emp");
         // Aplicar ancho uniforme para todas las columnas de empleados
         td.style.width = `${100 / employees.length}%`;
         td.style.minWidth = "180px";
@@ -530,15 +552,15 @@ const renderRows = (rows, employees) => {
 
         // Aplicar resaltado
         if (isCurrentGroup && td.className.includes('empty-cell') && !isExtraAvailable && !isExtraCompleted) {
-          td.style.backgroundColor = "rgba(255, 213, 79, 0.2)";
+          td.style.backgroundColor = ROW_COLORS.highlightCurrentGroup;
         }
         // Solo pintar de azul las celdas vacías si es una tarea extra disponible (sin completar)
         if (isExtraAvailable && td.className.includes('empty-cell')) {
-          td.style.backgroundColor = "rgba(96, 165, 250, 0.15)";
+          td.style.backgroundColor = ROW_COLORS.highlightExtraAvailable;
         }
         // Si es una tarea extra completada y esta es una celda vacía, aplicar el color normal del grupo actual
         if (isExtraCompleted && td.className.includes('empty-cell') && isCurrentGroup) {
-          td.style.backgroundColor = "rgba(255, 213, 79, 0.2)";
+          td.style.backgroundColor = ROW_COLORS.highlightCurrentGroup;
         }
 
         tr.appendChild(td);

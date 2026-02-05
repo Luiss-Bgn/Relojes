@@ -90,7 +90,6 @@ const createAverageProgressChart = (percentage) => {
 
 // Función para calcular promedio de completación de todos los empleados
 const calculateAverageCompletion = (viewData) => {
-  console.log("Calculando promedio de completación", viewData);
   if (!viewData || !viewData.employees || !viewData.rows) return 0;
 
   let totalEmployees = viewData.employees.length;
@@ -108,11 +107,11 @@ const calculateAverageCompletion = (viewData) => {
         }
       }
     });
-    console.log(`Empleado ${emp.nombre}: Tareas=${employeeTasks}, Completadas=${employeeCompleted}`);
+
     totalCompletion += employeeCompleted;
   });
 
-  return totalEmployees > 0 ? Math.round((totalCompletion / totalTasks) * 100) : 0;
+  return totalTasks > 0 ? Math.round((totalCompletion / totalTasks) * 100) : 0;
 };
 
 // Función para calcular total de puntos extras de todos los empleados
@@ -141,7 +140,7 @@ const updateGeneralStats = (viewData) => {
   const extraPointsEl = document.getElementById("total-extra-points");
   if (extraPointsEl) {
     extraPointsEl.textContent = totalExtraPoints;
-    console.log("✅ Actualizado total-extra-points:", totalExtraPoints);
+    // console.log("✅ Actualizado total-extra-points:", totalExtraPoints);
   } else {
     console.error("❌ Elemento total-extra-points no encontrado");
   }

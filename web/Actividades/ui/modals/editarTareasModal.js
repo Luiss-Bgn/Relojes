@@ -1,6 +1,7 @@
 import { loadModalHTML } from './modalLoader.js';
 import { showToast, showConfirm } from '../toast.js';
 import { createNotificationMessage, NOTIFICATION_TYPES } from '../../services/notificationTypes.js';
+import { checkTimeConflict, getSelectedDayKey } from './revisarConflictoHorario.js';
 
 export const showEditarTareasModal = async (emp) => {
   // Crear overlay
@@ -14,7 +15,7 @@ export const showEditarTareasModal = async (emp) => {
 
   // Cargar HTML del modal
   const modalHTML = await loadModalHTML('/web/Actividades/ui/modals/editarTareasModal.html');
-  
+
   if (!modalHTML) {
     showToast('Error al cargar el modal', 'error');
     return;
@@ -63,18 +64,18 @@ export const showEditarTareasModal = async (emp) => {
 
 async function loadEmployeeTasks(emp, modal) {
   try {
-    
+
     const response = await fetch(`http://localhost:8001/tareas/panel/obtener`);
     const result = await response.json();
-    
+
     if (result.status === 'success' && result.panel) {
       // Encontrar el usuario en el panel
       const usuario = result.panel.find(u => u.id === emp.id);
-      
+
       if (usuario && usuario.tareas_asignadas) {
         // Guardar las tareas en el modal para acceso posterior
         modal.dataset.tareas = JSON.stringify(usuario.tareas_asignadas);
-        
+
         // Renderizar tareas del primer día (Lunes)
         renderTasksForDay(emp, 'Lunes', modal);
       } else {
@@ -162,7 +163,7 @@ function createTaskCard(tarea, day, emp) {
   // Event listener para guardar
   const saveBtn = card.querySelector('.btn-save-task');
   saveBtn.addEventListener('click', async () => {
-    await saveTaskChanges(card, tarea.id, day);
+    await saveTaskChanges(card, tarea, day);
   });
 
   // Event listener para eliminar
@@ -174,7 +175,7 @@ function createTaskCard(tarea, day, emp) {
   return card;
 }
 
-async function saveTaskChanges(card, tareaId, day) {
+async function saveTaskChanges(card, tarea, day) {
   const nombre = card.querySelector('input[name="nombre"]').value;
   const descripcion = card.querySelector('input[name="descripcion"]').value;
   const hora_ini = card.querySelector('input[name="hora_ini"]').value;
@@ -183,6 +184,23 @@ async function saveTaskChanges(card, tareaId, day) {
 
   if (!nombre || !descripcion || !hora_ini || !puntos) {
     showToast('Por favor completa todos los campos obligatorios', 'warning');
+    return;
+  }
+
+  // console.log("dia seleccionado:", day);
+  // console.log("tarea a editar:", tarea);
+
+  const dia = getSelectedDayKey();
+
+  const conflictInfo = await checkTimeConflict({
+    empleadoId: tarea.id_dueño,
+    dia: day,
+    hora_ini,
+    hora_fin,
+    excludeTaskId: tarea.id,
+  });
+  if (conflictInfo) {
+    showToast(`Ya existe "${conflictInfo.nombre}" el ${conflictInfo.dia} de ${conflictInfo.hora_ini} a ${conflictInfo.hora_fin}`, 'error', 5000);
     return;
   }
 
@@ -195,7 +213,7 @@ async function saveTaskChanges(card, tareaId, day) {
   };
 
   try {
-    const response = await fetch(`http://localhost:8001/tareas/${tareaId}`, {
+    const response = await fetch(`http://localhost:8001/tareas/${tarea.id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -212,9 +230,9 @@ async function saveTaskChanges(card, tareaId, day) {
       setTimeout(() => {
         card.style.borderColor = '#e3e5ed';
       }, 2000);
-      
+
       createNotificationMessage(NOTIFICATION_TYPES.TAREA_ACTUALIZADA, {
-        taskId: tareaId,
+        taskId: tarea.id,
         updatedFields: tareaData
       });
       // Actualizar la tabla principal sin recargar
@@ -248,7 +266,7 @@ async function deleteTask(card, tareaId, emp) {
       card.style.transform = 'scale(0.9)';
       setTimeout(() => {
         card.remove();
-        
+
         // Si no quedan más tareas, mostrar mensaje
         const modal = document.querySelector('.editar-tareas-modal');
         const tasksGrid = modal.querySelector('.tasks-grid');
@@ -256,7 +274,7 @@ async function deleteTask(card, tareaId, emp) {
           showNoTasksMessage(modal);
         }
       }, 300);
-      
+
       createNotificationMessage(NOTIFICATION_TYPES.TAREA_ELIMINADA, {
         taskId: tareaId,
         assignedTo: emp.nombre

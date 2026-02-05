@@ -162,6 +162,7 @@ void ScreenTaskExtras::createTaskItem(lv_obj_t *parent, const Task &task)
         lv_obj_set_width(lblHora, 70);
     }
 
+    Serial.printf("[ScreenTaskExtras] Creating task item: %s | Status: %s\n", task.name.c_str(), task.status.c_str());
     lv_obj_t *lblTarea = lv_label_create(btn);
     lv_obj_set_width(lblTarea, 170);
     lv_label_set_long_mode(lblTarea, LV_LABEL_LONG_WRAP);

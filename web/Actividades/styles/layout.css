@@ -93,7 +93,7 @@
 .stat-card {
   background: var(--panel);
   border: 1px solid var(--border);
-  padding: 20px;
+  padding: 10px;
   border-radius: 14px;
   box-shadow: var(--shadow);
 }

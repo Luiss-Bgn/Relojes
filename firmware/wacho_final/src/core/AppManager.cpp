@@ -117,12 +117,13 @@ void AppManager::processMessage(String message)
     DEBUG_PRINTLN("[App] Processing message...");
 
     DynamicJsonDocument doc(8192);
-    if (deserializeJson(doc, message)) {
+    if (deserializeJson(doc, message))
+    {
         DEBUG_PRINTLN("[App] JSON Error");
         return;
     }
 
-    const char* comando = doc["comando"] | "";
+    const char *comando = doc["comando"] | "";
     bool vibrarFlag = doc["vibrar"].is<bool>() && doc["vibrar"].as<bool>();
     bool handled = false;
 
@@ -143,13 +144,25 @@ void AppManager::processMessage(String message)
         return; // ⚠️ ping no sigue procesando nada más
     }
 
-    if (strcmp(comando, "actualizar_hora") == 0)
+    else if (strcmp(comando, "actualizar_hora") == 0)
     {
-        if (Hal::updateClockFromJson(doc)) {
+        if (Hal::updateClockFromJson(doc))
+        {
             handled = true;
         }
     }
 
+    else if (strcmp(comando, "update_tareas") == 0)
+    {
+        JsonDocument pong;
+        pong["tipo"] = "relojes";
+        pong["comando"] = "actualizar_tareas";
+        pong["uuid"] = AuthService::getUUID();
+
+        String out;
+        serializeJson(pong, out);
+        NetworkService::send(out);
+    }
     /* ===============================
        2️⃣ MENSAJES DEPENDIENTES DE ESTADO
        =============================== */
@@ -194,11 +207,15 @@ void AppManager::processMessage(String message)
 
         if (TaskService::parseTasks(doc, isExtra))
         {
-            if (isExtra) {
+            if (isExtra)
+            {
                 UIManager::updateExtrasList(TaskService::getExtraTasks());
-            } else {
+            }
+            else
+            {
                 UIManager::updateTaskList(TaskService::getTasks());
-                if (currentState == AppState::EMPLOYEE_SELECTION) {
+                if (currentState == AppState::EMPLOYEE_SELECTION)
+                {
                     changeState(AppState::TASK_LIST);
                 }
             }
@@ -226,7 +243,6 @@ void AppManager::processMessage(String message)
     }
 }
 
-
 void AppManager::onEmployeeSelected(String id, String name)
 {
     DEBUG_PRINTLN("[App] Employee selected: " + id + " (" + name + ")");
@@ -244,4 +260,3 @@ void AppManager::onEmployeeSelected(String id, String name)
     serializeJson(doc, output);
     NetworkService::send(output);
 }
-

@@ -34,11 +34,11 @@ body {
   width: 98%;
   max-width: 100%;
   background: #ffffff;
-  margin: 80px auto 10px;
+  margin: 60px auto 10px;
   padding: 28px 26px 28px;
   border-radius: 14px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
-  min-height: calc(100vh - 140px);
+  min-height: calc(100vh - 80px);
   display: flex;
   flex-direction: column;
   gap: 5px;
