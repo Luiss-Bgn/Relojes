@@ -149,12 +149,12 @@ function calcularDatosQuincenal() {
         if (estaEnQuincena) {
           tieneTareasEnQuincena = true;
           
-          // Puntos asignados: todas las tareas excepto extras (estatus 5)
-          if (tarea.estatus !== 5) {
+          // Puntos asignados: todas las tareas excepto extras
+          if (tarea.estatus !== 'extra') {
             puntosAsignados += puntos;
             
-            // Puntos ganados: solo tareas completadas (estatus 3)
-            if (tarea.estatus === 3) {
+            // Puntos ganados: solo tareas completadas
+            if (tarea.estatus === 'completada') {
               puntosGanados += puntos;
             }
           }
@@ -242,9 +242,9 @@ function calcularDatosProgreso() {
       
       // Mezclar y deduplicar (IGUAL QUE LA TABLA)
       const merged = [
-        ...allTasks.filter(t => t.estatus === 3),
+        ...allTasks.filter(t => t.estatus === 'completada'),
         ...realizadasBackup,
-        ...allTasks.filter(t => t.estatus !== 3)
+        ...allTasks.filter(t => t.estatus !== 'completada')
       ].filter((t, i, arr) => {
         if (arr.findIndex(x => x.id === t.id) !== i) return false;
         return true;
@@ -263,15 +263,15 @@ function calcularDatosProgreso() {
         const puntos = parseInt(tarea.puntaje) || 0;
         if (puntos === 0) return;
         
-        if (tarea.estatus !== 5) {
+        if (tarea.estatus !== 'extra') {
           puntosAsignados += puntos;
         }
         
-        if (tarea.estatus === 3) {
+        if (tarea.estatus === 'completada') {
           puntosGanados += puntos;
-        } else if (tarea.estatus === 4) {
+        } else if (tarea.estatus === 'vencida') {
           puntosNoGanados += puntos;
-        } else if (tarea.estatus === 5) {
+        } else if (tarea.estatus === 'extra') {
           puntosExtras += puntos;
         }
       });

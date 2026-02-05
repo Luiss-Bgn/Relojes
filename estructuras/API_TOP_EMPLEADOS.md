@@ -2,7 +2,7 @@
 
 ## 📋 Descripción
 
-Esta API permite obtener el top de empleados con mayor puntaje en tareas regulares, excluyendo tareas con estatus '5' o 'extra'. Soporta tres modos de consulta: histórico general, por quincena, y por rango de fechas personalizado.
+Esta API permite obtener el top de empleados con mayor puntaje en tareas regulares, excluyendo tareas con estatus 'extra'. Soporta tres modos de consulta: histórico general, por quincena, y por rango de fechas personalizado.
 
 ## 🔗 Endpoint
 
@@ -158,7 +158,7 @@ GET /historial/top-empleados?fecha_inicio=2026-01-24&fecha_fin=2026-01-31&limite
 ## 🎯 Filtros Aplicados
 
 La API automáticamente **excluye**:
-- Tareas con estatus `'5'`
+- Tareas con estatus `'extra'`
 - Tareas con estatus `'extra'`
 - Tareas sin empleado asignado (`completadaPor IS NULL`)
 

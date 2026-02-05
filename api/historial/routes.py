@@ -58,6 +58,31 @@ async def listar_historial():
     return resultado
 
 
+@router.get("/quincenas-disponibles", response_model=dict)
+async def obtener_quincenas_disponibles():
+    """
+    Obtiene las quincenas que tienen datos en el historial
+    
+    Este endpoint retorna todas las quincenas que contienen al menos un registro
+    en la base de datos, ordenadas de la más reciente a la más antigua.
+    
+    **Retorna:**
+    - Lista de quincenas con año, mes, número de quincena y label formateado
+    
+    **Ejemplo de uso:**
+    - `/historial/quincenas-disponibles`
+    """
+    resultado = historial_manager.obtener_quincenas_disponibles()
+    
+    if resultado.get("status") != "success":
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=resultado.get("mensaje")
+        )
+    
+    return resultado
+
+
 @router.get("/top-empleados", response_model=dict)
 async def obtener_top_empleados(
     limite: int = Query(default=10, ge=1, le=100, description="Número de empleados a retornar"),
@@ -70,7 +95,7 @@ async def obtener_top_empleados(
     """
     Obtiene el top de empleados con mayor puntaje en tareas regulares
     
-    Excluye tareas con estatus '5' o 'extra'
+    Excluye tareas con estatus 'extra'
     
     **Modos de uso:**
     
@@ -138,7 +163,7 @@ async def obtener_top_extras(
     """
     Obtiene el top de empleados con mayor puntaje en tareas EXTRAS
     
-    Solo incluye tareas con estatus '5' o 'extra'
+    Solo incluye tareas con estatus 'extra'
     
     **Modos de uso:**
     

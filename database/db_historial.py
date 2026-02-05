@@ -128,7 +128,7 @@ class HistorialDAO:
                                limite: int = 10) -> List[Dict[str, Any]]:
         """
         Obtiene el top de empleados con mayor puntaje en tareas regulares
-        Excluye tareas con estatus '5' o 'extra'
+        Excluye tareas con estatus 'extra'
         
         Args:
             fecha_inicio: Fecha de inicio del rango (formato YYYY-MM-DD)
@@ -145,13 +145,13 @@ class HistorialDAO:
             query = '''
                 SELECT 
                     h.id_dueño as usuario_id,
-                    SUM(CASE WHEN h.estatus IN ('3', 'completada', 'completado') THEN h.puntos ELSE 0 END) as total_puntos,
+                    SUM(CASE WHEN h.estatus IN ('completada', 'completado') THEN h.puntos ELSE 0 END) as total_puntos,
                     COUNT(*) as total_tareas,
-                    SUM(CASE WHEN h.estatus IN ('3', 'completada', 'completado') THEN 1 ELSE 0 END) as completadas,
-                    SUM(CASE WHEN h.estatus IN ('1', '2', '4', 'sin iniciar', 'en progreso', 'no completado', 'vencida') THEN 1 ELSE 0 END) as vencidas
+                    SUM(CASE WHEN h.estatus IN ('completada', 'completado') THEN 1 ELSE 0 END) as completadas,
+                    SUM(CASE WHEN h.estatus IN ('sinIniciar', 'enProgreso', 'noCompletada', 'vencida') THEN 1 ELSE 0 END) as vencidas
                 FROM historial h
                 WHERE h.id_dueño IS NOT NULL
-                AND h.estatus NOT IN ('5', 'extra', 'extras')
+                AND h.estatus NOT IN ('extra', 'extras')
             '''
             
             params = []
@@ -195,7 +195,7 @@ class HistorialDAO:
                            limite: int = 10) -> List[Dict[str, Any]]:
         """
         Obtiene el top de empleados con mayor puntaje en tareas extras
-        Solo incluye tareas con estatus '5' o 'extra'
+        Solo incluye tareas con estatus 'extra'
         
         Args:
             fecha_inicio: Fecha de inicio del rango (formato YYYY-MM-DD)
@@ -208,7 +208,7 @@ class HistorialDAO:
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
             
-            # Query base - suma puntos por empleado, solo estatus 5 o 'extra'
+            # Query base - suma puntos por empleado, solo estatus 'extra'
             query = '''
                 SELECT 
                     h.completadaPor as usuario_id,
@@ -216,7 +216,7 @@ class HistorialDAO:
                     COUNT(*) as total_tareas
                 FROM historial h
                 WHERE h.completadaPor IS NOT NULL
-                AND h.estatus IN ('5', 'extra')
+                AND h.estatus IN ('extra')
             '''
             
             params = []
@@ -242,6 +242,65 @@ class HistorialDAO:
             cursor.execute(query, params)
             rows = cursor.fetchall()
             return [dict(row) for row in rows]
+    
+    def obtener_quincenas_con_datos(self) -> List[Dict[str, Any]]:
+        """
+        Obtiene las quincenas que tienen registros en la base de datos
+        
+        Returns:
+            Lista de quincenas únicas que tienen datos, ordenadas de más reciente a más antigua
+        """
+        with self.db.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Obtener todas las fechas únicas de los registros
+            query = '''
+                SELECT DISTINCT fecha
+                FROM historial
+                WHERE fecha IS NOT NULL
+                ORDER BY fecha DESC
+            '''
+            
+            cursor.execute(query)
+            rows = cursor.fetchall()
+            
+            # Convertir fechas a quincenas únicas
+            quincenas_set = set()
+            for row in rows:
+                fecha_str = row['fecha']
+                try:
+                    fecha = datetime.strptime(fecha_str, '%Y-%m-%d')
+                    dia = fecha.day
+                    mes = fecha.month
+                    año = fecha.year
+                    
+                    # Calcular a qué quincena pertenece esta fecha
+                    if dia >= 28:
+                        # Días 28+ pertenecen a Q1 del MES SIGUIENTE
+                        mes += 1
+                        if mes > 12:
+                            mes = 1
+                            año += 1
+                        quincena = 1
+                    elif dia <= 12:
+                        # Días 1-12 pertenecen a Q1 del mes actual
+                        quincena = 1
+                    else:
+                        # Días 13-27 pertenecen a Q2 del mes actual
+                        quincena = 2
+                    
+                    quincenas_set.add((año, mes, quincena))
+                except Exception as e:
+                    logger.warning(f"Error al procesar fecha {fecha_str}: {e}")
+                    continue
+            
+            # Convertir a lista y ordenar
+            quincenas_list = [
+                {'año': q[0], 'mes': q[1], 'quincena': q[2]}
+                for q in sorted(quincenas_set, reverse=True)
+            ]
+            
+            return quincenas_list
 
 #Logica de negocio, aqui en un futuro debemos agregar validaciones y condiciones, asi como funciones automaticas para el cambio estatyus 
 class HistorialManager:
@@ -615,4 +674,36 @@ class HistorialManager:
                 "status": "error",
                 "mensaje": f"Error al obtener top extras: {str(e)}"
             }
-
+    
+    def obtener_quincenas_disponibles(self) -> Dict[str, Any]:
+        """
+        Obtiene las quincenas que tienen datos en el historial
+        
+        Returns:
+            Dict con status y lista de quincenas con datos
+        """
+        try:
+            quincenas = self.historial_dao.obtener_quincenas_con_datos()
+            
+            # Enriquecer con información adicional
+            quincenas_enriquecidas = []
+            for q in quincenas:
+                quincenas_enriquecidas.append({
+                    'año': q['año'],
+                    'mes': q['mes'],
+                    'quincena': q['quincena'],
+                    'label': f"Q{q['quincena']} - {self._nombre_mes(q['mes'])} {q['año']}"
+                })
+            
+            logger.info(f"QUINCENAS DISPONIBLES OBTENIDAS - Total: {len(quincenas_enriquecidas)}")
+            return {
+                "status": "success",
+                "quincenas": quincenas_enriquecidas,
+                "total": len(quincenas_enriquecidas)
+            }
+        except Exception as e:
+            logger.error(f"ERROR AL OBTENER QUINCENAS DISPONIBLES: {str(e)}")
+            return {
+                "status": "error",
+                "mensaje": f"Error al obtener quincenas disponibles: {str(e)}"
+            }

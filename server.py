@@ -2,6 +2,7 @@
 Iniciar ambos servidores:
 - Puerto 8000: WebSocket (aiohttp) para los websocka
 - Puerto 8001: API REST (FastAPI) para la api
+- Backup automático: Tareas semana -> Historial (diario a las 9 PM)
 
 """
 
@@ -11,12 +12,15 @@ import asyncio
 import json
 import threading
 import uvicorn
+import schedule
+import time
 
 from funciones import manager
 from database import db_manager
 from conexiones import conexiones
 from funciones.eventos import EventManager
 import time_manager
+from backup_scheduler import BackupManager
 
 # Importar API REST (ahora ambos: usuarios + historial )
 from api import app as api_app
@@ -118,22 +122,49 @@ def run_rest_api():
         log_level="info"
     )
 
+
+def run_backup_scheduler():
+    """Ejecuta el scheduler de backup automático"""
+    print("\n" + "="*60)
+    print("INICIANDO SCHEDULER DE BACKUP")
+    print("="*60)
+    print("Backup programado: Diario a las 21:00 (9 PM)")
+    print("Función: Copiar tareas_semana -> historial")
+    print("="*60 + "\n")
+    
+    backup_manager = BackupManager()
+    
+    # Programar backup diario a las 21:00 (9 PM)
+    schedule.every().day.at("21:00").do(backup_manager.realizar_backup_diario)
+    
+    print(f"⏰ Próximo backup: {schedule.next_run().strftime('%Y-%m-%d %H:%M:%S')}\n")
+    
+    # Loop infinito para ejecutar tareas programadas
+    while True:
+        schedule.run_pending()
+        time.sleep(60)  # Verificar cada minuto
+
+
 #corremos servidor api y el ws
 if __name__ == "__main__":
     print("\n" + "="*60)
-    print("SERVIDOR RELOJES - INICIO DUAL")
+    print("SERVIDOR RELOJES - INICIO COMPLETO")
     print("="*60)
-    print("Iniciando WebSocket + API REST...\n")
+    print("Iniciando WebSocket + API REST + Backup Scheduler...\n")
     
     # Crear threads para cada servidor
     ws_thread = threading.Thread(target=run_websocket, daemon=False)
     api_thread = threading.Thread(target=run_rest_api, daemon=False)
+    backup_thread = threading.Thread(target=run_backup_scheduler, daemon=True)
     
-    # Iniciar ambos
+    # Iniciar todos
     ws_thread.start()
     api_thread.start()
+    backup_thread.start()
     
-    # Esperar a que ambos terminen
+    print("✅ Todos los servicios iniciados correctamente\n")
+    
+    # Esperar a que los servidores principales terminen
     ws_thread.join()
     api_thread.join()
 
