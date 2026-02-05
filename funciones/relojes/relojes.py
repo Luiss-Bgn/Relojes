@@ -73,10 +73,11 @@ class Relojes():
         lista_empleados = self.usuario_manager.obtener_usuarios_por_roles(["empleado"])
 
         mensaje = {
-            "lista_usuarios": [lista_empleados]['usuarios'],
+            "lista_usuarios": lista_empleados["usuarios"],
             "vibrar": True
         }
         conexion = conexiones.obtener_conexion(uuid)
+        print(mensaje)
 
         await conexion['ws'].send_json(mensaje)
 
@@ -93,14 +94,14 @@ class Relojes():
         conexion = conexiones.obtener_conexion(uuid)
         mensaje = {
             "comando": "tareas",
-            "tareas": [lista_tareas['registros']],
+            "tareas": lista_tareas['registros'],
             "vibrar": True
         }
         await conexion['ws'].send_json(mensaje)
 
         mensaje = {
             "comando": "extras",
-            "tareas": [lista_extras['registros']],
+            "tareas": lista_extras['registros'],
             "vibrar": False
         }
         await conexion['ws'].send_json(mensaje)

@@ -38,18 +38,18 @@ async def enviar_comandos():
             #     "comando": "obtener_tareas"
             # }
 
-            # comando = {
-            #     "tipo": "relojes",
-            #     "comando": "inicio",
-            #     "uuid": "56b87e25-cc10-4cbe-b2c6-7f71c7e166e3"
-            # }
-            
             comando = {
                 "tipo": "relojes",
-                "comando": "empleado_seleccionado",
-                "id": 3,
+                "comando": "inicio",
                 "uuid": "56b87e25-cc10-4cbe-b2c6-7f71c7e166e3"
             }
+            
+            # comando = {
+            #     "tipo": "relojes",
+            #     "comando": "empleado_seleccionado",
+            #     "id": 3,
+            #     "uuid": "56b87e25-cc10-4cbe-b2c6-7f71c7e166e3"
+            # }
 
             print("📤 Enviando:", comando)
             await ws.send_json(comando)
