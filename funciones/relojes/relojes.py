@@ -18,7 +18,8 @@ class Relojes():
             "registro": self._registrar_reloj_nuevo,
             "inicio": self._iniciar_reloj,
             "empleado_seleccionado": self._actualizar_reloj,
-            "actualizar_tareas": self._actualizar_reloj
+            "actualizar_tareas": self._actualizar_reloj,
+            "completar_tarea": self._completar_tarea
         }
 
         self.dias = [
@@ -74,6 +75,29 @@ class Relojes():
 
         else:
             return obj
+        
+    async def _completar_tarea(self, mensaje, uuid):
+        tarea_id = mensaje['tarea']['id']
+        tarea = self.tareas_manager.obtener_registro(tarea_id)
+
+        conexion = conexiones.obtener_conexion(uuid)
+
+        if not tarea and tarea['estatus'] != "en_progreso": 
+            await conexion["ws"].send_json(self.adaptar_para_arduino({"comando":"update_tareas"}))
+            return
+
+        resultado = self.tareas_manager.actualizar_registro(
+            tarea_id,
+            estatus="completada",
+        )
+
+        respuesta = {
+            "comando": "update_tareas",
+            "vibrar": False
+        }
+
+        await conexion["ws"].send_json(self.adaptar_para_arduino(respuesta))
+        
 
     async def _registrar_reloj_nuevo(self, mensaje, uuid):
         """Maneja el registro de un reloj nuevo"""
@@ -102,8 +126,7 @@ class Relojes():
         conexion = conexiones.obtener_conexion(uuid)
         print(mensaje)
         
-        mensaje = self.adaptar_para_arduino(mensaje)
-        await conexion['ws'].send_json(mensaje)
+        await conexion['ws'].send_json(self.adaptar_para_arduino(mensaje))
 
     async def _actualizar_reloj(self, mensaje, uuid):
         usuario_elegido = self.usuario_manager.obtener_usuario(mensaje['id'])
@@ -121,13 +144,11 @@ class Relojes():
             "tareas": lista_tareas['registros'],
             "vibrar": True
         }
-        mensaje = self.adaptar_para_arduino(mensaje)
-        await conexion['ws'].send_json(mensaje)
+        await conexion['ws'].send_json(self.adaptar_para_arduino(mensaje))
 
         mensaje = {
             "comando": "extras",
             "tareas": lista_extras['registros'],
             "vibrar": False
         }
-        mensaje = self.adaptar_para_arduino(mensaje)
-        await conexion['ws'].send_json(mensaje)
+        await conexion['ws'].send_json(self.adaptar_para_arduino(mensaje))
