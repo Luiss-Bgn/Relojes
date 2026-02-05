@@ -153,7 +153,7 @@ async def obtener_tareas_vencidas(quincena_actual: bool = True):
     
     for tarea in todas_tareas:
         # Saltar completadas
-        if tarea.get("estatus") == 3 or tarea.get("estatus") == "3":
+        if tarea.get("estatus") in ["completada", "completado", "3"]:
             continue
         
         try:

@@ -66,7 +66,7 @@ export async function update(data, dia, buttonElement = null) {
                                 nombre: data.nombre,
                                 descripcion: data.descripcion,
                                 hora: data.hora
-                                // Mantener estatus 5 (extra)
+                                // Mantener estatus 'extra'
                             }];
                             
                             console.log(`📤 Enviando actualización a empleado ${empleado.id}:`, payloadExtra);

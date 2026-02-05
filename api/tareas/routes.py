@@ -165,7 +165,7 @@ async def asignar_tareas_empleado(empleado_id: int, datos: dict):
                     "descripcion": "Descripción",
                     "hora": "08:00",
                     "hora_fin": "09:00",
-                    "estatus": 2,
+                    "estatus": "enProgreso",
                     "puntaje": 5,
                     "esExtra": false,
                     "fecha_inicio": "2026-02-01",
@@ -251,7 +251,7 @@ async def asignar_tareas_empleado(empleado_id: int, datos: dict):
                     hora_fin=hora_fin,
                     fecha=fecha_str,
                     puntos=tarea_data.get("puntaje", 1),
-                    estatus=str(tarea_data.get("estatus", 2)),
+                    estatus=str(tarea_data.get("estatus", "enProgreso")),
                     disponible_para_rol=tarea_data.get("disponible_para_rol", "todos")
                 )
                 

@@ -10,6 +10,7 @@ from .utils import notificar_relojes_async
 from pathlib import Path
 from typing import Optional
 import shutil
+import os
 
 router = APIRouter(prefix="/usuarios", tags=["Usuarios"])
 # Inicializamos db
@@ -20,6 +21,19 @@ usuario_manager = UsuarioManager(db_manager)
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 IMAGES_DIR = BASE_DIR / "web" / "Images"
 IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def eliminar_imagen_usuario(imagen_filename: str):
+    """Elimina la imagen de un usuario del sistema de archivos"""
+    if imagen_filename:
+        try:
+            file_path = IMAGES_DIR / imagen_filename
+            if file_path.exists():
+                os.remove(file_path)
+                return True
+        except Exception as e:
+            print(f"Error al eliminar imagen {imagen_filename}: {e}")
+    return False
 
 
 # ENdpoints crud
@@ -39,36 +53,7 @@ async def crear_usuario(
     Acepta FormData con campos de texto y archivo de imagen opcional.
     """
     
-    # 🔥 Si hay imagen, guardarla en /web/Images/
-    imagen_filename = None
-    if imagen and imagen.filename:
-        # Validar que sea imagen
-        if not imagen.content_type.startswith('image/'):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="El archivo debe ser una imagen"
-            )
-        
-        # 🔥 Usar formato canónico: <username>.<extension>
-        ext = Path(imagen.filename).suffix  # Obtener extensión (.jpg, .png, etc.)
-        if not ext:
-            ext = '.jpg'  # Extensión por defecto si no se detecta
-        
-        filename = f"{username}{ext}"  # Ejemplo: adrian.jpg
-        file_path = IMAGES_DIR / filename
-        
-        # Guardar archivo (sobrescribe si ya existe)
-        try:
-            with open(file_path, "wb") as buffer:
-                shutil.copyfileobj(imagen.file, buffer)
-            imagen_filename = filename
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error al guardar imagen: {str(e)}"
-            )
-    
-    # Crear usuario con el nombre de la imagen
+    # Crear usuario primero para obtener el ID
     resultado = usuario_manager.crear_usuario(
         nombre=nombre,
         username=username,
@@ -76,8 +61,55 @@ async def crear_usuario(
         pin=pin,
         rol=rol,
         puesto=puesto,
-        imagen=imagen_filename
+        imagen=None  # Temporalmente None
     )
+    
+    if resultado.get("status") != "success":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=resultado.get("mensaje")
+        )
+    
+    # Obtener el ID del usuario recién creado
+    usuario_id = resultado.get("usuario", {}).get("id")
+    
+    # 🔥 Si hay imagen, guardarla con el ID del usuario
+    imagen_filename = None
+    if imagen and imagen.filename and usuario_id:
+        # Validar que sea imagen
+        if not imagen.content_type.startswith('image/'):
+            # Si falla, eliminar el usuario creado
+            usuario_manager.eliminar_usuario(usuario_id)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="El archivo debe ser una imagen"
+            )
+        
+        # 🔥 Usar formato canónico: <id_user>.<extension>
+        ext = Path(imagen.filename).suffix  # Obtener extensión (.jpg, .png, etc.)
+        if not ext:
+            ext = '.jpg'  # Extensión por defecto si no se detecta
+        
+        filename = f"{usuario_id}{ext}"  # Ejemplo: 5.jpg
+        file_path = IMAGES_DIR / filename
+        
+        # Guardar archivo (sobrescribe si ya existe)
+        try:
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(imagen.file, buffer)
+            imagen_filename = filename
+            
+            # Actualizar usuario con el nombre de la imagen
+            usuario_manager.actualizar_usuario(usuario_id, imagen=imagen_filename)
+            resultado = usuario_manager.obtener_usuario(usuario_id)
+            
+        except Exception as e:
+            # Si falla al guardar la imagen, eliminar el usuario
+            usuario_manager.eliminar_usuario(usuario_id)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error al guardar imagen: {str(e)}"
+            )
     
     if resultado.get("status") != "success":
         raise HTTPException(
@@ -148,18 +180,36 @@ async def actualizar_usuario(usuario_id: int, datos: UsuarioActualizar):
 
 @router.delete("/{usuario_id}", response_model=dict)
 async def eliminar_usuario(usuario_id: int):
-    #Elimina un usuario
+    """Elimina un usuario y su imagen asociada"""
     
-    resultado = usuario_manager.eliminar_usuario(usuario_id)
+    # Obtener usuario para saber qué imagen eliminar
+    usuario_resultado = usuario_manager.obtener_usuario(usuario_id)
     
-    if resultado.get("status") != "success":
+    if usuario_resultado.get("status") == "success":
+        usuario = usuario_resultado.get("usuario", {})
+        imagen_filename = usuario.get("imagen")
+        
+        # Eliminar usuario de la base de datos
+        resultado = usuario_manager.eliminar_usuario(usuario_id)
+        
+        if resultado.get("status") != "success":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=resultado.get("mensaje")
+            )
+        
+        # 🔥 Eliminar imagen del sistema de archivos
+        if imagen_filename:
+            eliminar_imagen_usuario(imagen_filename)
+        
+        notificar_relojes_async(usuario_manager)
+        
+        return resultado
+    else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail= resultado.get("mensaje")
+            detail="Usuario no encontrado"
         )
-    notificar_relojes_async(usuario_manager)
-    
-    return resultado
 
 
 # Authenticiación

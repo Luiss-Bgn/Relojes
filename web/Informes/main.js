@@ -341,9 +341,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       await mostrarPanelDerecho(parseInt(empleado_id, 10));
     }
     
-    // 🔥 INICIAR AUTO-REFRESH para actualizar puntos en tiempo real
-    startAutoRefresh(2000); // Cada 2 segundos
-    console.info("✅ Auto-refresh de informes iniciado");
+    // 🔥 AUTO-REFRESH DESHABILITADO - Los datos solo se cargan al entrar/refrescar la página
+    // startAutoRefresh(2000); // Cada 2 segundos
+    console.info("✅ Informes cargados (sin auto-refresh)");
     
   } catch (e) {
     console.error("Error inicializando aplicación:", e);
