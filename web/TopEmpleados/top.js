@@ -14,8 +14,8 @@ async function cargarDatosHistorial() {
   try {
     console.log('🔄 Iniciando carga de datos usando endpoints /historial/top-*...');
 
-    // Generar quincenas disponibles (últimos 6 meses)
-    generarQuincenasDisponibles();
+    // Obtener quincenas disponibles desde la API
+    await cargarQuincenasDisponibles();
     console.log('✅ Quincenas detectadas:', quincenasDetectadas);
 
     // Poblar selector
@@ -32,7 +32,46 @@ async function cargarDatosHistorial() {
 }
 
 // ==================================================
-// 2. DETECTAR QUINCENAS DISPONIBLES
+// 2. OBTENER QUINCENAS DISPONIBLES DESDE LA API
+// ==================================================
+async function cargarQuincenasDisponibles() {
+  try {
+    const url = 'http://localhost:8001/historial/quincenas-disponibles';
+    console.log('🔄 Obteniendo quincenas disponibles desde:', url);
+    
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error('Error al obtener quincenas disponibles:', response.status, response.statusText);
+      // Si falla, generar quincenas por defecto
+      generarQuincenasDisponibles();
+      return;
+    }
+    
+    const data = await response.json();
+    console.log('✅ Quincenas disponibles recibidas:', data);
+    
+    if (data.status === 'success' && data.quincenas && data.quincenas.length > 0) {
+      // Mapear las quincenas recibidas al formato esperado
+      quincenasDetectadas = data.quincenas.map(q => ({
+        ano: q.año,
+        mes: q.mes,
+        quincena: q.quincena,
+        label: q.label,
+        key: `${q.año}-${q.mes}-${q.quincena}`
+      }));
+    } else {
+      console.warn('⚠️  No se encontraron quincenas con datos, usando generación por defecto');
+      generarQuincenasDisponibles();
+    }
+  } catch (error) {
+    console.error('Error al cargar quincenas disponibles:', error);
+    // En caso de error, usar generación por defecto
+    generarQuincenasDisponibles();
+  }
+}
+
+// ==================================================
+// 3. GENERAR QUINCENAS DISPONIBLES (FALLBACK)
 // ==================================================
 function generarQuincenasDisponibles() {
   // Generar quincenas de los últimos 6 meses
@@ -98,7 +137,7 @@ function obtenerNombreMes(mes) {
 }
 
 // ==================================================
-// 3. POBLAR SELECTOR DE QUINCENAS
+// 4. POBLAR SELECTOR DE QUINCENAS
 // ==================================================
 function poblarSelectorQuincenas() {
   const selector = document.getElementById('selectorQuincena');
@@ -115,7 +154,7 @@ function poblarSelectorQuincenas() {
 }
 
 // ==================================================
-// 4. FETCH TOP EMPLEADOS DESDE API
+// 5. FETCH TOP EMPLEADOS DESDE API
 // ==================================================
 async function fetchTopEmpleados(quincenaData = null) {
   try {
@@ -147,7 +186,7 @@ async function fetchTopEmpleados(quincenaData = null) {
 }
 
 // ==================================================
-// 5. FETCH TOP EXTRAS DESDE API
+// 6. FETCH TOP EXTRAS DESDE API
 // ==================================================
 async function fetchTopExtras(quincenaData = null) {
   try {
@@ -179,7 +218,7 @@ async function fetchTopExtras(quincenaData = null) {
 }
 
 // ==================================================
-// 6. MOSTRAR RANKING DE EMPLEADOS
+// 7. MOSTRAR RANKING DE EMPLEADOS
 // ==================================================
 async function mostrarRankingEmpleados(quincenaIndex = null) {
   const tbody = document.getElementById('tablaEmpleadosBody');
@@ -265,7 +304,7 @@ async function mostrarRankingEmpleados(quincenaIndex = null) {
 }
 
 // ==================================================
-// 7. MOSTRAR RANKING DE EXTRAS
+// 8. MOSTRAR RANKING DE EXTRAS
 // ==================================================
 async function mostrarRankingExtras(quincenaIndex = null) {
   const tbody = document.getElementById('tablaTareasExtraBody');
@@ -345,7 +384,7 @@ async function mostrarRankingExtras(quincenaIndex = null) {
 }
 
 // ==================================================
-// 8. APLICAR FILTRO DE QUINCENA
+// 9. APLICAR FILTRO DE QUINCENA
 // ==================================================
 async function aplicarFiltroQuincena() {
   const selector = document.getElementById('selectorQuincena');
@@ -359,7 +398,7 @@ async function aplicarFiltroQuincena() {
 }
 
 // ==================================================
-// 9. INICIALIZACIÓN AL CARGAR LA PÁGINA
+// 10. INICIALIZACIÓN AL CARGAR LA PÁGINA
 // ==================================================
 document.addEventListener('DOMContentLoaded', () => {
   cargarDatosHistorial();

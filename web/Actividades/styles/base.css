@@ -34,14 +34,14 @@ body {
   width: 98%;
   max-width: 100%;
   background: #ffffff;
-  margin: 80px auto 48px;
-  padding: 28px 26px 36px;
+  margin: 80px auto 10px;
+  padding: 28px 26px 28px;
   border-radius: 14px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
   min-height: calc(100vh - 140px);
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 5px;
 }
 
 button {

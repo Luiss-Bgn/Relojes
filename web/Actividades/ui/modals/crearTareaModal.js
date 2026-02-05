@@ -102,7 +102,11 @@ export const showCrearTareaModal = async (emp) => {
       const result = await response.json();
       
       if (response.ok) {
+        if(estatus === 'proximo'){
+          showToast('Tarea creada exitosamente para la siguiente semana ya que la hora de inicio ya pasó para hoy.', 'info', 7000);
+        } else {
         showToast('Tarea creada exitosamente', 'success');
+        }
         overlay.remove();
         // Actualizar panel sin recargar página
         const event = new CustomEvent('refreshPanel');

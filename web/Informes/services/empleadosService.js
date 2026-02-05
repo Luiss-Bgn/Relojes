@@ -92,22 +92,22 @@ export async function obtenerBackup() {
             
             // 🔥 IMPORTANTE: Si la tarea está en historial (excepto extras), significa que estaba asignada
             // Por lo tanto, sus puntos cuentan como asignados
-            if (estatus !== 5) { // Todas las tareas excepto extras cuentan como asignadas
+            if (estatus !== 'extra') { // Todas las tareas excepto extras cuentan como asignadas
               historialPuntos[fecha].asignados += puntos;
             }
             
             // Mapeo de estatus:
-            // 1 = sin iniciar → perdido
-            // 2 = en progreso → perdido
-            // 3 = completada → completado
-            // 4 = no completado → perdido
-            // 5 = extra → extra (NO cuenta como asignado)
+            // sinIniciar → perdido
+            // enProgreso → perdido
+            // completada → completado
+            // vencida → perdido
+            // extra → extra (NO cuenta como asignado)
             
-            if (estatus === 3) { // Completada
+            if (estatus === 'completada') { // Completada
               historialPuntos[fecha].completados += puntos;
-            } else if (estatus === 1 || estatus === 2 || estatus === 4) { // Sin iniciar, en progreso, o no completado
+            } else if (estatus === 'sinIniciar' || estatus === 'enProgreso' || estatus === 'vencida') { // Sin iniciar, en progreso, o vencida
               historialPuntos[fecha].perdidos += puntos;
-            } else if (estatus === 5) { // Extras
+            } else if (estatus === 'extra') { // Extras
               historialPuntos[fecha].extras += puntos;
             }
           });

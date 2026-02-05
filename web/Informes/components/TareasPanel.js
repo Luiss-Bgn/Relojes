@@ -100,7 +100,7 @@ export function mostrarTareasEmpleado(empleado) {
         const tareas = emp.tareas_asignadas[dia] || [];
         for (const tarea of tareas) {
           // Si es una tarea extra con referencia a una tarea original, marcar el ID original
-          if (tarea.estatus === 5 && tarea.tareaOriginalId) {
+          if (tarea.estatus === 'extra' && tarea.tareaOriginalId) {
             tareasCompletadasComoExtras.add(Number(tarea.tareaOriginalId));
           }
         }
@@ -112,9 +112,9 @@ export function mostrarTareasEmpleado(empleado) {
   // (incluso vencidas, aunque hayan sido completadas como extras por otros)
   // La exclusión se hará durante el cálculo de puntos, no aquí
   const merged = [
-    ...allTasks.filter(t => t.estatus === 3),
+    ...allTasks.filter(t => t.estatus === 'completada'),
     ...realizadasBackup,
-    ...allTasks.filter(t => t.estatus !== 3)
+    ...allTasks.filter(t => t.estatus !== 'completada')
   ].filter((t, i, arr) => {
     // Deduplicar por ID - pero PERMITIR vencidas incluso si fueron completadas como extras
     if (arr.findIndex(x => x.id === t.id) !== i) return false;
@@ -184,8 +184,8 @@ export function mostrarTareasEmpleado(empleado) {
       const puntos = parseInt(tarea.puntaje) || 0;
       
       // Puntos asignados: SIEMPRE se muestran (son las tareas que debe hacer)
-      // Estado 5 son extras, no se cuentan como asignados
-      if (tarea.estatus !== 5) {
+      // Estado extra no se cuenta como asignado
+      if (tarea.estatus !== 'extra') {
         puntosAsignados += puntos;
       }
       
@@ -194,15 +194,15 @@ export function mostrarTareasEmpleado(empleado) {
         return; // Siguiente tarea
       }
       
-      // Estados: 1=En progreso, 2=Sin iniciar, 3=Completada, 4=No completada, 5=Extras
-      if (tarea.estatus === 3) {
+      // Estados: sinIniciar, enProgreso, completada, vencida, extra
+      if (tarea.estatus === 'completada') {
         puntosRealizados += puntos;
       }
-      // 🔥 PUNTOS NO GANADOS: Estatus 2 (Sin iniciar) y Estatus 4 (No completada/Vencida)
-      if (tarea.estatus === 2 || tarea.estatus === 4) {
+      // 🔥 PUNTOS NO GANADOS: Estatus enProgreso y vencida
+      if (tarea.estatus === 'enProgreso' || tarea.estatus === 'vencida') {
         puntosPerdidos += puntos;
       }
-      if (tarea.estatus === 5) {
+      if (tarea.estatus === 'extra') {
         puntosExtras += puntos;
       }
     });
@@ -1126,9 +1126,9 @@ export function mostrarResumenAgregado() {
       const realizadasBackup = tareasRealizadasMap[empleado.id] || [];
       
       const merged = [
-        ...allTasks.filter(t => t.estatus === 3),
+        ...allTasks.filter(t => t.estatus === 'completada'),
         ...realizadasBackup,
-        ...allTasks.filter(t => t.estatus !== 3)
+        ...allTasks.filter(t => t.estatus !== 'completada')
       ].filter((t, i, arr) => {
         if (arr.findIndex(x => x.id === t.id) !== i) return false;
         return true;
@@ -1144,17 +1144,17 @@ export function mostrarResumenAgregado() {
       tareasDelDia.forEach(tarea => {
         const puntos = parseInt(tarea.puntaje) || 0;
         
-        if (tarea.estatus !== 5) {
+        if (tarea.estatus !== 'extra') {
           totalAsignados += puntos;
         }
         
         if (esFuturo) return;
         
-        if (tarea.estatus === 3) {
+        if (tarea.estatus === 'completada') {
           totalRealizados += puntos;
-        } else if (tarea.estatus === 4) {
+        } else if (tarea.estatus === 'vencida') {
           totalPerdidos += puntos;
-        } else if (tarea.estatus === 5) {
+        } else if (tarea.estatus === 'extra') {
           totalExtras += puntos;
         }
       });

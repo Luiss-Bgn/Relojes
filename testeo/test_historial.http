@@ -9,16 +9,16 @@ GET {{baseUrl}}/
 
 
 ### Crear registro
-POST {{baseUrl}}/tareas
+POST {{baseUrl}}/historial
 Content-Type: application/json
 
 {
-  "nombre": "Primera tarea desde test",
+  "nombre": "seg tarea desde test",
   "descripcion": " primera tarea",
   "id_dueño": 1,
-  "hora_ini": "09:00",
-  "hora_fin": "12:00",
-  "fecha": "2026-01-30",
+  "hora_ini": "19:00",
+  "hora_fin": "19:30",
+  "fecha": "2026-02-04",
   "puntos": 5,
   "estatus": "sinIniciar"
 }
