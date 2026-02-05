@@ -8,11 +8,13 @@ from datetime import datetime
 import unicodedata
 
 class Relojes():
-    def __init__(self):
+    def __init__(self, eventManager):
         self.db_manager = DatabaseManager("relojes.db")
         self.reloj_manager = RelojManager(self.db_manager)
         self.usuario_manager = UsuarioManager(self.db_manager)
         self.tareas_manager = TareasManager(self.db_manager)
+
+        self.eventManager = eventManager
 
         self.comandos = {
             "registro": self._registrar_reloj_nuevo,
@@ -77,12 +79,12 @@ class Relojes():
             return obj
         
     async def _completar_tarea(self, mensaje, uuid):
-        tarea_id = mensaje['tarea']['id']
+        tarea_id = mensaje['tarea'][0]['id']
         tarea = self.tareas_manager.obtener_registro(tarea_id)
 
         conexion = conexiones.obtener_conexion(uuid)
-
-        if not tarea and tarea['estatus'] != "en_progreso": 
+        if not tarea or tarea['registro']['estatus'] != "en_progreso": 
+            # print("No se puede completar la tarea")
             await conexion["ws"].send_json(self.adaptar_para_arduino({"comando":"update_tareas"}))
             return
 
@@ -97,6 +99,15 @@ class Relojes():
         }
 
         await conexion["ws"].send_json(self.adaptar_para_arduino(respuesta))
+
+        await self.eventManager.emit("tareas_actualizadas", {
+                "source": "tareas",
+                "target": "web",
+                "action": "update_tareas",
+                "notification": [],
+                "data": resultado
+        })
+
         
 
     async def _registrar_reloj_nuevo(self, mensaje, uuid):

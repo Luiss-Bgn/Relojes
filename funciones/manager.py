@@ -12,7 +12,7 @@ class Manager():
 
         self.funciones = {
             "usuarios": funciones.Usuarios(),
-            "relojes": funciones.Relojes(),
+            "relojes": funciones.Relojes(eventManager),
             "tareas": funciones.Tareas(eventManager),
             "extras": funciones.Extras(eventManager),
         }
