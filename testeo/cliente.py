@@ -55,7 +55,7 @@ async def enviar_comandos():
                 "tipo": "relojes",
                 "comando": "completar_tarea",
                 "uuid": "56b87e25-cc10-4cbe-b2c6-7f71c7e166e3",
-                "tarea": [{"id": 41, "id_empleado":3}]
+                "tarea": {"id": 41, "id_empleado":3}
             }
 
             print("📤 Enviando:", comando)

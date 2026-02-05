@@ -79,7 +79,7 @@ class Relojes():
             return obj
         
     async def _completar_tarea(self, mensaje, uuid):
-        tarea_id = mensaje['tarea'][0]['id']
+        tarea_id = mensaje['tarea']['id']
         tarea = self.tareas_manager.obtener_registro(tarea_id)
 
         conexion = conexiones.obtener_conexion(uuid)
@@ -91,6 +91,35 @@ class Relojes():
         resultado = self.tareas_manager.actualizar_registro(
             tarea_id,
             estatus="completada",
+        )
+
+        respuesta = {
+            "comando": "update_tareas",
+            "vibrar": False
+        }
+
+        await conexion["ws"].send_json(self.adaptar_para_arduino(respuesta))
+
+        await self.eventManager.emit("tareas_actualizadas", {
+                "source": "tareas",
+                "target": "web",
+                "action": "update_tareas",
+                "notification": [],
+                "data": resultado
+        })
+
+    async def _completar_extra(self, mensaje, uuid):
+        tarea_id = mensaje['tarea']['id']
+        tarea = self.tareas_manager.obtener_registro(tarea_id)
+
+        conexion = conexiones.obtener_conexion(uuid)
+        if not tarea or tarea['registro']['estatus'] != "extra":
+            await conexion["ws"].send_json(self.adaptar_para_arduino({"comando":"update_tareas"}))
+            return
+        
+        resultado = self.tareas_manager.actualizar_registro(
+            tarea_id,
+            completadaPor=mensaje['tarea']['id_empleado'],
         )
 
         respuesta = {
