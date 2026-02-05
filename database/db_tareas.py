@@ -122,6 +122,47 @@ class TareasDAO:
             cursor.execute('DELETE FROM tareas_semana WHERE id = ?', (tareas_semana_id,))
             conn.commit()
             return cursor.rowcount > 0
+        
+    def obtener_por_usuario_y_fecha(self, usuario_id: int, fecha: str) -> List[Dict[str, Any]]:
+        with self.db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT id, nombre, descripcion, id_dueño, hora_ini, hora_fin,
+                    fecha, puntos, estatus, completadaPor, disponible_para_rol
+                FROM tareas_semana
+                WHERE fecha = ?
+                AND (
+                        id_dueño = ?
+                        OR completadaPor = ?
+                    )
+                ORDER BY hora_ini
+            ''', (fecha, usuario_id, usuario_id))
+            rows = cursor.fetchall()
+            return [dict(row) for row in rows]
+        
+    def obtener_extras_por_fecha_y_rol(self, fecha: str, rol: str, usuario_id: int) -> List[Dict[str, Any]]:
+        """Obtiene tareas extra disponibles por fecha y rol"""
+        with self.db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT id, nombre, descripcion, id_dueño, hora_ini, hora_fin,
+                    fecha, puntos, estatus, completadaPor, disponible_para_rol
+                FROM tareas_semana
+                WHERE fecha = ?
+                AND estatus = 'extra'
+                AND completadaPor IS NULL
+                AND id_dueño != ?
+                AND (
+                        disponible_para_rol = ?
+                        OR disponible_para_rol = 'todos'
+                    )
+                ORDER BY hora_ini
+            ''', (fecha,usuario_id, rol))
+            rows = cursor.fetchall()
+            return [dict(row) for row in rows]
+
+
+
 
 #Logica de negocio, aqui en un futuro debemos agregar validaciones y condiciones, asi como funciones automaticas para el cambio estatyus 
 class TareasManager:
@@ -330,3 +371,44 @@ class TareasManager:
                 "status": "error",
                 "mensaje": f"Error al eliminar registro: {str(e)}"
             }
+        
+    def listar_por_usuario_y_fecha(self, usuario_id: int, fecha: str) -> Dict[str, Any]:
+        try:
+            registros = self.tareas_dao.obtener_por_usuario_y_fecha(usuario_id, fecha)
+
+            if registros:
+                return {
+                    "status": "success",
+                    "registros": registros,
+                    "total": len(registros)
+                }
+            else:
+                return {
+                    "status": "success",
+                    "registros": [],
+                    "total": 0
+                }
+        except Exception as e:
+            logger.error(f"ERROR AL LISTAR REGISTROS POR USUARIO Y FECHA: {str(e)}")
+            return {
+                "status": "error",
+                "mensaje": f"Error al listar registros: {str(e)}"
+            }
+        
+    def listar_extras_por_fecha_y_rol(self, fecha: str, rol: str, usuario_id:int) -> Dict[str, Any]:
+        try:
+            registros = self.tareas_dao.obtener_extras_por_fecha_y_rol(fecha, rol, usuario_id)
+
+            return {
+                "status": "success",
+                "registros": registros,
+                "total": len(registros)
+            }
+        except Exception as e:
+            logger.error(f"ERROR AL LISTAR TAREAS EXTRA: {str(e)}")
+            return {
+                "status": "error",
+                "mensaje": f"Error al listar tareas extra: {str(e)}"
+            }
+
+

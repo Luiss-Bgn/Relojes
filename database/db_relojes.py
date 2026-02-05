@@ -122,44 +122,35 @@ class RelojManager:
             "mensaje": "UUID asignado permanentemente al reloj"
         }
     
-    def iniciar_sesion_reloj(self, uuid_reloj: str) -> Dict[str, Any]:
-        """
-        Inicia sesión de un reloj registrado.
-        El reloj enviará: {"tipo":"relojes", "comando":"inicio", "uuid":"uuid-del-reloj"}
-        
-        Args:
-            uuid_reloj: UUID del reloj
-            
-        Returns:
-            {"status": "success"/"error", "data": {...}}
-        """
+    def iniciar_sesion_reloj(self, uuid_reloj: str, empleado_id: int, rol: str) -> Dict[str, Any]:
+
         reloj = self.reloj_dao.obtener_por_uuid(uuid_reloj)
-        
+
         if not reloj:
-            logger.warning(
-                f"✗ INICIO FALLIDO - UUID no encontrado: {uuid_reloj} "
-                f"| Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-            )
             return {
                 "status": "error",
-                "mensaje": "UUID no registrado en la base de datos",
-                "uuid": uuid_reloj
+                "mensaje": "No existe ese registro de reloj"
             }
-        
-        logger.info(
-            f"✓ RELOJ INICIADO - UUID: {uuid_reloj} | ID: {reloj['id']} "
-            f"| Empleado: {reloj['empleado_id']} | Rol: {reloj['rol']} "
-            f"| Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+
+        actualizado = self.reloj_dao.actualizar(
+            reloj["id"],
+            empleado_id=empleado_id,
+            rol=rol
         )
-        
+
+        if not actualizado:
+            return {
+                "status": "error",
+                "mensaje": "No se pudo actualizar el reloj"
+            }
+        reloj_actualizado = self.reloj_dao.obtener_por_uuid(uuid_reloj)
+
         return {
             "status": "success",
-            "uuid": uuid_reloj,
-            "id": reloj['id'],
-            "empleado_id": reloj['empleado_id'],
-            "rol": reloj['rol'],
-            "mensaje": "Reloj iniciado correctamente"
+            "mensaje": "Sesión iniciada correctamente",
+            "reloj": reloj_actualizado
         }
+        
     
     def obtener_uuids_por_empleados(self, empleados_ids):
         if not empleados_ids:

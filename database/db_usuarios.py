@@ -117,6 +117,19 @@ class UsuarioDAO:
             if row:
                 return row[0] == contraseña
             return False
+        
+    def obtener_por_roles(self, roles: List[str]) -> List[Dict[str, Any]]:
+        with self.db.get_connection() as conn:
+            cursor = conn.cursor()
+            query = f"""
+                SELECT id, nombre, username, pin, rol, puesto, imagen
+                FROM usuarios
+                WHERE rol IN ({','.join('?' for _ in roles)})
+            """
+            cursor.execute(query, roles)
+            rows = cursor.fetchall()
+            return [dict(row) for row in rows]
+
 
 
 class UsuarioManager:
@@ -180,7 +193,7 @@ class UsuarioManager:
             usuario = self.usuario_dao.obtener_por_id(usuario_id)
             
             if usuario:
-                logger.info(f"✓ USUARIO OBTENIDO - ID: {usuario_id}")
+                # logger.info(f"✓ USUARIO OBTENIDO - ID: {usuario_id}")
                 return {
                     "status": "success",
                     "usuario": usuario
@@ -309,7 +322,7 @@ class UsuarioManager:
             usuario = self.usuario_dao.obtener_por_pin(pin)
             
             if usuario:
-                logger.info(f"✓ USUARIO OBTENIDO - PIN: {pin}")
+                # logger.info(f"✓ USUARIO OBTENIDO - PIN: {pin}")
                 return {
                     "status": "success",
                     "usuario": usuario
@@ -336,3 +349,28 @@ class UsuarioManager:
             """
             cursor.execute(query, roles)
             return [row["id"] for row in cursor.fetchall()]
+        
+    def obtener_usuarios_por_roles(self, roles: List[str]) -> Dict[str, Any]:
+        try:
+            usuarios = self.usuario_dao.obtener_por_roles(roles)
+
+            if usuarios:
+                logger.info(f"✓ USUARIOS OBTENIDOS POR ROLES - Roles: {roles} | Total: {len(usuarios)}")
+                return {
+                    "status": "success",
+                    "usuarios": usuarios,
+                    "total": len(usuarios)
+                }
+            else:
+                logger.warning(f"✗ NO SE ENCONTRARON USUARIOS PARA ROLES: {roles}")
+                return {
+                    "status": "error",
+                    "mensaje": "No se encontraron usuarios con esos roles"
+                }
+        except Exception as e:
+            logger.error(f"✗ ERROR AL OBTENER USUARIOS POR ROLES: {str(e)}")
+            return {
+                "status": "error",
+                "mensaje": f"Error al obtener usuarios: {str(e)}"
+            }
+
