@@ -85,8 +85,8 @@ class Usuarios():
             print(f"Error en seleccionar empleado: {e}")
             return {"status": "error", "mensaje": str(e)}
     
-    async def Actualizar(self):
-        """Se ejecuta periódicamente por el Manager"""
-        print("Actualizando Usuarios...")
-        return
+    # async def Actualizar(self):
+    #     """Se ejecuta periódicamente por el Manager"""
+    #     print("Actualizando Usuarios...")
+    #     return
 

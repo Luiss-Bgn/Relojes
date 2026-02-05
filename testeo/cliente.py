@@ -33,9 +33,13 @@ async def enviar_comandos():
             #         "estado": "sin_inicar"
             #     }]
             # }
+            # comando = {
+            #     "tipo": "tareas",
+            #     "comando": "obtener_tareas"
+            # }
             comando = {
-                "tipo": "tareas",
-                "comando": "obtener_tareas"
+                "tipo": "relojes",
+                "comando": "registro"
             }
 
             print("📤 Enviando:", comando)

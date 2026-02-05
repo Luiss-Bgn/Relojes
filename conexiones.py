@@ -2,6 +2,7 @@
 class Conexiones():
     def __init__(self):
         self.conexiones_activas = {}
+        self.conexiones_a_registrar = {}
 
     def agregar_conexion(self, uuid, conexion, tipo):
         if uuid in self.conexiones_activas:
@@ -12,6 +13,22 @@ class Conexiones():
             "tipo": tipo
         }
         print(f"Conexión agregada. Total conexiones: {len(self.conexiones_activas)}")
+
+    def agregar_registro(self, ip, conexion):
+        self.conexiones_a_registrar[ip] = {
+            "ws": conexion
+        }
+    
+    def obtener_registro(self, ip):
+        return self.conexiones_a_registrar[ip]
+    
+    def eliminar_registro(self,ip):
+        try:
+            del self.conexiones_a_registrar[ip]
+            # print("Conexion eliminada")
+        except:
+            print("Error eliminando la conexion del registro")
+
 
     def eliminar_conexion(self, uuid):
         if uuid in self.conexiones_activas:

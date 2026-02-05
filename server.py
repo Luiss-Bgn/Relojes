@@ -16,7 +16,6 @@ import schedule
 import time
 
 from funciones import manager
-from database import db_manager
 from conexiones import conexiones
 from funciones.eventos import EventManager
 import time_manager
@@ -27,10 +26,6 @@ from api import app as api_app
 
 event_Manager = EventManager()
 Manager = manager.Manager(event_Manager)
-
-# Manejar base de datos
-iniciar_db = db_manager.IniciarDB()
-cerrar_db = db_manager.CerrarDB()
 
 # Manejo de tiempo
 async def iniciar_chequeo_hora(app):
@@ -64,13 +59,18 @@ async def ws_handler(request):
             if msg.type == web.WSMsgType.TEXT:
                 data = msg.json()
                 if not es_web:
-                    uuid_cliente = data.get("uuid", "desconocido")
+                    uuid_cliente = data.get("uuid")
                 
                 # Si es la primera vez que recibimos el UUID, registrar la conexión
-                conectados = conexiones.obtener_conexiones()
-                conexiones.agregar_conexion(uuid_cliente, ws, "web" if es_web else "reloj")
+                if uuid_cliente:
+                    conexiones.agregar_conexion(uuid_cliente, ws, "web" if es_web else "reloj")
+                else:
+                    data['ip'] = request.remote
+                    conexiones.agregar_registro(request.remote, ws)
+                    
                 await Manager.AnalizarMensaje(data, uuid_cliente)
 
+                conectados = conexiones.obtener_conexiones()
                 print(f"Conexiones activas: {list(conectados.keys())}")
     finally:
         print("Cliente desconectado")
@@ -83,8 +83,6 @@ async def ws_handler(request):
 app = web.Application()
 app.router.add_get('/ws', ws_handler)
 
-# app.on_startup.append(iniciar_db)
-# app.on_cleanup.append(cerrar_db)
 
 # Arrancar manejo de tiempo
 app.on_startup.append(iniciar_chequeo_hora)

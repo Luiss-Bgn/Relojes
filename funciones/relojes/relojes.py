@@ -47,23 +47,16 @@ class Relojes():
         
         # Obtener la conexión actual (registrada por server.py con request.remote)
         # y re-registrarla con el UUID que acabamos de obtener
-        cone = None
+
         # Buscar en todas las conexiones la más reciente sin UUID
-        todas_conexiones = conexiones.obtener_conexiones()
-        if todas_conexiones:
-            # Tomar la última conexión registrada (que debería ser la del cliente actual)
-            cone = list(todas_conexiones.values())[-1] if todas_conexiones else None
-        
-        # Re-registrar con el UUID
-        if cone:
-            # Eliminar el registro anterior con IP
-            for key in list(todas_conexiones.keys()):
-                if todas_conexiones[key] == cone:
-                    conexiones.eliminar_conexion(key)
-                    break
-            # Registrar con UUID
-            conexiones.agregar_conexion(uuid, cone)
-            await cone.send_json(resultado)
+        conexion = conexiones.obtener_registro(data['ip'])
+        if conexion:
+            conexiones.eliminar_registro(data['ip'])
+
+        conexiones.agregar_conexion(uuid, conexion['ws'], "reloj")
+        conexion = conexiones.obtener_conexion(uuid)
+
+        await conexion['ws'].send_json(resultado)
         
         return resultado 
 
