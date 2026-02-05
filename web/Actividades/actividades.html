@@ -38,33 +38,52 @@
       </div>
     </header>
 
-    <section class="summary">
-      <div class="date-block">
-        <p class="muted">Resumen del día</p>
-        <div style="display: flex; align-items: center; gap: 16px; justify-content: center;">
-          <button class="ghost" id="prev-day-btn" style="font-size: 24px; padding: 8px 12px;">←</button>
-          <h1 id="selected-date" style="min-width: 12ch; text-align: center;">--</h1>
-          <button class="ghost" id="next-day-btn" style="font-size: 24px; padding: 8px 12px;">→</button>
-        </div>
-        <p class="muted" id="current-time">--</p>
+    <section class="main-layout">
+      <!-- Contenedor 1: Etiquetas de estado -->
+      <div class="legend-container">
+        <div class="legend" id="legend"></div>
       </div>
-      <div class="stats" id="stats">
-        <div class="stat-card">
-          <div class="stat-value" id="completion-rate">0%</div>
-          <div class="stat-label">Puntos ganados</div>
+      
+      <!-- Contenedor 2: Fecha y resumen del día -->
+      <div class="date-container">
+        <div class="date-block">
+          <div style="display: flex; align-items: center; gap: 16px; justify-content: center;">
+            <button class="ghost" id="prev-day-btn" style="font-size: 24px; padding: 8px 12px;">←</button>
+            <h1 id="selected-date" style="min-width: 12ch; text-align: center;">--</h1>
+            <button class="ghost" id="next-day-btn" style="font-size: 24px; padding: 8px 12px;">→</button>
+          </div>
+          <p class="muted" id="current-time">--</p>
         </div>
-        <div class="stat-card">
-          <div class="stat-value" id="extra-count">0</div>
-          <div class="stat-label">Puntos extra</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="pending-count">0</div>
-          <div class="stat-label">Pendientes</div>
+      </div>
+      
+      <!-- Contenedor 3: Stats/Promedio empleados -->
+      <div class="stats-container">
+        <div class="stats" id="stats">
+          <div class="stat-card main-stat">
+            <h3 class="stat-title">Promedio de todos los empleados</h3>
+            <div class="stat-content">
+              <div class="progress-section">
+                <div id="average-progress-chart"></div>
+                <div class="legend-section">
+                  <div class="legend-item">
+                    <span class="legend-dot" style="background-color: #22c55e;"></span>
+                    <span>Total puntos ganados</span>
+                  </div>
+                  <div class="legend-item">
+                    <span class="legend-dot" style="background-color: #ef4444;"></span>
+                    <span>Puntos no ganados</span>
+                  </div>
+                </div>
+              </div>
+              <div class="extra-section">
+                <div class="stat-label">Puntos extras ganados</div>
+                <div class="stat-value" id="total-extra-points">0</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
-
-    <section class="legend" id="legend"></section>
 
     <section class="table-wrapper">
       <table id="panel-table">

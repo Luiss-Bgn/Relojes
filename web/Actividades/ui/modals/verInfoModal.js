@@ -2,6 +2,12 @@ import { loadModalHTML } from './modalLoader.js';
 import { showToast } from '../toast.js';
 import { createNotificationMessage, NOTIFICATION_TYPES } from '../../services/notificationTypes.js';
 
+const ROLE_LABELS = {
+  empleado: '👤 Empleado',
+  supervisor: '👔 Supervisor',
+  admin: '👑 Administrador'
+};
+
 export const showVerInfoModal = async (emp) => {
   console.log('Mostrando modal de información para el empleado:', emp);
   // Crear overlay
@@ -55,7 +61,9 @@ function fillEmployeeInfo(emp, modal, userRole) {
   // Campo de rol con estilos visuales
   const rolSelect = modal.querySelector('#field-rol');
   const empleadoRol = emp.rol ? emp.rol.toLowerCase() : 'empleado';
-  rolSelect.value = empleadoRol;
+  configureRoleOptions(rolSelect, userRole);
+  const displayedRole = userRole === 'admin' ? empleadoRol : 'empleado';
+  rolSelect.value = displayedRole;
   
   // Aplicar colores según el rol
   const roleColors = {
@@ -64,7 +72,7 @@ function fillEmployeeInfo(emp, modal, userRole) {
     'admin': '#fff2e8'       // Naranja claro
   };
   
-  rolSelect.style.backgroundColor = roleColors[empleadoRol] || roleColors['empleado'];
+  rolSelect.style.backgroundColor = roleColors[displayedRole] || roleColors['empleado'];
   rolSelect.style.fontWeight = '600';
   
   modal.querySelector('#field-reloj').value = emp.reloj_id || '';
@@ -73,7 +81,7 @@ function fillEmployeeInfo(emp, modal, userRole) {
   // Foto del empleado (si existe)
   const photo = modal.querySelector('#employee-photo');
   if (emp.imagen) {  // Cambio: imagen en lugar de foto
-    photo.src = emp.imagen;
+    photo.src = "/web/Images/" +emp.imagen;
   }
 
   // Mostrar credenciales solo para admin
@@ -85,6 +93,21 @@ function fillEmployeeInfo(emp, modal, userRole) {
     modal.querySelector('#field-pin').value = emp.pin || '****';
     modal.querySelector('#field-password').value = emp.password || '************';
   }
+}
+
+function configureRoleOptions(rolSelect, userRole) {
+  const allowedRoles = userRole === 'admin'
+    ? ['empleado', 'supervisor', 'admin']
+    : ['empleado'];
+
+  rolSelect.innerHTML = '';
+
+  allowedRoles.forEach(role => {
+    const option = document.createElement('option');
+    option.value = role;
+    option.textContent = ROLE_LABELS[role] || role;
+    rolSelect.appendChild(option);
+  });
 }
 
 function setupVerInfoEventListeners(emp, modal, overlay, userRole) {
