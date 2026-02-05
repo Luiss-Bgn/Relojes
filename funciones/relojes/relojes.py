@@ -5,6 +5,7 @@ from database.db_tareas import TareasManager
 from conexiones import conexiones
 
 from datetime import datetime
+import unicodedata
 
 class Relojes():
     def __init__(self):
@@ -51,6 +52,28 @@ class Relojes():
         lista_tareas = self.tareas_manager.listar_extras_por_fecha_y_rol(dia,rol,id_empleado)
 
         return lista_tareas
+    
+    def adaptar_para_arduino(self, obj):
+        if isinstance(obj, dict):
+            nuevo = {}
+            for k, v in obj.items():
+                if k == "id_dueño":
+                    k = "id_dueno"
+
+                nuevo[k] = self.adaptar_para_arduino(v)
+            return nuevo
+
+        elif isinstance(obj, list):
+            return [self.adaptar_para_arduino(i) for i in obj]
+
+        elif isinstance(obj, str):
+            # Quita tildes y caracteres raros
+            return unicodedata.normalize("NFKD", obj)\
+                .encode("ascii", "ignore")\
+                .decode("ascii")
+
+        else:
+            return obj
 
     async def _registrar_reloj_nuevo(self, mensaje, uuid):
         """Maneja el registro de un reloj nuevo"""
@@ -78,7 +101,8 @@ class Relojes():
         }
         conexion = conexiones.obtener_conexion(uuid)
         print(mensaje)
-
+        
+        mensaje = self.adaptar_para_arduino(mensaje)
         await conexion['ws'].send_json(mensaje)
 
     async def _actualizar_reloj(self, mensaje, uuid):
@@ -97,6 +121,7 @@ class Relojes():
             "tareas": lista_tareas['registros'],
             "vibrar": True
         }
+        mensaje = self.adaptar_para_arduino(mensaje)
         await conexion['ws'].send_json(mensaje)
 
         mensaje = {
@@ -104,4 +129,5 @@ class Relojes():
             "tareas": lista_extras['registros'],
             "vibrar": False
         }
+        mensaje = self.adaptar_para_arduino(mensaje)
         await conexion['ws'].send_json(mensaje)
