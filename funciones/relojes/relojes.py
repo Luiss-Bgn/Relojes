@@ -73,7 +73,7 @@ class Relojes():
         lista_empleados = self.usuario_manager.obtener_usuarios_por_roles(["empleado"])
 
         mensaje = {
-            "lista_usuarios": [lista_empleados],
+            "lista_usuarios": [lista_empleados]['usuarios'],
             "vibrar": True
         }
         conexion = conexiones.obtener_conexion(uuid)
