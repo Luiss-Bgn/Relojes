@@ -1,6 +1,7 @@
 import { loadModalHTML } from './modalLoader.js';
 import { showToast } from '../toast.js';
 import { createNotificationMessage, NOTIFICATION_TYPES } from '../../services/notificationTypes.js';
+import { checkTimeConflict } from './revisarConflictoHorario.js';
 
 export const showCrearTareaModal = async (emp) => {
   // Crear overlay
@@ -102,7 +103,7 @@ export const showCrearTareaModal = async (emp) => {
       const result = await response.json();
       
       if (response.ok) {
-        if(estatus === 'proximo'){
+        if(estatus === 'futura'){
           showToast('Tarea creada exitosamente para la siguiente semana ya que la hora de inicio ya pasó para hoy.', 'info', 7000);
         } else {
         showToast('Tarea creada exitosamente', 'success');
@@ -151,58 +152,10 @@ function determinarEstatus(dias, hora_ini) {
   
   if (incluyeHoy && horaIniMinutos < horaActualMinutos) {
     // La tarea es para hoy pero la hora ya pasó
-    return 'proximo';
+    return 'futura';
   }
   
   return 'sin_iniciar';
 }
 
-// Función para verificar conflicto de horarios
-async function checkTimeConflict(empleadoId, dias, hora_ini, hora_fin) {
-  try {
-    // Obtener todas las tareas del panel
-    const response = await fetch('http://localhost:8001/tareas/panel/obtener');
-    const result = await response.json();
-    
-    if (result.status !== 'success' || !result.panel) {
-      return null; // Si no se pueden obtener las tareas, permitir continuar
-    }
-    
-    // Buscar el empleado en el panel
-    const empleado = result.panel.find(u => u.id === empleadoId);
-    if (!empleado || !empleado.tareas_asignadas) {
-      return null; // No hay tareas asignadas, no hay conflicto
-    }
-    
-    const nuevaInicio = timeToMinutes(hora_ini);
-    const nuevaFin = hora_fin ? timeToMinutes(hora_fin) : nuevaInicio + 60; // Si no hay hora_fin, asumir 1 hora
-    
-    // Revisar cada día seleccionado
-    for (const dia of dias) {
-      const tareasDelDia = empleado.tareas_asignadas[dia] || [];
-      
-      // Verificar solapamiento con cada tarea existente
-      for (const tarea of tareasDelDia) {
-        const tareaInicio = timeToMinutes(tarea.hora_ini);
-        const tareaFin = tarea.hora_fin ? timeToMinutes(tarea.hora_fin) : tareaInicio + 60;
-        
-        // Verificar si hay solapamiento
-        // Dos rangos se solapan si: inicio1 < fin2 AND inicio2 < fin1
-        if (nuevaInicio < tareaFin && tareaInicio < nuevaFin) {
-          // Retornar información del conflicto
-          return {
-            nombre: tarea.nombre,
-            dia: dia,
-            hora_ini: tarea.hora_ini,
-            hora_fin: tarea.hora_fin || tarea.hora_ini
-          };
-        }
-      }
-    }
-    
-    return null; // No hay conflicto
-  } catch (error) {
-    console.error('Error verificando conflictos:', error);
-    return null; // En caso de error, permitir continuar
-  }
-}
+// checkTimeConflict ahora está en ./modalTimeConflict.js

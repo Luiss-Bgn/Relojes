@@ -17,10 +17,18 @@
 #panel-table thead {
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 100;
   background: #f7f8fb;
   border-bottom: 2px solid var(--border);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Asegurar que las cabeceras queden siempre por encima de las celdas sticky */
+#panel-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 110;
+  background: #f7f8fb;
 }
 
 #panel-table th,
@@ -30,6 +38,7 @@
   border: 1px solid var(--border);
   vertical-align: middle;
   overflow: hidden;
+  background-clip: padding-box;
 }
 
 #panel-table th { 
@@ -39,48 +48,51 @@
 }
 
 /* Columna HORARIO - Sticky */
-#panel-table thead th:nth-child(1),
-#panel-table tbody td:nth-child(1) {
+#panel-table .col-hora {
   width: 130px;
   min-width: 130px;
   max-width: 130px;
   position: sticky;
   left: 0;
-  z-index: 5;
-  background: #f7f8fb;
-  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(var(--sticky-highlight, transparent), var(--sticky-highlight, transparent)), #f7f8fb;
+  box-shadow: inset -1px 0 0 var(--border), 2px 0 4px rgba(0, 0, 0, 0.1);
   white-space: nowrap;
   font-weight: 600;
   text-align: center;
   padding: 10px 12px;
 }
 
-#panel-table tbody td:nth-child(1) {
-  background: white;
+#panel-table tbody td.col-hora {
+  z-index: 20;
+  background: linear-gradient(var(--sticky-highlight, transparent), var(--sticky-highlight, transparent)), #fff;
+}
+
+#panel-table thead th.col-hora {
+  z-index: 130;
 }
 
 /* Columna ACTIVIDAD - Sticky */
-#panel-table thead th:nth-child(2),
-#panel-table tbody td:nth-child(2) {
+#panel-table .col-actividad {
   width: 50ch;
   min-width: 50ch;
   max-width: 50ch;
   position: sticky;
-  left: 110px;
-  z-index: 5;
-  background: #f7f8fb;
-  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+  left: 130px;
+  background: linear-gradient(var(--sticky-highlight, transparent), var(--sticky-highlight, transparent)), #f7f8fb;
+  box-shadow: inset -1px 0 0 var(--border), 2px 0 4px rgba(0, 0, 0, 0.1);
   text-align: left;
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
 
-#panel-table thead th:nth-child(2) {
+#panel-table thead th.col-actividad {
+  z-index: 129;
   text-align: center;
 }
 
-#panel-table tbody td:nth-child(2) {
-  background: white;
+#panel-table tbody td.col-actividad {
+  z-index: 19;
+  background: linear-gradient(var(--sticky-highlight, transparent), var(--sticky-highlight, transparent)), #fff;
   text-align: left;
 }
 
@@ -97,28 +109,30 @@
 }
 
 /* Columna PUNTOS - Sticky */
-#panel-table thead th:nth-child(3),
-#panel-table tbody td:nth-child(3) {
+#panel-table .col-puntos {
   width: 90px !important;
   min-width: 90px !important;
   max-width: 90px !important;
   position: sticky;
-  left: calc(110px + 50ch);
-  z-index: 5;
-  background: #f7f8fb;
+  left: calc(130px + 50ch);
+  background: linear-gradient(var(--sticky-highlight, transparent), var(--sticky-highlight, transparent)), #f7f8fb;
   text-align: center;
-  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+  box-shadow: inset -1px 0 0 var(--border), 2px 0 4px rgba(0, 0, 0, 0.1);
   font-weight: 600;
   padding: 10px 12px;
 }
 
-#panel-table tbody td:nth-child(3) {
-  background: white;
+#panel-table thead th.col-puntos {
+  z-index: 128;
 }
 
-/* Columnas de EMPLEADOS (desde la 4ta) */
-#panel-table thead th:nth-child(n+4),
-#panel-table tbody td:nth-child(n+4) {
+#panel-table tbody td.col-puntos {
+  z-index: 18;
+  background: linear-gradient(var(--sticky-highlight, transparent), var(--sticky-highlight, transparent)), #fff;
+}
+
+/* Columnas de EMPLEADOS */
+#panel-table .col-emp {
   min-width: 180px;
   width: auto;
 }

@@ -153,11 +153,11 @@ void ScreenTaskList::updateTasks(const std::vector<Task> &tasks)
     {
         lv_obj_t *item = createTaskItem(listContainer, task);
         lastItem = item;
-        if (task.status.equalsIgnoreCase("En Progreso"))
+        if (task.status.equalsIgnoreCase("en_progreso"))
         {
             target = item;
         }
-        else if (!task.status.equalsIgnoreCase("Sin iniciar"))
+        else if (!task.status.equalsIgnoreCase("sin_iniciar"))
         {
             lastStarted = item;
         }
@@ -244,7 +244,7 @@ void ScreenTaskList::onTaskClicked(lv_event_t *e)
     Task *data = static_cast<Task *>(lv_event_get_user_data(e));
     if (!data)
         return;
-    if (!data->status.equalsIgnoreCase("En Progreso"))
+    if (!data->status.equalsIgnoreCase("en_progreso"))
         return;
     showTaskPopup(*data);
 }

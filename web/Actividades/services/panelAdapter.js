@@ -120,8 +120,8 @@ export const adaptPanel = (payload, preferredDate) => {
     assigned.forEach((task) => {
       const taskStatus = statusFromTask(task);
       
-      // Filtrar tareas con estatus "proximo" - no mostrarlas en la tabla principal
-      if (taskStatus === 'proximo') {
+      // Filtrar tareas con estatus "futura" - no mostrarlas en la tabla principal
+      if (taskStatus === 'futura') {
         return;
       }
       

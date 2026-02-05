@@ -3,7 +3,7 @@ import { showToast, showConfirm } from '../toast.js';
 import { showPinKeypadModal } from '../pinKeypadModal.js';
 import { completeTaskWithPin, hasActiveSession } from '../pinAuth.js';
 import { createNotificationMessage, NOTIFICATION_TYPES } from '../../services/notificationTypes.js';
-
+import { checkTimeConflict, getSelectedDayKey } from './revisarConflictoHorario.js';
 const STATUS_LABELS = {
   'sin_iniciar': 'Sin Iniciar',
   'en_progreso': 'En Progreso',
@@ -22,9 +22,9 @@ const VALID_ROLES = ['todos', 'admin', 'empleado', 'supervisor'];
 const AUTH_ROLES = ['admin', 'supervisor', 'empleado'];
 
 export const showVerEditarTareaModal = async (tarea, userRole, targetEmployeeId = null) => {
-  console.log('Mostrando modal para tarea:', tarea);
-  console.log('Rol de usuario:', userRole);
-  console.log("idu")
+  // console.log('Mostrando modal para tarea:', tarea);
+  // console.log('Rol de usuario:', userRole);
+  // console.log("idu")
   // console.log('targetEmployeeId:', targetEmployeeId);
   // Crear overlay
   const overlay = document.createElement('div');
@@ -299,7 +299,7 @@ function setupEventListeners(modal, overlay, tarea, canEdit, canComplete, canCom
   if (canEdit) {
     const btnGuardar = modal.querySelector('#btn-guardar-cambios-tarea');
     btnGuardar.addEventListener('click', async () => {
-      await saveTaskChanges(modal, tarea.id, overlay);
+      await saveTaskChanges(modal, tarea, overlay);
     });
 
     // Eliminar tarea
@@ -316,8 +316,8 @@ function setupEventListeners(modal, overlay, tarea, canEdit, canComplete, canCom
       // Cerrar modal actual y abrir en modo edición
       overlay.remove();
       // Re-abrir el modal pero forzando modo edición
-        const loggedUserString = localStorage.getItem("loggedUser");
-        const user = loggedUserString ? JSON.parse(loggedUserString) : null;
+      const loggedUserString = localStorage.getItem("loggedUser");
+      const user = loggedUserString ? JSON.parse(loggedUserString) : null;
       showVerEditarTareaModal(tarea, user.role, null);
     });
   }
@@ -334,7 +334,7 @@ function setupEventListeners(modal, overlay, tarea, canEdit, canComplete, canCom
         // Si no, usar el userId actual (empleado completando su propia tarea)
         const employeeIdToComplete = targetEmployeeId || user.id;
 
-        
+
         await completeExtraTask(tarea.id, employeeIdToComplete, overlay);
       } else {
         // Completar tarea normal
@@ -353,7 +353,8 @@ function setupEventListeners(modal, overlay, tarea, canEdit, canComplete, canCom
   }
 }
 
-async function saveTaskChanges(modal, tareaId, overlay) {
+
+async function saveTaskChanges(modal, tarea, overlay) {
   const nombre = modal.querySelector('#tarea-nombre').value;
   const descripcion = modal.querySelector('#tarea-descripcion').value;
   const hora_ini = modal.querySelector('#tarea-hora-ini').value;
@@ -361,12 +362,24 @@ async function saveTaskChanges(modal, tareaId, overlay) {
   const puntos = parseInt(modal.querySelector('#tarea-puntos').value);
   const disponible_para_rol = modal.querySelector('#tarea-disponible-para').value;
 
-  if (!nombre || !descripcion || !hora_ini || !puntos) {
+  if (!nombre || !descripcion || !hora_ini || !puntos || !hora_fin) {
     showToast('Por favor completa todos los campos obligatorios', 'warning');
     return;
   }
 
-  console.log("disponible para rol:", disponible_para_rol);
+  const dia = getSelectedDayKey();
+  const conflictInfo = await checkTimeConflict({
+    empleadoId: tarea.empleadoId,
+    dia,
+    hora_ini,
+    hora_fin,
+    excludeTaskId: tarea.id,
+  });
+  if (conflictInfo) {
+    showToast(`Ya existe "${conflictInfo.nombre}" el ${conflictInfo.dia} de ${conflictInfo.hora_ini} a ${conflictInfo.hora_fin}`, 'error', 5000);
+    return;
+  }
+  // console.log("disponible para rol:", disponible_para_rol);
   const tareaData = {
     nombre,
     descripcion,
@@ -377,7 +390,7 @@ async function saveTaskChanges(modal, tareaId, overlay) {
   };
 
   try {
-    const response = await fetch(`http://localhost:8001/tareas/${tareaId}`, {
+    const response = await fetch(`http://localhost:8001/tareas/${tarea.id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -395,7 +408,7 @@ async function saveTaskChanges(modal, tareaId, overlay) {
       const event = new CustomEvent('refreshPanel');
 
       createNotificationMessage(NOTIFICATION_TYPES.TAREA_ACTUALIZADA, {
-        taskId: tareaId,
+        taskId: tarea.id,
         updatedFields: tareaData
       });
       window.dispatchEvent(event);

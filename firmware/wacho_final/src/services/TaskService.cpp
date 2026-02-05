@@ -1,4 +1,5 @@
 #include "TaskService.h"
+#include "AuthService.h"
 
 std::vector<Task> TaskService::tasks;
 std::vector<Task> TaskService::extraTasks;
@@ -31,9 +32,19 @@ bool TaskService::parseTasks(const JsonDocument &doc, const bool isExtra)
         {
             task.id = obj["id"].as<String>();
         }
-        task.name = obj["tarea"].as<String>();
-        task.status = obj["estado"].is<const char *>() ? obj["estado"].as<const char *>() : "";
-        task.timeStart = obj["hora_inicio"].is<const char *>() ? obj["hora_inicio"].as<const char *>() : "";
+
+        if (AuthService::getCurrentEmployeeId() == obj["id_dueno"].as<String>() && !obj["completadaPor"].isNull())
+        {
+            task.status = "vencida";
+        }
+        else
+        {
+            task.status = obj["estatus"].is<const char *>() ? obj["estatus"].as<const char *>() : "";
+        }
+
+        task.name = obj["nombre"].as<String>();
+
+        task.timeStart = obj["hora_ini"].is<const char *>() ? obj["hora_ini"].as<const char *>() : "";
         task.timeEnd = obj["hora_fin"].is<const char *>() ? obj["hora_fin"].as<const char *>() : "";
         task.type = isExtra ? "extra" : "tarea";
 
