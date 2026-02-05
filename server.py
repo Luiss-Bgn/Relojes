@@ -37,6 +37,7 @@ async def detener_chequeo_hora(app):
     await app['tiempo_task']
 
 async def inicar_eventListener(app):
+    event_Manager.set_loop()
     app['event_task'] = asyncio.create_task(Manager.event_listener())
 
 

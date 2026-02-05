@@ -200,7 +200,7 @@ class TareasManager:
         """Lista todos los registros de un usuario"""
         try:
             registros = self.tareas_dao.obtener_por_usuario(usuario_id)
-            logger.info(f"REGISTROS USUARIO LISTADOS - Usuario: {usuario_id} | Total: {len(registros)}")
+            # logger.info(f"REGISTROS USUARIO LISTADOS - Usuario: {usuario_id} | Total: {len(registros)}")
             return {
                 "status": "success",
                 "registros": registros,
@@ -217,7 +217,7 @@ class TareasManager:
         """Lista registros por fecha específica"""
         try:
             registros = self.tareas_dao.obtener_por_fecha(fecha)
-            logger.info(f"REGISTROS POR FECHA LISTADOS - Fecha: {fecha} | Total: {len(registros)}")
+            # logger.info(f"REGISTROS POR FECHA LISTADOS - Fecha: {fecha} | Total: {len(registros)}")
             return {
                 "status": "success",
                 "registros": registros,

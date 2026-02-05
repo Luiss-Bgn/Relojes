@@ -226,7 +226,7 @@ class Tareas():
                 continue
 
             # Tarea vencida
-            if ahora > hora_fin:
+            elif ahora > hora_fin:
                 tarea['estatus'] = 'vencida'
                 hubo_cambios = True
                 # print(f"Tarea vencida: {tarea['nombre']}")
@@ -242,13 +242,15 @@ class Tareas():
                 lista_notificaciones.append(tarea['id_dueño'])
 
             
-        if lista_modificaciones:
-            resultado = self.tareas_manager.actualizar_varios(lista_modificaciones)
-            print(resultado)
-            await self.eventManager.emit("tareas_actualizadas", {
-                "source": "tareas",
-                "target": "individual",
-                "action": "update_tareas",
-                "notification": lista_notificaciones,
-                "data": resultado
-            })
+        # if lista_modificaciones:
+        resultado = self.tareas_manager.actualizar_varios(lista_modificaciones)
+        # print(resultado)
+
+        print(resultado)
+        await self.eventManager.emit("tareas_actualizadas", {
+            "source": "tareas",
+            "target": "individual",
+            "action": "update_tareas",
+            "notification": lista_notificaciones,
+            "data": resultado
+        })

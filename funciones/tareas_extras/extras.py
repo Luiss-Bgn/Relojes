@@ -6,9 +6,11 @@ from conexiones import conexiones
 
 
 class Extras():
-    def __init__(self):
+    def __init__(self, eventManager):
         self.tareas_del_dia = []
-        self.tiempo_para_extra = timedelta(minutes=20)
+        self.tiempo_para_extra = timedelta(minutes=5)
+
+        self.eventManager = eventManager
 
         self.dias = [
             "Lunes", "Martes", "Miércoles",
@@ -152,9 +154,11 @@ class Extras():
         dia = self.dias[ahora.weekday()]
 
         lista_tareas = self.tareas_manager.listar_por_fecha(dia)
-        hubo_cambios = False
+        lista_modificaciones = []
+        lista_notificaciones = []
 
         for tarea in lista_tareas['registros']:
+            hubo_cambios = False
 
             hora_fin = datetime.strptime(tarea['hora_fin'], "%H:%M").replace(
                 year=ahora.year, month=ahora.month, day=ahora.day
@@ -163,7 +167,7 @@ class Extras():
             if tarea['estatus'] in ['completada', 'en_progreso', 'sin_iniciar', 'futura']:
                 continue
 
-            if ahora >= hora_fin and tarea['estatus'] == 'vencida' and ahora < hora_fin + self.tiempo_para_extra:
+            elif ahora >= hora_fin and tarea['estatus'] == 'vencida' and ahora < hora_fin + self.tiempo_para_extra:
                 tarea['estatus'] = 'extra'
                 hubo_cambios = True
                 # print(f"Tarea extra: {tarea['nombre']}")
@@ -173,8 +177,19 @@ class Extras():
                 hubo_cambios = True
                 # print(f"Tarea caduco: {tarea['nombre']}")
 
-        if hubo_cambios:
-            resultado = self.tareas_manager.actualizar_varios(lista_tareas['registros'])
-            webs = conexiones.obtener_web()
-            for ws in webs:
-                await ws.send_json({"status": "update_tareas"})
+            if hubo_cambios:
+                lista_modificaciones.append(tarea)
+                if tarea['disponible_para_rol'] not in lista_modificaciones:
+                    # print(tarea['disponible_para_rol']) 
+                    lista_notificaciones.append(tarea['disponible_para_rol'])
+
+        if lista_modificaciones:
+            resultado = self.tareas_manager.actualizar_varios(lista_modificaciones)
+            # print(resultado)
+            await self.eventManager.emit("tareas_actualizadas", {
+                "source": "tareas",
+                "target": "rol",
+                "action": "update_tareas",
+                "notification": lista_notificaciones,
+                "data": resultado
+            })

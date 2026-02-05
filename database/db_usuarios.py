@@ -202,7 +202,7 @@ class UsuarioManager:
         """Lista todos los usuarios"""
         try:
             usuarios = self.usuario_dao.obtener_todos()
-            logger.info(f"✓ USUARIOS LISTADOS - Total: {len(usuarios)}")
+            # logger.info(f"✓ USUARIOS LISTADOS - Total: {len(usuarios)}")
             return {
                 "status": "success",
                 "usuarios": usuarios,
@@ -326,3 +326,13 @@ class UsuarioManager:
                 "status": "error",
                 "mensaje": f"Error al obtener usuario: {str(e)}"
             }
+        
+    def obtener_ids_por_roles(self, roles):
+        with self.usuario_dao.db.get_connection() as conn:
+            cursor = conn.cursor()
+            query = f"""
+                SELECT id FROM usuarios
+                WHERE rol IN ({','.join('?' for _ in roles)})
+            """
+            cursor.execute(query, roles)
+            return [row["id"] for row in cursor.fetchall()]

@@ -160,3 +160,18 @@ class RelojManager:
             "rol": reloj['rol'],
             "mensaje": "Reloj iniciado correctamente"
         }
+    
+    def obtener_uuids_por_empleados(self, empleados_ids):
+        if not empleados_ids:
+            return []
+
+        with self.reloj_dao.db.get_connection() as conn:
+            cursor = conn.cursor()
+            query = f"""
+                SELECT uuid FROM relojes
+                WHERE empleado_id IN ({','.join('?' for _ in empleados_ids)})
+            """
+            cursor.execute(query, empleados_ids)
+            return [row["uuid"] for row in cursor.fetchall()]
+
+

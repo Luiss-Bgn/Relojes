@@ -32,4 +32,14 @@ class Conexiones():
     def obtener_relojes(self):
         return [c["ws"] for c in self.conexiones_activas.values() if c["tipo"] == "reloj"]
     
+    def obtener_uuids_por_tipo(self, tipo):
+        return [
+            uuid for uuid, data in self.conexiones_activas.items()
+            if data["tipo"] == tipo
+        ]
+
+    def obtener_todos_los_uuids(self):
+        return list(self.conexiones_activas.keys())
+
+    
 conexiones = Conexiones()
