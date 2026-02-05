@@ -7,9 +7,6 @@ const headEl = document.getElementById("panel-head");
 const bodyEl = document.getElementById("panel-body");
 const legendEl = document.getElementById("legend");
 const emptyEl = document.getElementById("empty-state");
-const completionEl = document.getElementById("completion-rate");
-const extraEl = document.getElementById("extra-count");
-const pendingEl = document.getElementById("pending-count");
 const dateEl = document.getElementById("selected-date");
 
 const initials = (name = "") => {
@@ -19,15 +16,199 @@ const initials = (name = "") => {
 
 const avatar = (employee) => {
   const wrapper = document.createElement("div");
+  console.log("employee avatar", employee)
   wrapper.className = "avatar";
   if (employee.imagen) {
     const img = document.createElement("img");
-    img.src = employee.imagen;
+    img.src = "/web/Images/" +employee.imagen;
     img.alt = employee.nombre;
     wrapper.appendChild(img);
   } else {
     wrapper.textContent = initials(employee.nombre);
   }
+  return wrapper;
+};
+
+// Variable global para almacenar los datos actuales del panel
+let currentPanelData = null;
+
+// Función para calcular el porcentaje de completación de tareas del empleado
+const calculateCompletionPercentage = (employeeId) => {
+  if (!currentPanelData || !currentPanelData.rows) return 0;
+
+  let totalTasks = 0;
+  let completedTasks = 0;
+
+  currentPanelData.rows.forEach(row => {
+    // Solo contar tareas asignadas a este empleado (no extras)
+    if (row.empleadoId === employeeId && row.estatus!=='sin_iniciar') {
+      totalTasks += row.puntos;
+      if (row.estatus === 'completada') {
+        completedTasks += row.puntos;
+      }
+    }
+  });
+
+  return totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+};
+
+// Función para calcular puntos extras del empleado
+const calculateExtraPoints = (employeeId) => {
+  if (!currentPanelData || !currentPanelData.rows) return 0;
+
+  let extraPoints = 0;
+
+  currentPanelData.rows.forEach(row => {
+    // Verificar si es una tarea extra completada por este empleado
+    if (row.estatus === 'extra' && row.completadaPor === employeeId) {
+      extraPoints += row.puntos || 0;
+    }
+  });
+
+  return extraPoints;
+};
+
+// Función para crear gráfica circular de progreso
+const createProgressChart = (percentage) => {
+  const wrapper = document.createElement("div");
+  wrapper.style.cssText = `
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  `;
+
+  // Texto "asignadas"
+  const label = document.createElement("div");
+  label.style.cssText = `
+    font-size: 12px;
+    font-weight: 500;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  `;
+  label.textContent = "asignadas";
+
+  const container = document.createElement("div");
+  container.className = "progress-chart";
+  container.style.cssText = `
+    position: relative;
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  `;
+
+  // Determinar color basado en porcentaje
+  let color;
+  if (percentage <= 80) {
+    color = '#ef4444'; // rojo
+  } else if (percentage <= 90) {
+    color = '#f97316'; // naranja
+  } else {
+    color = '#22c55e'; // verde
+  }
+
+  // Crear SVG circular
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("width", "64");
+  svg.setAttribute("height", "64");
+  svg.setAttribute("viewBox", "0 0 64 64");
+
+  // Círculo de fondo
+  const backgroundCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  backgroundCircle.setAttribute("cx", "32");
+  backgroundCircle.setAttribute("cy", "32");
+  backgroundCircle.setAttribute("r", "24");
+  backgroundCircle.setAttribute("fill", "none");
+  backgroundCircle.setAttribute("stroke", "#e5e7eb");
+  backgroundCircle.setAttribute("stroke-width", "6");
+
+  // Círculo de progreso
+  const progressCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  progressCircle.setAttribute("cx", "32");
+  progressCircle.setAttribute("cy", "32");
+  progressCircle.setAttribute("r", "24");
+  progressCircle.setAttribute("fill", "none");
+  progressCircle.setAttribute("stroke", color);
+  progressCircle.setAttribute("stroke-width", "6");
+  progressCircle.setAttribute("stroke-linecap", "round");
+  
+  const circumference = 2 * Math.PI * 24;
+  const strokeDasharray = circumference;
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+  
+  progressCircle.setAttribute("stroke-dasharray", strokeDasharray);
+  progressCircle.setAttribute("stroke-dashoffset", strokeDashoffset);
+  progressCircle.setAttribute("transform", "rotate(-90 32 32)");
+
+  svg.appendChild(backgroundCircle);
+  svg.appendChild(progressCircle);
+
+  // Texto del porcentaje
+  const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  text.setAttribute("x", "32");
+  text.setAttribute("y", "36");
+  text.setAttribute("text-anchor", "middle");
+  text.setAttribute("font-size", "14");
+  text.setAttribute("font-weight", "600");
+  text.setAttribute("fill", color);
+  text.textContent = `${percentage}%`;
+
+  svg.appendChild(text);
+  container.appendChild(svg);
+
+  wrapper.appendChild(label);
+  wrapper.appendChild(container);
+
+  return wrapper;
+};
+
+// Función para crear contador de puntos extras
+const createExtraCounter = (extraPoints) => {
+  const wrapper = document.createElement("div");
+  wrapper.style.cssText = `
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  `;
+
+  // Texto "extras"
+  const label = document.createElement("div");
+  label.style.cssText = `
+    font-size: 12px;
+    font-weight: 500;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  `;
+  label.textContent = "extras";
+
+  const container = document.createElement("div");
+  container.className = "extra-counter";
+  container.style.cssText = `
+    background: rgba(59, 130, 246, 0.2);
+    color: #3b82f6;
+    border-radius: 6px;
+    padding: 1px;
+    font-size: 14px;
+    font-weight: 800;
+    min-width: 64px;
+    min-height: 64px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  `;
+  
+  container.textContent = `${extraPoints}`;
+  container.title = `${extraPoints} puntos extras completados`;
+
+  wrapper.appendChild(label);
+  wrapper.appendChild(container);
+
   return wrapper;
 };
 
@@ -48,7 +229,7 @@ const renderLegend = () => {
   });
 };
 
-const renderHead = (employees) => {
+const renderHead = (employees, rows = []) => {
   const base = ["Horario", "Actividad", "Puntos"];
   const tr = document.createElement("tr");
   base.forEach((title) => {
@@ -83,6 +264,31 @@ const renderHead = (employees) => {
 
     textWrapper.appendChild(nameDiv);
     textWrapper.appendChild(roleDiv);
+
+    // Crear contenedor para estadísticas
+    const statsWrapper = document.createElement("div");
+    statsWrapper.className = "emp-stats";
+    statsWrapper.style.cssText = `
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 8px;
+      gap: 10px;
+    `;
+
+    // Calcular estadísticas del empleado
+    const completionPercentage = calculateCompletionPercentage(emp.id);
+    const extraPoints = calculateExtraPoints(emp.id);
+
+    // Crear gráfica circular de progreso
+    const progressChart = createProgressChart(completionPercentage);
+    statsWrapper.appendChild(progressChart);
+
+    // Crear contador de puntos extras
+    const extraCounter = createExtraCounter(extraPoints);
+    statsWrapper.appendChild(extraCounter);
+
+    textWrapper.appendChild(statsWrapper);
     wrapper.appendChild(textWrapper);
 
     th.appendChild(wrapper);
@@ -394,11 +600,11 @@ function openTaskModal(row, clickedEmployeeId = null) {
 }
 
 export const renderPanel = (view) => {
+  // Almacenar datos actuales para cálculos de estadísticas
+  currentPanelData = view;
+  
   dateEl.textContent = view.dateLabel;
   renderLegend();
-  renderHead(view.employees);
+  renderHead(view.employees, view.rows);
   renderRows(view.rows, view.employees);
-  completionEl.textContent = `${view.stats.completionRate}%`;
-  extraEl.textContent = view.stats.extra;
-  pendingEl.textContent = view.stats.pending;
 };
