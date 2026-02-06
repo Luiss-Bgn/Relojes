@@ -187,7 +187,7 @@ class Relojes():
         }
         await conexion['ws'].send_json(self.adaptar_para_arduino(mensaje))
 
-        mensaje_extras = {
+        mensaje = {
             "comando": "extras",
             "tareas": lista_extras['registros'],
             "vibrar": False

@@ -121,10 +121,14 @@ class Manager():
         # Individual
         if criterios["individual"]:
             empleados_ids = list(criterios["individual"])
+            print(empleados_ids)
             uuids = self.reloj_manager.obtener_uuids_por_empleados(empleados_ids)
+            print(uuids)
+            print()
 
             for uuid in uuids:
                 if conexiones.obtener_conexion(uuid):
+                    print(uuid)
                     destinatarios.add(uuid)
 
         # Roles 
@@ -152,7 +156,7 @@ class Manager():
         if criterios["reloj"]:
             destinatarios.update(conexiones.obtener_uuids_por_tipo("reloj"))
 
-        print(f"🎯 Destinatarios finales: {destinatarios}")
+        print(f"Destinatarios finales: {destinatarios}")
         return destinatarios
 
 
@@ -165,7 +169,7 @@ class Manager():
             for uuid in destinatarios:
                 ws = conexiones.obtener_conexion(uuid)
                 if ws:
-                    lista_mensajes.append(ws.send_json(mensaje))
+                    lista_mensajes.append(ws['ws'].send_json(mensaje))
 
             # web siempre recibe
             for ws in conexiones.obtener_web():
