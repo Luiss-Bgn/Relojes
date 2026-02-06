@@ -68,17 +68,17 @@ export async function obtenerBackup() {
             }
             
             // 🔥 IMPORTANTE: estatus puede ser STRING o número
-            // Mapear strings a números
+            // Mapear strings a números (convertir a lowercase con underscore)
             let estatus = h.estatus;
             if (typeof estatus === 'string') {
-              const estatusLower = estatus.toLowerCase();
-              if (estatusLower === 'sin iniciar' || estatusLower === 'sininiciar') {
+              const estatusLower = estatus.toLowerCase().replace(/\s+/g, '_');
+              if (estatusLower === 'sin_iniciar' || estatusLower === 'sininiciar') {
                 estatus = 1;
-              } else if (estatusLower === 'en progreso' || estatusLower === 'enprogreso') {
+              } else if (estatusLower === 'en_progreso' || estatusLower === 'enprogreso') {
                 estatus = 2;
               } else if (estatusLower === 'completada' || estatusLower === 'completado') {
                 estatus = 3;
-              } else if (estatusLower === 'no completado' || estatusLower === 'nocompletado' || estatusLower === 'vencida') {
+              } else if (estatusLower === 'vencida' || estatusLower === 'no_completado' || estatusLower === 'nocompletado') {
                 estatus = 4;
               } else if (estatusLower === 'extra' || estatusLower === 'extras') {
                 estatus = 5;
@@ -90,46 +90,28 @@ export async function obtenerBackup() {
             
             const puntos = h.puntos || 0;
             
-            // 🔥 IMPORTANTE: Si la tarea está en historial (excepto extras), significa que estaba asignada
-            // Por lo tanto, sus puntos cuentan como asignados
-            if (estatus !== 'extra') { // Todas las tareas excepto extras cuentan como asignadas
-              historialPuntos[fecha].asignados += puntos;
-            }
+            // 🔥 LÓGICA CORRECTA:
+            // - Si está en historial (excepto extras), sus puntos cuentan como asignados
+            // - Las tareas en historial YA incluyen toda la información, no necesitamos tareas_semana
             
             // Mapeo de estatus:
-            // sinIniciar → perdido
-            // enProgreso → perdido
-            // completada → completado
-            // vencida → perdido
+            // sin_iniciar → NO cuenta (no llegó al historial aún)
+            // en_progreso → NO cuenta (no llegó al historial aún)
+            // completada → asignado + completado
+            // vencida → asignado + perdido
             // extra → extra (NO cuenta como asignado)
             
-            if (estatus === 'completada') { // Completada
+            if (estatus === 'completada' || estatus === 3) { // Completada
+              historialPuntos[fecha].asignados += puntos;
               historialPuntos[fecha].completados += puntos;
-            } else if (estatus === 'sinIniciar' || estatus === 'enProgreso' || estatus === 'vencida') { // Sin iniciar, en progreso, o vencida
+            } else if (estatus === 'vencida' || estatus === 4) { // Vencida
+              historialPuntos[fecha].asignados += puntos;
               historialPuntos[fecha].perdidos += puntos;
-            } else if (estatus === 'extra') { // Extras
+            } else if (estatus === 'extra' || estatus === 5) { // Extras
               historialPuntos[fecha].extras += puntos;
+              // Extras NO cuentan como asignados
             }
-          });
-          
-          // 🔥 Calcular puntos asignados por fecha desde las tareas originales
-          // Las tareas tienen puntos asignados
-          tareas.forEach(t => {
-            // Las tareas pueden tener una fecha asociada o no
-            // Si tienen fecha, usarla; si no, probablemente sean tareas semanales recurrentes
-            if (t.fecha) {
-              const fecha = t.fecha;
-              if (!historialPuntos[fecha]) {
-                historialPuntos[fecha] = {
-                  asignados: 0,
-                  completados: 0,
-                  perdidos: 0,
-                  extras: 0,
-                  fecha: fecha
-                };
-              }
-              historialPuntos[fecha].asignados += t.puntos || 0;
-            }
+            // sin_iniciar y en_progreso NO deberían estar en historial, se ignoran
           });
           
           // 🔥 Organizar tareas por día de la semana desde tareas asignadas

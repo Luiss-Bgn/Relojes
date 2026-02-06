@@ -171,7 +171,7 @@ class TareasManager:
     
     def crear_registro(self, nombre: str, descripcion: str, id_dueño: int, 
                       hora_ini: str, hora_fin: str, fecha: str, puntos: int, 
-                      estatus: str = "sinIniciar", disponible_para_rol: str = "todos") -> Dict[str, Any]:
+                      estatus: str = "sin_iniciar", disponible_para_rol: str = "todos") -> Dict[str, Any]:
         """
         Crea un nuevo registro en el tareas_semana
         

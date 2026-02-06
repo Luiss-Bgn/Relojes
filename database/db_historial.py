@@ -148,7 +148,7 @@ class HistorialDAO:
                     SUM(CASE WHEN h.estatus IN ('completada', 'completado') THEN h.puntos ELSE 0 END) as total_puntos,
                     COUNT(*) as total_tareas,
                     SUM(CASE WHEN h.estatus IN ('completada', 'completado') THEN 1 ELSE 0 END) as completadas,
-                    SUM(CASE WHEN h.estatus IN ('sinIniciar', 'enProgreso', 'noCompletada', 'vencida') THEN 1 ELSE 0 END) as vencidas
+                    SUM(CASE WHEN h.estatus IN ('sin_iniciar', 'en_progreso', 'vencida') THEN 1 ELSE 0 END) as vencidas
                 FROM historial h
                 WHERE h.id_dueño IS NOT NULL
                 AND h.estatus NOT IN ('extra', 'extras')
@@ -309,7 +309,7 @@ class HistorialManager:
     
     def crear_registro(self, nombre: str, descripcion: str, id_dueño: int, 
                       hora_ini: str, hora_fin: str, fecha: str, puntos: int, 
-                      estatus: str = "sinIniciar", disponible_para_rol: str = "todos") -> Dict[str, Any]:
+                      estatus: str = "sin_iniciar", disponible_para_rol: str = "todos") -> Dict[str, Any]:
         """
         Crea un nuevo registro en el historial
         
