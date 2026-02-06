@@ -386,13 +386,15 @@ const renderRows = (rows, employees) => {
   let currentTimeGroup = null;
   let latestStart = -1;
 
+  // console.log("Agrupación por horario:", groupedByTime);  
   for (const [hora] of Object.entries(groupedByTime)) {
     const horaInicio = hora.split(" - ")[0];
     const inicioMinutes = timeToMinutes(horaInicio);
 
-    if (inicioMinutes <= currentTimeInMinutes && inicioMinutes > latestStart) {
+    if (inicioMinutes == currentTimeInMinutes && inicioMinutes > latestStart) {
       latestStart = inicioMinutes;
       currentTimeGroup = hora;
+      // console.log(`Grupo activo encontrado: ${currentTimeGroup} (inició a las ${horaInicio})`);
     }
   }
 
@@ -621,6 +623,132 @@ function openTaskModal(row, clickedEmployeeId = null) {
   showVerEditarTareaModal(tarea, userRole, clickedEmployeeId);
 }
 
+// Sistema de auto-scroll para centrar fila activa
+let lastActivityTime = Date.now();
+let autoScrollTimer = null;
+const INACTIVITY_TIMEOUT = 30000; // 30 segundos
+
+// Función para detectar si hay scroll vertical activo
+const hasVerticalScroll = () => {
+  const tableWrapper = document.querySelector('.table-wrapper');
+  if (!tableWrapper) return false;
+  return tableWrapper.scrollHeight > tableWrapper.clientHeight;
+};
+
+// Función para encontrar la fila activa (grupo de horario actual)
+const findActiveRowElement = () => {
+  const rows = bodyEl.querySelectorAll('tr');
+  // console.log('Buscando fila activa entre', rows.length, 'filas');
+  
+  // Buscar la fila que tiene el color de grupo activo
+  for (const row of rows) {
+    const timeCell = row.querySelector('td:first-child');
+    const activityCell = row.querySelector('td:nth-child(2)');
+    
+    // Método 1: Verificar backgroundColor directamente en el TR
+    const trBgColor = window.getComputedStyle(row).backgroundColor;
+    // console.log('Revisando fila, TR backgroundColor:', trBgColor);
+    
+    // Método 2: Verificar CSS custom property en timeCell
+    let timeCellHighlight = '';
+    if (timeCell) {
+      timeCellHighlight = window.getComputedStyle(timeCell).getPropertyValue('--sticky-highlight').trim();
+      // console.log('timeCell --sticky-highlight:', timeCellHighlight);
+    }
+    
+    // Método 3: Verificar CSS custom property en activityCell  
+    let activityCellHighlight = '';
+    if (activityCell) {
+      activityCellHighlight = window.getComputedStyle(activityCell).getPropertyValue('--sticky-highlight').trim();
+      // console.log('activityCell --sticky-highlight:', activityCellHighlight);
+    }
+    
+    // Verificar si alguno tiene el color del grupo activo (amarillo)
+    if (timeCellHighlight === ROW_COLORS.highlightCurrentGroup || 
+        activityCellHighlight === ROW_COLORS.highlightCurrentGroup ||
+        trBgColor.includes('255, 213, 79')) { // rgba(255, 213, 79, 0.2)
+      // console.log('¡Fila activa encontrada!', row);
+      return row;
+    }
+  }
+  
+  console.log('No se encontró fila activa');
+  return null;
+};
+
+// Función para centrar verticalmente una fila
+const scrollToRowCenter = (row) => {
+  if (!row) return;
+  
+  const tableWrapper = document.querySelector('.table-wrapper');
+  if (!tableWrapper) return;
+  
+  const rowTop = row.offsetTop;
+  const rowHeight = row.offsetHeight;
+  const wrapperHeight = tableWrapper.clientHeight;
+  
+  // Calcular posición para centrar la fila
+  const scrollPosition = rowTop - (wrapperHeight / 2) + (rowHeight / 2);
+  
+  // Hacer scroll suave
+  tableWrapper.scrollTo({
+    top: Math.max(0, scrollPosition),
+    behavior: 'smooth'
+  });
+  
+  // console.log('🎯 Auto-scroll: fila activa centrada');
+};
+
+// Función para reiniciar el timer de auto-scroll
+const resetAutoScrollTimer = () => {
+  lastActivityTime = Date.now();
+  
+  if (autoScrollTimer) {
+    clearTimeout(autoScrollTimer);
+  }
+  
+  autoScrollTimer = setTimeout(() => {
+    // Solo hacer auto-scroll si hay scroll vertical y la tabla está rendered
+    if (hasVerticalScroll() && bodyEl.children.length > 0) {
+      const activeRow = findActiveRowElement();
+      // console.log('Fila activa encontrada para auto-scroll:', activeRow);
+      if (activeRow) {
+        // console.log('Iniciando auto-scroll para centrar fila activa...');
+        scrollToRowCenter(activeRow);
+      }
+    }
+  }, INACTIVITY_TIMEOUT);
+};
+
+// Función para detectar actividad del usuario
+const handleUserActivity = () => {
+  resetAutoScrollTimer();
+};
+
+// Event listeners para detectar actividad
+const tableWrapper = document.querySelector('.table-wrapper');
+if (tableWrapper) {
+  // Scroll manual
+  tableWrapper.addEventListener('scroll', handleUserActivity, { passive: true });
+  
+  // Interacciones del mouse
+  tableWrapper.addEventListener('mousedown', handleUserActivity);
+  tableWrapper.addEventListener('mousemove', handleUserActivity);
+  tableWrapper.addEventListener('wheel', handleUserActivity, { passive: true });
+  
+  // Toques en dispositivos móviles
+  tableWrapper.addEventListener('touchstart', handleUserActivity, { passive: true });
+  tableWrapper.addEventListener('touchmove', handleUserActivity, { passive: true });
+}
+
+// También detectar actividad en toda la ventana
+window.addEventListener('mousemove', handleUserActivity, { passive: true });
+window.addEventListener('keydown', handleUserActivity, { passive: true });
+window.addEventListener('click', handleUserActivity, { passive: true });
+
+// Iniciar el timer cuando se carga el módulo
+resetAutoScrollTimer();
+
 export const renderPanel = (view) => {
   // Almacenar datos actuales para cálculos de estadísticas
   currentPanelData = view;
@@ -629,4 +757,7 @@ export const renderPanel = (view) => {
   renderLegend();
   renderHead(view.employees, view.rows);
   renderRows(view.rows, view.employees);
+  
+  // Reiniciar el timer después de renderizar
+  resetAutoScrollTimer();
 };
