@@ -191,5 +191,6 @@ class Extras():
                 "target": "rol",
                 "action": "update_tareas",
                 "notification": lista_notificaciones,
-                "data": resultado
+                "data": resultado,
+                "vibrar": True
             })

@@ -251,5 +251,6 @@ class Tareas():
                 "target": "individual",
                 "action": "update_tareas",
                 "notification": lista_notificaciones,
-                "data": resultado
+                "data": resultado,
+                "vibrar": True
             })

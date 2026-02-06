@@ -21,7 +21,8 @@ class Relojes():
             "inicio": self._iniciar_reloj,
             "empleado_seleccionado": self._actualizar_reloj,
             "actualizar_tareas": self._actualizar_reloj,
-            "completar_tarea": self._completar_tarea
+            "completar_tarea": self._completar_tarea,
+            "completar_extra": self._completar_extra
         }
 
         self.dias = [
@@ -130,11 +131,11 @@ class Relojes():
         await conexion["ws"].send_json(self.adaptar_para_arduino(respuesta))
 
         await self.eventManager.emit("tareas_actualizadas", {
-                "source": "tareas",
-                "target": "web",
-                "action": "update_tareas",
-                "notification": [],
-                "data": resultado
+            "source": "tareas",
+            "target": "web",
+            "action": "update_tareas",
+            "notification": [],
+            "data": resultado
         })
 
         
@@ -176,7 +177,7 @@ class Relojes():
             resultado = self.reloj_manager.iniciar_sesion_reloj(uuid, mensaje['id'], rol)
 
         lista_tareas = await self.obtenerTareas(mensaje['id'])
-        lista_extras = await self.obtenerExtras(rol,mensaje['id'])
+        lista_extras = await self.obtenerExtras(rol, mensaje['id'])
         
         conexion = conexiones.obtener_conexion(uuid)
         mensaje = {
@@ -186,7 +187,7 @@ class Relojes():
         }
         await conexion['ws'].send_json(self.adaptar_para_arduino(mensaje))
 
-        mensaje = {
+        mensaje_extras = {
             "comando": "extras",
             "tareas": lista_extras['registros'],
             "vibrar": False
