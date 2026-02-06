@@ -1,6 +1,6 @@
 """
 Backup Scheduler - Sistema automatizado de backup de tareas
-Copia datos de tareas_semana a historial diariamente a las 9 PM
+Copia datos de tareas_semana a historial diariamente a las 12:10 AM
 """
 
 import schedule
@@ -121,6 +121,7 @@ class BackupManager:
                             fecha=fecha_especifica,  # Fecha específica YYYY-MM-DD
                             puntos=tarea['puntos'],
                             estatus=tarea['estatus'],  # Mantener el status actual
+                            completadaPor=tarea.get('completadaPor'),  # 🔥 NUEVO: Preservar quién completó como extra
                             disponible_para_rol=tarea.get('disponible_para_rol', 'todos')
                         )
                         

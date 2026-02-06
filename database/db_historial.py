@@ -128,7 +128,7 @@ class HistorialDAO:
                                limite: int = 10) -> List[Dict[str, Any]]:
         """
         Obtiene el top de empleados con mayor puntaje en tareas regulares
-        Excluye tareas con estatus 'extra'
+        INCLUYE tareas con estatus 'extra' contándolas como vencidas (tarea vencida completada como extra)
         
         Args:
             fecha_inicio: Fecha de inicio del rango (formato YYYY-MM-DD)
@@ -141,17 +141,16 @@ class HistorialDAO:
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
             
-            # Query mejorado - incluye completadas, vencidas y porcentaje
+            # Query mejorado - incluye completadas, vencidas (incluyendo extras) y porcentaje
             query = '''
                 SELECT 
                     h.id_dueño as usuario_id,
                     SUM(CASE WHEN h.estatus IN ('completada', 'completado') THEN h.puntos ELSE 0 END) as total_puntos,
                     COUNT(*) as total_tareas,
                     SUM(CASE WHEN h.estatus IN ('completada', 'completado') THEN 1 ELSE 0 END) as completadas,
-                    SUM(CASE WHEN h.estatus IN ('sin_iniciar', 'en_progreso', 'vencida') THEN 1 ELSE 0 END) as vencidas
+                    SUM(CASE WHEN h.estatus IN ('sin_iniciar', 'en_progreso', 'vencida', 'extra') THEN 1 ELSE 0 END) as vencidas
                 FROM historial h
                 WHERE h.id_dueño IS NOT NULL
-                AND h.estatus NOT IN ('extra', 'extras')
             '''
             
             params = []
@@ -208,13 +207,16 @@ class HistorialDAO:
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
             
-            # Query base - suma puntos por empleado, solo estatus 'extra'
+            # Query base - suma puntos por empleado, solo estatus 'extra', JOIN con usuarios
             query = '''
                 SELECT 
                     h.completadaPor as usuario_id,
+                    u.nombre,
+                    u.puesto,
                     SUM(h.puntos) as total_puntos,
                     COUNT(*) as total_tareas
                 FROM historial h
+                LEFT JOIN usuarios u ON h.completadaPor = u.id
                 WHERE h.completadaPor IS NOT NULL
                 AND h.estatus IN ('extra')
             '''
@@ -309,7 +311,7 @@ class HistorialManager:
     
     def crear_registro(self, nombre: str, descripcion: str, id_dueño: int, 
                       hora_ini: str, hora_fin: str, fecha: str, puntos: int, 
-                      estatus: str = "sin_iniciar", disponible_para_rol: str = "todos") -> Dict[str, Any]:
+                      estatus: str = "sin_iniciar", completadaPor: Optional[int] = None, disponible_para_rol: str = "todos") -> Dict[str, Any]:
         """
         Crea un nuevo registro en el historial
         
@@ -322,6 +324,7 @@ class HistorialManager:
             fecha: Fecha (YYYY-MM-DD)
             puntos: Puntos asociados
             estatus: Estado (pendiente, completada, cancelada)
+            completadaPor: ID del empleado que completó la tarea (especialmente para extras)
             disponible_para_rol: Filtro de roles para tareas extras ('todos', 'mismo_rol')
         
         Returns:
@@ -330,7 +333,7 @@ class HistorialManager:
         try:
             registro = self.historial_dao.crear(
                 nombre, descripcion, id_dueño, hora_ini, hora_fin, 
-                fecha, puntos, estatus, disponible_para_rol=disponible_para_rol
+                fecha, puntos, estatus, completadaPor=completadaPor, disponible_para_rol=disponible_para_rol
             )
             
             logger.info(
@@ -636,37 +639,21 @@ class HistorialManager:
             else:
                 periodo = "Histórico general"
             
-            # Obtener top de empleados en extras
+            # Obtener top de empleados en extras (ya incluye nombre y puesto)
             top_extras = self.historial_dao.obtener_top_extras(
                 fecha_inicio=fecha_inicio,
                 fecha_fin=fecha_fin,
                 limite=limite
             )
             
-            # Enriquecer con información del usuario
-            from database.db_usuarios import UsuarioDAO
-            usuario_dao = UsuarioDAO(self.historial_dao.db)
-            
-            empleados_enriquecidos = []
-            for empleado in top_extras:
-                usuario_info = usuario_dao.obtener_por_id(empleado['usuario_id'])
-                if usuario_info:
-                    empleados_enriquecidos.append({
-                        'posicion': len(empleados_enriquecidos) + 1,
-                        'usuario_id': empleado['usuario_id'],
-                        'nombre': usuario_info.get('nombre', 'Desconocido'),
-                        'total_puntos': empleado['total_puntos'],
-                        'total_tareas': empleado['total_tareas']
-                    })
-            
-            logger.info(f"TOP EXTRAS OBTENIDO - Periodo: {periodo} | Total: {len(empleados_enriquecidos)}")
+            logger.info(f"TOP EXTRAS OBTENIDO - Periodo: {periodo} | Total: {len(top_extras)}")
             return {
                 "status": "success",
                 "periodo": periodo,
                 "fecha_inicio": fecha_inicio,
                 "fecha_fin": fecha_fin,
-                "top_extras": empleados_enriquecidos,
-                "total": len(empleados_enriquecidos)
+                "top_extras": top_extras,
+                "total": len(top_extras)
             }
         except Exception as e:
             logger.error(f"ERROR AL OBTENER TOP EXTRAS: {str(e)}")

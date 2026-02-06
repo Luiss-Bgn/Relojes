@@ -127,14 +127,14 @@ def run_backup_scheduler():
     print("\n" + "="*60)
     print("INICIANDO SCHEDULER DE BACKUP")
     print("="*60)
-    print("Backup programado: Diario a las 21:00 (9 PM)")
+    print("Backup programado: Diario a las 00:10 (12:10 AM)")
     print("Función: Copiar tareas_semana -> historial")
     print("="*60 + "\n")
     
     backup_manager = BackupManager()
     
-    # Programar backup diario a las 21:00 (9 PM)
-    schedule.every().day.at("21:00").do(backup_manager.realizar_backup_diario)
+    # Programar backup diario a las 00:10 (12:10 AM)
+    schedule.every().day.at("00:10").do(backup_manager.realizar_backup_diario)
     
     print(f"⏰ Próximo backup: {schedule.next_run().strftime('%Y-%m-%d %H:%M:%S')}\n")
     
