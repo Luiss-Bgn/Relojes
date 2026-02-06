@@ -65,11 +65,11 @@ class BackupManager:
         # Obtener el día actual (0=lunes, 6=domingo)
         dia_actual = fecha_base.weekday()
         
-        # Calcular cuántos días retroceder para llegar al día objetivo de la semana pasada
-        # Siempre queremos la semana PASADA
+        # Calcular cuántos días retroceder para llegar al día objetivo
         dias_atras = (dia_actual - dia_objetivo) % 7
-        if dias_atras == 0:
-            dias_atras = 7  # Si es el mismo día, retroceder una semana completa
+        
+        # Si es el mismo día (dias_atras == 0), usar la fecha actual
+        # Esto permite respaldar el día actual cuando se ejecuta manualmente
         
         fecha_resultado = fecha_base - timedelta(days=dias_atras)
         return fecha_resultado.strftime('%Y-%m-%d')
@@ -134,13 +134,13 @@ class BackupManager:
                         errores += 1
                         logger.error(f"    ❌ Excepción al respaldar '{tarea['nombre']}': {e}")
                 
-                # Resetear status de las tareas a 'sinIniciar' para la nueva semana
+                # Resetear status de las tareas a 'sin_iniciar' para la nueva semana
                 try:
                     with self.db_manager.get_connection() as conn:
                         cursor = conn.cursor()
                         cursor.execute("""
                             UPDATE tareas_semana 
-                            SET estatus = 'sinIniciar', completadaPor = NULL
+                            SET estatus = 'sin_iniciar', completadaPor = NULL
                             WHERE fecha = ?
                         """, (dia_nombre.capitalize(),))
                         conn.commit()

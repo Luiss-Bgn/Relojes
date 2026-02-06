@@ -308,12 +308,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     setTareasRealizadasMap(tareasRealizadasMap);
     // 🔥 NUEVO: Pasar el mapa de tareas realizadas también a PromedioEmpleados
     setTareasRealizadasMapPromedio(tareasRealizadasMap);
-    // 🔥 Nuevo: pasar los empleados globales a TareasPanel para detectar tareas extras
-    setEmpleadosGlobales(emps);
-    // 🔥 Inicializar datos para Tareas Vencidas
-    setEmpleadosDataVencidas(emps);
-    // 🔥 Inicializar datos para Promedio de Empleados
-    setEmpleadosPromedioData(emps);
+    // 🔥 Nuevo: pasar los empleados globales a TareasPanel para detectar tareas extras (CON historial_puntos)
+    setEmpleadosGlobales(empleadosData);
+    // 🔥 Inicializar datos para Tareas Vencidas (CON historial_puntos)
+    setEmpleadosDataVencidas(empleadosData);
+    // 🔥 Inicializar datos para Promedio de Empleados (CON historial_puntos)
+    setEmpleadosPromedioData(empleadosData);
     inicializarTareasVencidas();
 
     const { role, empleado_id } = usuario;

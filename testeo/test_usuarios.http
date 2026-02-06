@@ -28,18 +28,18 @@ Content-Type: {{contentType}}
 GET {{baseUrl}}/usuarios
 
 ### Obtener usuario con ID 1
-GET {{baseUrl}}/usuarios/1
+GET {{baseUrl}}/usuarios/4
 
 
 ###  usuario que no exist
 GET {{baseUrl}}/usuarios/999
 
 ### Actualizar PIN del usuario 1
-PUT {{baseUrl}}/usuarios/1
+PUT {{baseUrl}}/usuarios/2
 Content-Type: {{contentType}}
 
 {
-  "pin": 9876
+  "rol": "admin"
 }
 
 

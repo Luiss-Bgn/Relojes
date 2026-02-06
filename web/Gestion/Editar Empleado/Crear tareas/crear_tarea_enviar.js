@@ -115,7 +115,7 @@ export function enviarTarea(empId) {
       nombre,
       descripcion,
       hora: horaInicio,
-      estatus: 'enProgreso',
+      estatus: 'en_progreso',
       puntaje,
       esExtra: false,  // 🔥 Marcar como tarea normal (no extra) por defecto
       fecha_inicio: fechaHoy,  // 🔥 NUEVO: Agregar fecha actual (cuando se crea)

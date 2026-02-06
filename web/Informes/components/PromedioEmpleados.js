@@ -220,11 +220,12 @@ function calcularDatosProgreso() {
     const fechaEvaluada = new Date(currentDate);
     fechaEvaluada.setHours(0, 0, 0, 0);
     const esPasado = fechaEvaluada < hoyDate;
+    const esHoy = fechaEvaluada.getTime() === hoyDate.getTime();
     
     // Para cada empleado (IGUAL QUE LA TABLA)
     for (const empleado of empleadosGlobales) {
-      // 🔥 PRIMERO: Intentar obtener del historial si es día pasado
-      if (esPasado && empleado.historial_puntos && empleado.historial_puntos[fechaBuscada]) {
+      // 🔥 PRIMERO: Intentar obtener del historial si es día pasado O día actual
+      if ((esPasado || esHoy) && empleado.historial_puntos && empleado.historial_puntos[fechaBuscada]) {
         const hist = empleado.historial_puntos[fechaBuscada];
         puntosAsignados += hist.asignados || 0;
         puntosGanados += hist.completados || 0;

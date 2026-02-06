@@ -124,6 +124,8 @@ export function mostrarTareasEmpleado(empleado) {
   // 🔥 Función auxiliar para obtener puntos del historial guardado
   function obtenerPuntosHistorial(fechaBuscada) {
     const historial = empleado.historial_puntos || {};
+    console.log(`🔍 [${empleado.nombre}] Buscando historial para ${fechaBuscada}:`, historial[fechaBuscada] || 'NO ENCONTRADO');
+    console.log(`   Fechas disponibles en historial:`, Object.keys(historial));
     if (historial[fechaBuscada]) {
       // Usar snapshot guardado (historial no cambia)
       return {
@@ -152,12 +154,17 @@ export function mostrarTareasEmpleado(empleado) {
     const esHoy = fechaEvaluada.getTime() === hoyInicio.getTime();
     const esPasado = fechaEvaluada < hoyInicio;
     
-    // 🔥 USAR HISTORIAL GUARDADO para días pasados (NO recalcular)
-    if (esPasado) {
+    console.log(`🔍 [${empleado.nombre}] calcularPuntosPorDiaFecha(${fechaBuscada}): esPasado=${esPasado}, esHoy=${esHoy}, esFuturo=${esFuturo}`);
+    
+    // 🔥 USAR HISTORIAL GUARDADO para días pasados O día actual si existe en historial
+    if (esPasado || esHoy) {
+      console.log(`   ✅ Buscando en historial porque esPasado || esHoy`);
       const historial = obtenerPuntosHistorial(fechaBuscada);
       if (historial) {
+        console.log(`   ✅ ENCONTRADO EN HISTORIAL:`, historial);
         return historial; // Usar snapshot guardado
       }
+      console.log(`   ⚠️ NO encontrado en historial, calculando fallback`);
       // Si no hay historial, calcular (fallback)
     }
     
@@ -194,12 +201,12 @@ export function mostrarTareasEmpleado(empleado) {
         return; // Siguiente tarea
       }
       
-      // Estados: sinIniciar, enProgreso, completada, vencida, extra
+      // Estados: sin_iniciar, en_progreso, completada, vencida, extra
       if (tarea.estatus === 'completada') {
         puntosRealizados += puntos;
       }
-      // 🔥 PUNTOS NO GANADOS: Estatus enProgreso y vencida
-      if (tarea.estatus === 'enProgreso' || tarea.estatus === 'vencida') {
+      // 🔥 PUNTOS NO GANADOS: Estatus en_progreso y vencida
+      if (tarea.estatus === 'en_progreso' || tarea.estatus === 'vencida') {
         puntosPerdidos += puntos;
       }
       if (tarea.estatus === 'extra') {
@@ -1105,12 +1112,16 @@ export function mostrarResumenAgregado() {
     fechaEvaluada.setHours(0, 0, 0, 0);
     const esFuturo = fechaEvaluada > hoyInicio;
     const esPasado = fechaEvaluada < hoyInicio;
+    const esHoy = fechaEvaluada.getTime() === hoyInicio.getTime();
+    
+    console.log(`🔍 [Resumen] calcularPuntosAgregadosPorDia(${fechaBuscada}): esPasado=${esPasado}, esHoy=${esHoy}, esFuturo=${esFuturo}`);
     
     // Recorrer todos los empleados
     for (const empleado of empleadosGlobales) {
-      // 🔥 PRIMERO: Intentar obtener del historial si es día pasado
-      if (esPasado && empleado.historial_puntos && empleado.historial_puntos[fechaBuscada]) {
+      // 🔥 PRIMERO: Intentar obtener del historial si es día pasado O día actual
+      if ((esPasado || esHoy) && empleado.historial_puntos && empleado.historial_puntos[fechaBuscada]) {
         const hist = empleado.historial_puntos[fechaBuscada];
+        console.log(`   ✅ [${empleado.nombre}] Historial encontrado: asig=${hist.asignados}, real=${hist.completados}, extras=${hist.extras}`);
         totalAsignados += hist.asignados || 0;
         totalRealizados += hist.completados || 0;
         totalPerdidos += hist.perdidos || 0;

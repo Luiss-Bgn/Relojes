@@ -9,18 +9,18 @@ GET {{baseUrl}}/
 
 
 ### Crear registro
-POST {{baseUrl}}/historial
+POST {{baseUrl}}/tareas
 Content-Type: application/json
 
 {
-  "nombre": "seg tarea desde test",
+  "nombre": "Primera tarea desde test",
   "descripcion": " primera tarea",
   "id_dueño": 1,
-  "hora_ini": "19:00",
-  "hora_fin": "19:30",
-  "fecha": "2026-02-04",
+  "hora_ini": "09:00",
+  "hora_fin": "12:00",
+  "fecha": "2026-01-30",
   "puntos": 5,
-  "estatus": "sinIniciar"
+  "estatus": "sin_iniciar"
 }
 
 
@@ -40,16 +40,27 @@ GET {{baseUrl}}/historial/fecha/2026-01-29
 GET {{baseUrl}}/historial/4
 
 ### Obtener tarea de un empleado que no existe
-GET {{baseUrl}}/historial/999
+GET {{baseUrl}}/historial/
 
 
 ### Actualizar estado a completada 
-PUT {{baseUrl}}/historial/1
+PUT {{baseUrl}}/historial/33
 Content-Type: application/json
 
 {
   "estatus": "completada",
-  "completadaPor": 1 // ID del usuario que la completo 
+  "completadaPor": 1
+}
+
+
+###
+
+PUT {{baseUrl}}/historial/4
+Content-Type: application/json
+
+{
+  "estatus": "completada",
+  "completadaPor": 3
 }
 
 ### Actualizar con múltiples campos es lo mismoq arriba
@@ -63,5 +74,5 @@ Content-Type: application/json
 }
 
 ### Eliminar registro 4
-DELETE {{baseUrl}}/historial/5
+DELETE {{baseUrl}}/historial/41
 
