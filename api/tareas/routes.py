@@ -20,10 +20,10 @@ async def crear_registro(registro: TareasCrear):
     #Crea un nuevo registro en el TAREAS
     #aqui se agregaran condiciones por cada endpoint
     for fecha in registro.fecha:
-        print("Fecha recibida para la tarea:", fecha)
+        # print("Fecha recibida para la tarea:", fecha)
         
-        print("Datos de la tarea:", registro)
-        print("Creando tarea de:", registro.nombre)
+        # print("Datos de la tarea:", registro)
+        # print("Creando tarea de:", registro.nombre)
         resultado = tareas_manager.crear_registro(
             nombre=registro.nombre,
             descripcion=registro.descripcion,

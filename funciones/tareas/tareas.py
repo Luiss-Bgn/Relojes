@@ -31,12 +31,6 @@ class Tareas():
         }
         pass
 
-    async def IniciarTareas(self):
-        print("Iniciando Tareas...")
-        self.tareas_del_dia = await self.ObtenerTodasLasTareas()
-        print(f"Tareas cargadas: {len(self.tareas_del_dia)} tareas")
-        return
-
     async def AnalizarMensaje(self, mensaje, uuid):
         # print(f"Analizando mensaje en Tareas: {mensaje}")
         try:

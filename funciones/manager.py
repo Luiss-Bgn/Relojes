@@ -15,6 +15,7 @@ class Manager():
             "relojes": funciones.Relojes(eventManager),
             "tareas": funciones.Tareas(eventManager),
             "extras": funciones.Extras(eventManager),
+            "notificacion": funciones.Notificaciones(eventManager)
         }
 
         self.db_manager = DatabaseManager("relojes.db")
@@ -94,10 +95,10 @@ class Manager():
                 criterios["global"] = True
 
             elif target == "web":
-                criterios["solo_web"] = True
+                criterios["web"] = True
 
             elif target == "reloj":
-                criterios["solo_reloj"] = True
+                criterios["reloj"] = True
 
             data_acumulada.append(payload.get("action"))
 
@@ -121,10 +122,10 @@ class Manager():
         # Individual
         if criterios["individual"]:
             empleados_ids = list(criterios["individual"])
-            print(empleados_ids)
+            # print(empleados_ids)
             uuids = self.reloj_manager.obtener_uuids_por_empleados(empleados_ids)
-            print(uuids)
-            print()
+            # print(uuids)
+            # print()
 
             for uuid in uuids:
                 if conexiones.obtener_conexion(uuid):

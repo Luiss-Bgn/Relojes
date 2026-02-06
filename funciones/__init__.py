@@ -3,3 +3,4 @@ from .relojes.relojes import Relojes
 from .manager import Manager
 from .tareas_extras.extras import Extras
 from .tareas.tareas import Tareas
+from .notificaciones import Notificaciones
