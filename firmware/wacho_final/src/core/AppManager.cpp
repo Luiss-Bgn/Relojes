@@ -154,13 +154,14 @@ void AppManager::processMessage(String message)
 
     else if (strcmp(comando, "update_tareas") == 0)
     {
-        JsonDocument pong;
-        pong["tipo"] = "relojes";
-        pong["comando"] = "actualizar_tareas";
-        pong["uuid"] = AuthService::getUUID();
+        JsonDocument message;
+        message["tipo"] = "relojes";
+        message["comando"] = "actualizar_tareas";
+        message["uuid"] = AuthService::getUUID();
+        message["id"] = AuthService::getCurrentEmployeeId();
 
         String out;
-        serializeJson(pong, out);
+        serializeJson(message, out);
         NetworkService::send(out);
     }
     /* ===============================

@@ -242,6 +242,7 @@ void ScreenTaskList::onExtrasClicked(lv_event_t *e)
 void ScreenTaskList::onTaskClicked(lv_event_t *e)
 {
     Task *data = static_cast<Task *>(lv_event_get_user_data(e));
+    DEBUG_PRINTF("datos recibidos: %s | %s\n", data->name.c_str(), data->status.c_str());
     if (!data)
         return;
     if (!data->status.equalsIgnoreCase("en_progreso"))
