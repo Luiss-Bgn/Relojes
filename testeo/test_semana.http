@@ -25,10 +25,10 @@ Content-Type: application/json
 
 
 ### get d todo el historial
-GET {{baseUrl}}/historial
+GET {{baseUrl}}/tareas
 
 ### get tareas del usuario 1 
-GET {{baseUrl}}/historial/usuario/3
+GET {{baseUrl}}/tareas/usuario/1
 
 ### tareas del dia 2026-01-30
 GET {{baseUrl}}/historial/fecha/2026-01-30
@@ -44,12 +44,12 @@ GET {{baseUrl}}/historial/
 
 
 ### Actualizar estado a completada 
-PUT {{baseUrl}}/historial/33
+PUT {{baseUrl}}/tareas/23
 Content-Type: application/json
 
 {
-  "estatus": "completada",
-  "completadaPor": 1
+  "estatus": "extra",
+  "completadaPor": 3
 }
 
 
@@ -74,5 +74,5 @@ Content-Type: application/json
 }
 
 ### Eliminar registro 4
-DELETE {{baseUrl}}/historial/75
+DELETE {{baseUrl}}/historial/41
 

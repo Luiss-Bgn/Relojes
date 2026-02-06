@@ -277,15 +277,15 @@ async function mostrarRankingEmpleados(quincenaIndex = null) {
       </td>
       <td style="width: 3%;"></td>
       <td style="width: 20%;"><strong>${usuario.nombre}</strong></td>
-      <td style="width: 15%;">${usuario.puesto || 'N/A'}</td>
-      <td style="width: 8%; text-align: center;">${usuario.total_tareas || 0}</td>
-      <td style="width: 8%; text-align: center;" class="vencidas-cell">${usuario.vencidas || 0}</td>
-      <td style="width: 15%; text-align: center;" class="completadas-cell">${usuario.completadas || usuario.total_tareas || 0}</td>
+      <td style="width: 15%;">${usuario.puesto ?? 'N/A'}</td>
+      <td style="width: 8%; text-align: center;">${usuario.total_tareas ?? 0}</td>
+      <td style="width: 8%; text-align: center;" class="vencidas-cell">${usuario.vencidas ?? 0}</td>
+      <td style="width: 15%; text-align: center;" class="completadas-cell">${usuario.completadas ?? 0}</td>
       <td style="width: 15%; text-align: center; padding: 8px;">
         <div style="background: ${bgColor}; color: white; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; display: inline-block;">${porcentaje.toFixed(1)}%</div>
       </td>
       <td style="width: 10%; text-align: center;" class="puntos-cell">
-        <div class="puntos-badge">${usuario.total_puntos || 0}</div>
+        <div class="puntos-badge">${usuario.total_puntos ?? 0}</div>
       </td>
     `;
 
@@ -359,11 +359,11 @@ async function mostrarRankingExtras(quincenaIndex = null) {
       <td style="width: 10%; text-align: center;">
         <div class="rank-badge ${index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : ''}">${index + 1}</div>
       </td>
-      <td style="width: 2%; text-align: center;">.</td>
-      <td style="width: 15%; text-align: left;"><strong style="color: #e63946;">${usuario.nombre}</strong></td>
-      <td style="width: 19%;  text-align: center;">${usuario.puesto || 'N/A'}</td>
-      <td style="width: 14%; text-align: center; font-weight: 600; padding: 12px 10px; color: #000;">${usuario.total_tareas || 0}</td>
-      <td style="width: 19%; text-align: center; font-weight: 600; padding: 12px 10px; color: #000;">${usuario.total_puntos || 0}</td>
+      <td style="width: 2%; text-align: center;"></td>
+      <td style="width: 15%; text-align: left;"><strong style="color: #e63946;">${usuario.nombre ?? 'N/A'}</strong></td>
+      <td style="width: 19%;  text-align: center;">${usuario.puesto ?? 'N/A'}</td>
+      <td style="width: 14%; text-align: center; font-weight: 600; padding: 12px 10px; color: #000;">${usuario.total_tareas ?? 0}</td>
+      <td style="width: 19%; text-align: center; font-weight: 600; padding: 12px 10px; color: #000;">${usuario.total_puntos ?? 0}</td>
       <td style="width: 23%; text-align: center; padding: 8px;">
         <div style="background: ${bgColor}; color: white; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; display: inline-block;">${porcentajePuntos.toFixed(1)}%</div>
       </td>
