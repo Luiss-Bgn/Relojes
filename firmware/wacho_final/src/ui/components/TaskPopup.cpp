@@ -26,7 +26,14 @@ namespace
         //   }
         // }
         doc["tipo"] = "relojes";
-        doc["comando"] = "completar_tarea";
+
+        if(data.type == TaskPopupType::Extra) {
+            doc["comando"] = "completar_extra";
+        }
+        else {
+            doc["comando"] = "completar_tarea";
+        }
+
         doc["uuid"]= AuthService::getUUID();
 
         JsonObject tarea = doc.createNestedObject("tarea");

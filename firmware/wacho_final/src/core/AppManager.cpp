@@ -116,7 +116,7 @@ void AppManager::processMessage(String message)
 {
     DEBUG_PRINTLN("[App] Processing message...");
 
-    DynamicJsonDocument doc(8192);
+    JsonDocument doc;
     if (deserializeJson(doc, message))
     {
         DEBUG_PRINTLN("[App] JSON Error");
