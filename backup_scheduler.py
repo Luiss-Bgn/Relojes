@@ -111,6 +111,11 @@ class BackupManager:
                 # Copiar cada tarea a historial
                 for tarea in tareas:
                     try:
+                        estatus_final = tarea.get('estatus')
+                        if estatus_final == 'futura':
+                            continue
+                        if estatus_final == 'extra' and tarea.get('completadaPor') is None:
+                            estatus_final = 'vencida'
                         # Crear registro en historial con la fecha específica
                         resultado_historial = self.historial_manager.crear_registro(
                             nombre=tarea['nombre'],
@@ -120,7 +125,7 @@ class BackupManager:
                             hora_fin=tarea['hora_fin'],
                             fecha=fecha_especifica,  # Fecha específica YYYY-MM-DD
                             puntos=tarea['puntos'],
-                            estatus=tarea['estatus'],  # Mantener el status actual
+                            estatus=estatus_final,  # Mantener el status actual
                             completadaPor=tarea.get('completadaPor'),  # 🔥 NUEVO: Preservar quién completó como extra
                             disponible_para_rol=tarea.get('disponible_para_rol', 'todos')
                         )

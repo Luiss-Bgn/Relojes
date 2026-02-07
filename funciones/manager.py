@@ -118,14 +118,10 @@ class Manager():
     async def _resolver_destinatarios(self, criterios):
         destinatarios = set()
 
-        # print("criterio",criterios)
         # Individual
         if criterios["individual"]:
             empleados_ids = list(criterios["individual"])
-            # print(empleados_ids)
             uuids = self.reloj_manager.obtener_uuids_por_empleados(empleados_ids)
-            # print(uuids)
-            # print()
 
             for uuid in uuids:
                 if conexiones.obtener_conexion(uuid):
@@ -159,7 +155,6 @@ class Manager():
 
         print(f"Destinatarios finales: {destinatarios}")
         return destinatarios
-
 
 
     # Envio de mensaje
