@@ -64,6 +64,8 @@ async def endpoints_info():
                 "crear": "POST /historial",
                 "listar": "GET /historial",
                 "obtener": "GET /historial/{id}",
+                "vencidas": "GET /historial/vencidas",
+                "vencidas": "GET /historial/top-vencidas",
                 "por_usuario": "GET /historial/usuario/{usuario_id}",
                 "por_fecha": "GET /historial/fecha/{fecha}",
                 "actualizar": "PUT /historial/{id}",

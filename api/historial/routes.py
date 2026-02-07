@@ -83,6 +83,70 @@ async def obtener_quincenas_disponibles():
     return resultado
 
 
+@router.get("/vencidas", response_model=dict)
+async def obtener_actividades_vencidas(
+    solo_quincena_actual: bool = Query(
+        default=True,
+        description="Si es true, solo devuelve las vencidas de la quincena actual"
+    )
+):
+    """
+    Obtiene actividades vencidas
+
+    - Por defecto: solo quincena actual
+    - solo_quincena_actual=false → todas las vencidas históricas
+
+    Ejemplos:
+    - /historial/vencidas
+    - /historial/vencidas?solo_quincena_actual=false
+    """
+
+    resultado = historial_manager.obtener_actividades_vencidas(
+        solo_quincena_actual=solo_quincena_actual
+    )
+
+    if resultado.get("status") != "success":
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=resultado.get("mensaje")
+        )
+
+    if "registros" in resultado:
+        resultado["registros"] = [
+            enriquecer_historial(r) for r in resultado["registros"]
+        ]
+
+    return resultado
+
+@router.get("/top-vencidas", response_model=dict)
+async def obtener_top_tareas_vencidas(
+    limite: int = Query(default=10, ge=1, le=50),
+    solo_quincena_actual: bool = Query(default=True)
+):
+    """
+    Top de tareas más vencidas
+
+    Ejemplos:
+    - /historial/top-vencidas
+    - /historial/top-vencidas?limite=5
+    - /historial/top-vencidas?solo_quincena_actual=false
+    """
+
+    resultado = historial_manager.obtener_top_tareas_vencidas(
+        solo_quincena_actual=solo_quincena_actual,
+        limite=limite
+    )
+
+    if resultado.get("status") != "success":
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=resultado.get("mensaje")
+        )
+
+    return resultado
+
+
+
 @router.get("/top-empleados", response_model=dict)
 async def obtener_top_empleados(
     limite: int = Query(default=10, ge=1, le=100, description="Número de empleados a retornar"),

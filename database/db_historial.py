@@ -303,6 +303,76 @@ class HistorialDAO:
             ]
             
             return quincenas_list
+    def obtener_vencidas(self,fecha_inicio: Optional[str] = None,fecha_fin: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Obtiene actividades vencidas.
+        Se consideran vencidas las que NO están completadas y su fecha ya pasó.
+        """
+
+        with self.db.get_connection() as conn:
+            cursor = conn.cursor()
+
+            query = """
+                SELECT id, nombre, descripcion, id_dueño, hora_ini, hora_fin,
+                    fecha, puntos, estatus, completadaPor, disponible_para_rol
+                FROM historial
+                WHERE estatus IN ('vencida')
+            """
+
+            params = []
+
+            if fecha_inicio and fecha_fin:
+                query += " AND fecha BETWEEN ? AND ?"
+                params.extend([fecha_inicio, fecha_fin])
+            else:
+                query += " AND fecha < date('now')"
+
+            query += " ORDER BY fecha ASC"
+
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
+            return [dict(row) for row in rows]
+        
+    def obtener_top_tareas_vencidas(self,fecha_inicio: Optional[str] = None,fecha_fin: Optional[str] = None,limite: int = 10) -> List[Dict[str, Any]]:
+        """
+        Obtiene el top de tareas más vencidas (agrupadas por nombre)
+        """
+
+        with self.db.get_connection() as conn:
+            cursor = conn.cursor()
+
+            query = """
+                SELECT
+                    nombre,
+                    COUNT(*) as total_vencidas,
+                    SUM(puntos) as total_puntos,
+                    MIN(fecha) as primera_fecha,
+                    MAX(fecha) as ultima_fecha
+                FROM historial
+                WHERE estatus = 'vencida'
+            """
+
+            params = []
+
+            if fecha_inicio and fecha_fin:
+                query += " AND fecha BETWEEN ? AND ?"
+                params.extend([fecha_inicio, fecha_fin])
+            else:
+                query += " AND fecha < date('now')"
+
+            query += """
+                GROUP BY nombre
+                ORDER BY total_vencidas DESC
+                LIMIT ?
+            """
+
+            params.append(limite)
+
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
+            return [dict(row) for row in rows]
+
+
 
 #Logica de negocio, aqui en un futuro debemos agregar validaciones y condiciones, asi como funciones automaticas para el cambio estatyus 
 class HistorialManager:
@@ -694,3 +764,95 @@ class HistorialManager:
                 "status": "error",
                 "mensaje": f"Error al obtener quincenas disponibles: {str(e)}"
             }
+    def obtener_actividades_vencidas(self,solo_quincena_actual: bool = True) -> Dict[str, Any]:
+        """
+        Obtiene actividades vencidas.
+        - Por defecto: solo quincena actual
+        - False: histórico completo
+        """
+
+        try:
+            fecha_inicio = None
+            fecha_fin = None
+            periodo = "Histórico completo"
+
+            if solo_quincena_actual:
+                hoy = datetime.now()
+                dia = hoy.day
+                mes = hoy.month
+                año = hoy.year
+
+                quincena = 1 if dia <= 12 else 2
+                fechas = self.calcular_fechas_quincena(año, mes, quincena)
+
+                fecha_inicio = fechas["fecha_inicio"]
+                fecha_fin = fechas["fecha_fin"]
+                periodo = f"Q{quincena} {self._nombre_mes(mes)} {año}"
+
+            registros = self.historial_dao.obtener_vencidas(
+                fecha_inicio=fecha_inicio,
+                fecha_fin=fecha_fin
+            )
+
+            return {
+                "status": "success",
+                "periodo": periodo,
+                "fecha_inicio": fecha_inicio,
+                "fecha_fin": fecha_fin,
+                "registros": registros,
+                "total": len(registros)
+            }
+
+        except Exception as e:
+            logger.error(f"ERROR AL OBTENER ACTIVIDADES VENCIDAS: {str(e)}")
+            return {
+                "status": "error",
+                "mensaje": f"Error al obtener actividades vencidas: {str(e)}"
+            }
+    def obtener_top_tareas_vencidas(self,solo_quincena_actual: bool = True,limite: int = 10) -> Dict[str, Any]:
+        """
+        Obtiene el top de tareas más vencidas
+        """
+
+        try:
+            fecha_inicio = None
+            fecha_fin = None
+            periodo = "Histórico completo"
+
+            if solo_quincena_actual:
+                hoy = datetime.now()
+                dia = hoy.day
+                mes = hoy.month
+                año = hoy.year
+
+                quincena = 1 if dia <= 12 else 2
+                fechas = self.calcular_fechas_quincena(año, mes, quincena)
+
+                fecha_inicio = fechas["fecha_inicio"]
+                fecha_fin = fechas["fecha_fin"]
+                periodo = f"Q{quincena} {self._nombre_mes(mes)} {año}"
+
+            top = self.historial_dao.obtener_top_tareas_vencidas(
+                fecha_inicio=fecha_inicio,
+                fecha_fin=fecha_fin,
+                limite=limite
+            )
+
+            # agregar ranking
+            for i, tarea in enumerate(top, start=1):
+                tarea["posicion"] = i
+
+            return {
+                "status": "success",
+                "periodo": periodo,
+                "top_tareas": top,
+                "total": len(top)
+            }
+
+        except Exception as e:
+            logger.error(f"ERROR AL OBTENER TOP TAREAS VENCIDAS: {str(e)}")
+            return {
+                "status": "error",
+                "mensaje": f"Error al obtener top tareas vencidas: {str(e)}"
+            }
+
