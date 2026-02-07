@@ -281,8 +281,10 @@ async function mostrarRankingEmpleados(quincenaIndex = null) {
       <td style="width: 8%; text-align: center;">${usuario.total_tareas ?? 0}</td>
       <td style="width: 8%; text-align: center;" class="vencidas-cell">${usuario.vencidas ?? 0}</td>
       <td style="width: 15%; text-align: center;" class="completadas-cell">${usuario.completadas ?? 0}</td>
-      <td style="width: 15%; text-align: center; background: ${bgColor}; color: white; font-weight: 700; padding: 8px; border-radius: 6px;">
+      <td style="width: 15%; text-align: center; padding: 8px;">
+        <div style="background: ${bgColor}; color: white; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; display: inline-block; width: 10ch;">
         ${porcentaje.toFixed(1)}%
+        </div>
       </td>
       <td style="width: 10%; text-align: center;" class="puntos-cell">
         <div class="puntos-badge">${usuario.total_puntos ?? 0}</div>
@@ -364,8 +366,10 @@ async function mostrarRankingExtras(quincenaIndex = null) {
       <td style="width: 19%;  text-align: center;">${usuario.puesto ?? 'N/A'}</td>
       <td style="width: 14%; text-align: center; font-weight: 600; padding: 12px 10px; color: #000;">${usuario.total_tareas ?? 0}</td>
       <td style="width: 19%; text-align: center; font-weight: 600; padding: 12px 10px; color: #000;">${usuario.total_puntos ?? 0}</td>
-      <td style="width: 23%; text-align: center; background: ${bgColor}; color: white; font-weight: 700; padding: 8px; border-radius: 6px;">
+      <td style="width: 23%; text-align: center; padding: 8px;">
+        <div style="background: ${bgColor}; color: white; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; display: inline-block; width: 10ch;">
         ${porcentajePuntos.toFixed(1)}%
+        </div>
       </td>
     `;
 

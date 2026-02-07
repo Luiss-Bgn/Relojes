@@ -283,13 +283,13 @@ function calcularDatosProgreso() {
 
   const pct = puntosAsignados > 0 ? (puntosGanados / puntosAsignados) * 100 : 0;
   
-  const modoTexto = modoActual === 'quincena' ? 'QUINCENA' : 'TODO HISTORIAL';
-  const fechaInicioStr = fechaInicio.toLocaleDateString('es-ES');
-  const fechaFinStr = fechaFin.toLocaleDateString('es-ES');
+  // const modoTexto = modoActual === 'quincena' ? 'QUINCENA' : 'TODO HISTORIAL';
+  // const fechaInicioStr = fechaInicio.toLocaleDateString('es-ES');
+  // const fechaFinStr = fechaFin.toLocaleDateString('es-ES');
   
-  console.log(`🎯 GRÁFICA (${modoTexto}) - Desde ${fechaInicioStr} hasta ${fechaFinStr}`);
-  console.log(`   📊 Asignados: ${puntosAsignados} | Ganados: ${puntosGanados} | No Ganados: ${puntosNoGanados} | Extras: ${puntosExtras}`);
-  console.log(`   📈 Porcentaje: ${pct.toFixed(1)}%`);
+  // console.log(`🎯 GRÁFICA (${modoTexto}) - Desde ${fechaInicioStr} hasta ${fechaFinStr}`);
+  // console.log(`   📊 Asignados: ${puntosAsignados} | Ganados: ${puntosGanados} | No Ganados: ${puntosNoGanados} | Extras: ${puntosExtras}`);
+  // console.log(`   📈 Porcentaje: ${pct.toFixed(1)}%`);
   
   return {
     puntosAsignados,

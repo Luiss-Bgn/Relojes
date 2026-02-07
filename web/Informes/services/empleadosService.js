@@ -44,10 +44,10 @@ export async function obtenerBackup() {
           const tareas = dataTareas.registros || [];
           const historial = dataHistorial.registros || [];
           
-          console.log(`📋 [${usuario.nombre}] Tareas: ${tareas.length}, Historial: ${historial.length}`);
-          if (historial.length > 0) {
-            console.log(`   Fechas del historial:`, historial.map(h => `${h.fecha}(s:${h.estatus})`).join(', '));
-          }
+          // console.log(`📋 [${usuario.nombre}] Tareas: ${tareas.length}, Historial: ${historial.length}`);
+          // if (historial.length > 0) {
+          //   console.log(`   Fechas del historial:`, historial.map(h => `${h.fecha}(s:${h.estatus})`).join(', '));
+          // }
           
           // 🔥 IMPORTANTE: Convertir historial a un objeto con fechas como claves
           // para que sea compatible con TareasPanel.js que espera este formato
@@ -171,11 +171,11 @@ export async function obtenerBackup() {
           };
           
           // 🔥 DEBUG: Mostrar estructura de historialPuntos
-          console.log(`   📊 historial_puntos keys:`, Object.keys(historialPuntos).slice(0, 3).join(', '));
-          if (Object.keys(historialPuntos).length > 0) {
-            const firstKey = Object.keys(historialPuntos)[0];
-            console.log(`   💾 Primer registro [${firstKey}]:`, historialPuntos[firstKey]);
-          }
+          // console.log(`   📊 historial_puntos keys:`, Object.keys(historialPuntos).slice(0, 3).join(', '));
+          // if (Object.keys(historialPuntos).length > 0) {
+          //   const firstKey = Object.keys(historialPuntos)[0];
+          //   // console.log(`   💾 Primer registro [${firstKey}]:`, historialPuntos[firstKey]);
+          // }
           
           return resultado;
         } catch (err) {
