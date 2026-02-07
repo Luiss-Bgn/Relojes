@@ -9,11 +9,11 @@ import { setEmpleadosPromedioData, renderizarGraficaPromedio, setTareasRealizada
 /* -------------------- Sesión ------------------- */
 const usuario = JSON.parse(localStorage.getItem("loggedUser"));
 
-// 🔥 DEBUG: Ver qué usuario está intentando acceder
-console.log("=== INFORMES - DEBUG ===");
-console.log("Usuario desde localStorage:", usuario);
-console.log("Rol del usuario:", usuario?.role);
-console.log("Cookies del navegador:", document.cookie);
+// // 🔥 DEBUG: Ver qué usuario está intentando acceder
+// console.log("=== INFORMES - DEBUG ===");
+// console.log("Usuario desde localStorage:", usuario);
+// console.log("Rol del usuario:", usuario?.role);
+// console.log("Cookies del navegador:", document.cookie);
 
 if (!usuario || !["admin", "administrador", "supervisor", "empleado"].includes(usuario.role)) {
   console.log("❌ ACCESO DENEGADO - Redirigiendo a actividades");
@@ -145,11 +145,11 @@ function stopAutoRefresh() {
 
 /* ----------------- ADMIN ----------------------- */
 async function generarItinerarios() {
-  console.log("🚀 [generarItinerarios] INICIANDO...");
-  console.log("🚀 [generarItinerarios] empleadosData.length:", empleadosData.length);
+  // console.log("🚀 [generarItinerarios] INICIANDO...");
+  // console.log("🚀 [generarItinerarios] empleadosData.length:", empleadosData.length);
   
   const tarjetasContainer = document.getElementById("tarjetas-container");
-  console.log("🚀 [generarItinerarios] tarjetasContainer:", tarjetasContainer);
+  // console.log("🚀 [generarItinerarios] tarjetasContainer:", tarjetasContainer);
   
   if (!tarjetasContainer) {
     console.error("❌ No existe contenedor con ID 'tarjetas-container'.");
@@ -205,8 +205,8 @@ async function generarItinerarios() {
   const userRole = role ? role.toLowerCase() : 'visitante';
   let empleadosFiltrados = empleadosData;
   
-  console.log(`🔍 [Informes] Usuario logueado: ${userRole}`);
-  console.log(`📊 [Informes] Total empleados desde API: ${empleadosData.length}`);
+  // console.log(`🔍 [Informes] Usuario logueado: ${userRole}`);
+  // console.log(`📊 [Informes] Total empleados desde API: ${empleadosData.length}`);
   
   // 🔥 Filtrar según rol del usuario
   empleadosFiltrados = empleadosData.filter(emp => {
@@ -228,14 +228,14 @@ async function generarItinerarios() {
     } else if (userRole === 'supervisor' || userRole === 'admin' || userRole === 'administrador') {
       // Ver empleados + supervisores
       const mostrar = empRole === 'empleado' || empRole === 'supervisor';
-      console.log(`   ${mostrar ? '✅' : '❌'} ${emp.nombre} (rol=${empRole}) → ${userRole} ve empleados + supervisores`);
+      // console.log(`   ${mostrar ? '✅' : '❌'} ${emp.nombre} (rol=${empRole}) → ${userRole} ve empleados + supervisores`);
       return mostrar;
     }
     
     return true; // Por defecto, mostrar
   });
   
-  console.log(`📊 [Informes] Empleados a mostrar: ${empleadosFiltrados.length}`);
+  // console.log(`📊 [Informes] Empleados a mostrar: ${empleadosFiltrados.length}`);
 
   empleadosFiltrados.forEach((empleado, i) => {
     const card = createEmpleadoCard(empleado, i);
@@ -318,8 +318,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const { role, empleado_id } = usuario;
 
-    console.log("📍 [DOMContentLoaded] Rol del usuario:", role);
-    console.log("📍 [DOMContentLoaded] Empleados cargados:", empleadosData.length);
+    // console.log("📍 [DOMContentLoaded] Rol del usuario:", role);
+    // console.log("📍 [DOMContentLoaded] Empleados cargados:", empleadosData.length);
 
     // Restaurar el título principal sin header derecho
     const tituloInformes = document.getElementById("titulo-informes");
@@ -333,17 +333,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     if (role === "admin" || role === "administrador" || role === "supervisor") {
-      console.log("✅ [DOMContentLoaded] Llamando a generarItinerarios()...");
+      // console.log("✅ [DOMContentLoaded] Llamando a generarItinerarios()...");
       await generarItinerarios();
-      console.log("✅ [DOMContentLoaded] generarItinerarios() completado");
+      // console.log("✅ [DOMContentLoaded] generarItinerarios() completado");
     } else if (role === "empleado") {
-      console.log("✅ [DOMContentLoaded] Llamando a mostrarPanelDerecho()...");
+      // console.log("✅ [DOMContentLoaded] Llamando a mostrarPanelDerecho()...");
       await mostrarPanelDerecho(parseInt(empleado_id, 10));
     }
     
     // 🔥 AUTO-REFRESH DESHABILITADO - Los datos solo se cargan al entrar/refrescar la página
     // startAutoRefresh(2000); // Cada 2 segundos
-    console.info("✅ Informes cargados (sin auto-refresh)");
+    // console.info("✅ Informes cargados (sin auto-refresh)");
     
   } catch (e) {
     console.error("Error inicializando aplicación:", e);
