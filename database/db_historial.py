@@ -333,7 +333,7 @@ class HistorialDAO:
             rows = cursor.fetchall()
             return [dict(row) for row in rows]
         
-    def obtener_top_tareas_vencidas(self,fecha_inicio: Optional[str] = None,fecha_fin: Optional[str] = None,limite: int = 10) -> List[Dict[str, Any]]:
+    def obtener_top_tareas_vencidas(self,fecha_inicio: Optional[str] = None,fecha_fin: Optional[str] = None,limite: Optional[int] = None) -> List[Dict[str, Any]]:
         """
         Obtiene el top de tareas más vencidas (agrupadas por nombre)
         """
@@ -366,7 +366,9 @@ class HistorialDAO:
                 LIMIT ?
             """
 
-            params.append(limite)
+            if limite:
+                query += " LIMIT ?"
+                params.append(limite)
 
             cursor.execute(query, params)
             rows = cursor.fetchall()
@@ -809,7 +811,7 @@ class HistorialManager:
                 "status": "error",
                 "mensaje": f"Error al obtener actividades vencidas: {str(e)}"
             }
-    def obtener_top_tareas_vencidas(self,solo_quincena_actual: bool = True,limite: int = 10) -> Dict[str, Any]:
+    def obtener_top_tareas_vencidas(self,solo_quincena_actual: bool = True,limite: Optional[int] = None) -> Dict[str, Any]:
         """
         Obtiene el top de tareas más vencidas
         """

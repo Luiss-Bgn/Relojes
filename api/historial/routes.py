@@ -84,12 +84,7 @@ async def obtener_quincenas_disponibles():
 
 
 @router.get("/vencidas", response_model=dict)
-async def obtener_actividades_vencidas(
-    solo_quincena_actual: bool = Query(
-        default=True,
-        description="Si es true, solo devuelve las vencidas de la quincena actual"
-    )
-):
+async def obtener_actividades_vencidas(solo_quincena_actual: bool = Query(default=True,description="Si es true, solo devuelve las vencidas de la quincena actual")):
     """
     Obtiene actividades vencidas
 
@@ -120,7 +115,7 @@ async def obtener_actividades_vencidas(
 
 @router.get("/top-vencidas", response_model=dict)
 async def obtener_top_tareas_vencidas(
-    limite: int = Query(default=10, ge=1, le=50),
+    limite: int = Query(default=None, ge=1, le=100),
     solo_quincena_actual: bool = Query(default=True)
 ):
     """
