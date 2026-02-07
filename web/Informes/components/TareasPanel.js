@@ -649,6 +649,7 @@ export async function mostrarTareasEmpleado(empleado) {
         height: 100%;
         display: table-cell;
         vertical-align: middle;
+        border: none;
       `;
 
       // Guardar en array si es día pasado o actual
@@ -713,10 +714,7 @@ export async function mostrarTareasEmpleado(empleado) {
           height: 100%;
           display: table-cell;
           vertical-align: middle;
-          border-left: 1px solid ${colorFinal} !important;
-          border-right: 1px solid ${colorFinal} !important;
-          border-bottom: 1px solid ${colorFinal} !important;
-          border-top: 1px solid ${colorFinal} !important;
+          border: none !important;
         `;
       });
     }
@@ -1013,7 +1011,7 @@ export async function mostrarTareasEmpleado(empleado) {
   }, 100);
 }
 // 🔥 NUEVA FUNCIÓN: Mostrar tabla resumen agregado de TODOS los empleados
-export function mostrarResumenAgregado() {
+export async function mostrarResumenAgregado() {
   // 🔥 ASEGURAR que el panel izquierdo sea visible
   const leftPanel = document.querySelector('.left-panel');
   if (leftPanel) {
@@ -1051,6 +1049,31 @@ export function mostrarResumenAgregado() {
   const year = today.getFullYear();
   const month = today.getMonth();
   const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+  // Datos en vivo del panel para el día actual (por empleado)
+  const weekdayBackendResumen = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+  const diaHoyNombreResumen = weekdayBackendResumen[today.getDay()];
+  let tareasTiempoRealPorEmpleado = null;
+
+  try {
+    const response = await fetch('http://localhost:8001/tareas/panel/obtener', { cache: 'no-store' });
+    if (response.ok) {
+      const panelData = await response.json();
+      if (panelData?.status === 'success' && Array.isArray(panelData.panel)) {
+        tareasTiempoRealPorEmpleado = {};
+        for (const emp of panelData.panel) {
+          const tareasHoy = (emp.tareas_asignadas?.[diaHoyNombreResumen] || []).filter(t => t.estatus !== 'sin_iniciar');
+          if (tareasHoy.length) {
+            tareasTiempoRealPorEmpleado[emp.id] = tareasHoy;
+          }
+        }
+      }
+    } else {
+      console.warn(`[ResumenAgregado] No se pudo obtener panel en vivo: ${response.status}`);
+    }
+  } catch (error) {
+    console.error('[ResumenAgregado] Error al obtener panel en vivo:', error);
+  }
 
   const bodyDiv = document.createElement("div");
   bodyDiv.classList.add("tasks-card-body");
@@ -1143,6 +1166,7 @@ export function mostrarResumenAgregado() {
 
     // console.log(`🔍 [Resumen] calcularPuntosAgregadosPorDia(${fechaBuscada}): esPasado=${esPasado}, esHoy=${esHoy}, esFuturo=${esFuturo}`);
 
+    // console.log("tareasTiempoRealPorEmpleado:", tareasTiempoRealPorEmpleado);
     // Recorrer todos los empleados
     for (const empleado of empleadosGlobales) {
       // 🔥 PRIMERO: Intentar obtener del historial si es día pasado O día actual
@@ -1159,6 +1183,7 @@ export function mostrarResumenAgregado() {
       // 🔥 Si no hay historial o es día actual/futuro, calcular dinámicamente
       const weekdayFull = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
       const dayName = normalizeDay(weekdayFull[dayDate.getDay()]);
+      const dayNamePanel = weekdayBackendResumen[dayDate.getDay()];
 
       const allTasks = getAllTasks(empleado);
       const realizadasBackup = tareasRealizadasMap[empleado.id] || [];
@@ -1172,19 +1197,25 @@ export function mostrarResumenAgregado() {
         return true;
       });
 
-      const tareasDelDia = merged.filter(t => {
-        if (t.fecha) {
-          return t.fecha === fechaBuscada;
-        }
-        return normalizeDay(t.dia) === dayName;
-      });
+      // Si es hoy y tenemos datos en vivo del panel para este empleado, usarlos (excluyendo sin_iniciar ya filtrado)
+      const tareasDelDia = (esHoy && tareasTiempoRealPorEmpleado && tareasTiempoRealPorEmpleado[empleado.id])
+        ? tareasTiempoRealPorEmpleado[empleado.id]
+        : merged.filter(t => {
+            if (t.fecha) {
+              return t.fecha === fechaBuscada;
+            }
+            // Compatibilidad con claves de día y nombres normalizados
+            return normalizeDay(t.dia) === dayName || t.fecha === dayNamePanel;
+          });
+
 
       tareasDelDia.forEach(tarea => {
-        const puntos = parseInt(tarea.puntaje) || 0;
+        const puntos = parseInt(tarea.puntaje ?? tarea.puntos) || 0;
 
-        if (tarea.estatus !== 'extra') {
+        if (tarea.estatus !== 'sin_iniciar') {
           totalAsignados += puntos;
         }
+
 
         if (esFuturo) return;
 
@@ -1192,7 +1223,7 @@ export function mostrarResumenAgregado() {
           totalRealizados += puntos;
         } else if (tarea.estatus === 'vencida') {
           totalPerdidos += puntos;
-        } else if (tarea.estatus === 'extra') {
+        } else if (tarea.estatus === 'extra' && tarea.completadaPor !==null) {
           totalExtras += puntos;
         }
       });
@@ -1265,9 +1296,11 @@ export function mostrarResumenAgregado() {
     const puntos = calcularPuntosAgregadosPorDia(currentDate);
 
     const tr = document.createElement("tr");
-    // No aplicar border-bottom a las filas que forman la barra verde
-    const esDiaActualParaBarra = currentDate.getTime() <= hoyDate.getTime();
-    tr.style.borderBottom = esDiaActualParaBarra ? "none" : "1px solid #e5e7eb";
+    const esHoyFila = currentDate.getTime() === hoyDate.getTime();
+    tr.style.borderBottom = "1px solid #e5e7eb";
+    if (esHoyFila) {
+      tr.style.backgroundColor = "#e8f4ff"; // Azul claro para destacar el día actual
+    }
 
     const tdDia = document.createElement("td");
     tdDia.style.cssText = "padding: 12px 8px; text-align: center; font-weight: 500; font-size: 14px;";
@@ -1301,14 +1334,14 @@ export function mostrarResumenAgregado() {
 
     const porcentajeDiario = puntos.asignados > 0
       ? ((puntos.realizados / puntos.asignados) * 100).toFixed(1)
-      : 'N/A';
+      : 'N/D';
 
     const tdDiario = document.createElement("td");
     // 🔥 Colorear la celda según el porcentaje diario
     let diarioColor = '#fff'; // Fondo blanco por defecto
     let diarioTextColor = '#333'; // Texto oscuro por defecto
 
-    if (porcentajeDiario !== 'N/A') {
+    if (porcentajeDiario !== 'N/D') {
       const pctDiario = parseFloat(porcentajeDiario);
       if (pctDiario >= 90) {
         diarioColor = '#10b981'; // Verde: 90-100
@@ -1322,8 +1355,25 @@ export function mostrarResumenAgregado() {
       }
     }
 
-    tdDiario.style.cssText = `padding: 12px 8px; text-align: center; font-weight: 600; font-size: 14px; background: ${diarioColor}; color: ${diarioTextColor};`;
-    tdDiario.textContent = porcentajeDiario === 'N/A' ? 'N/A' : porcentajeDiario + '%';
+    if (porcentajeDiario === 'N/D') {
+      tdDiario.style.cssText = `
+        text-align: center;
+        padding: 8px 6px;
+        font-size: 11px;
+        font-weight: 700;
+        border-left: 1px solid #eee;
+        border-right: 1px solid #eee;
+        height: 100%;
+        display: table-cell;
+        vertical-align: middle;
+        background: repeating-linear-gradient(45deg, #f3f4f6, #f3f4f6 8px, #e5e7eb 8px, #e5e7eb 16px);
+        color: #9ca3af;
+      `;
+      tdDiario.textContent = 'N/D';
+    } else {
+      tdDiario.style.cssText = `padding: 12px 8px; text-align: center; font-weight: 600; font-size: 14px; background: ${diarioColor}; color: ${diarioTextColor};`;
+      tdDiario.textContent = porcentajeDiario + '%';
+    }
     tr.appendChild(tdDiario);
 
     const tdQuincenal = document.createElement("td");
@@ -1359,13 +1409,15 @@ export function mostrarResumenAgregado() {
         background: ${columnColor};
         color: white;
         border-radius: ${borderRadius};
-        border: none;
+        border-top: 1px solid ${columnColor};
+        border-bottom: 1px solid ${columnColor};
+
       `;
       // Mostrar % solo en HOY
       tdQuincenal.textContent = esHoy ? porcentajeFinalQuincena.toFixed(1) + '%' : '';
     } else {
       // Día futuro: sin color
-      tdQuincenal.style.cssText = "padding: 12px 8px; text-align: center; font-weight: 600; font-size: 14px; color: #9ca3af;";
+      tdQuincenal.style.cssText = "padding: 12px 8px; text-align: center; font-weight: 600; font-size: 14px; color: #9ca3af; border: none;";
       tdQuincenal.textContent = '';
     }
 

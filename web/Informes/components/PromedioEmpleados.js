@@ -88,7 +88,7 @@ function obtenerQuincenaActual() {
   fechaInicio.setHours(0, 0, 0, 0);
   fechaFin.setHours(23, 59, 59, 999);
   
-  console.log(`📅 Quincena actual: ${nombreQuincena} (${fechaInicio.toLocaleDateString()} - ${fechaFin.toLocaleDateString()})`);
+  // console.log(`📅 Quincena actual: ${nombreQuincena} (${fechaInicio.toLocaleDateString()} - ${fechaFin.toLocaleDateString()})`);
   
   return { fechaInicio, fechaFin, nombreQuincena };
 }
@@ -500,10 +500,10 @@ export function renderizarGraficaPromedio() {
 
   const datosProgreso = calcularDatosProgreso();
 
-  console.log('🔄 [GraficaPromedio] Actualizado -', new Date().toLocaleTimeString(), {
-    progreso: datosProgreso,
-    empleados: empleadosGlobales.length
-  });
+  // console.log('🔄 [GraficaPromedio] Actualizado -', new Date().toLocaleTimeString(), {
+  //   progreso: datosProgreso,
+  //   empleados: empleadosGlobales.length
+  // });
 
   container.innerHTML = generarHTMLGraficaMini(datosProgreso);
 }

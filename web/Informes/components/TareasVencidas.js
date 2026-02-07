@@ -202,21 +202,23 @@ function renderizarTareasVencidasPaginadas() {
 }
 
 /**
- * 🔥 NUEVO: Obtiene tareas vencidas desde el endpoint /tareas-vencidas
+ * 🔥 NUEVO: Obtiene tareas vencidas desde el endpoint /historial/top-vencidas
  */
 async function obtenerTareasVencidasDesdeAPI() {
   try {
     const url = mostrandoQuincena 
-      ? '/tareas-vencidas?quincena_actual=true' 
-      : '/tareas-vencidas?quincena_actual=false';
+      ? '/historial/top-vencidas?solo_quincena_actual=true' 
+      : '/historial/top-vencidas?solo_quincena_actual=false';
     
     const response = await fetch(url, { cache: 'no-store' });
+    console.log("response", response);
     if (!response.ok) {
       console.error('Error obteniendo tareas vencidas:', response.status);
       return [];
     }
     
     const data = await response.json();
+    console.log('Tareas vencidas obtenidas:', data);
     return data || [];
   } catch (error) {
     console.error('Error en obtenerTareasVencidasDesdeAPI:', error);
