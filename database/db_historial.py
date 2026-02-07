@@ -363,7 +363,6 @@ class HistorialDAO:
             query += """
                 GROUP BY nombre
                 ORDER BY total_vencidas DESC
-                LIMIT ?
             """
 
             if limite:
