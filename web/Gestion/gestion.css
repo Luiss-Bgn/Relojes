@@ -189,6 +189,7 @@ body {
 
 .actions-row {
   display: flex;
+  justify-content: center;
   gap: 10px;
   margin-top: 20px;
 }
@@ -306,6 +307,98 @@ body {
   font-weight: 500;
 }
 
+.relojes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.reloj-item {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px 16px;
+  transition: var(--transition);
+}
+
+.reloj-item:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.reloj-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.reloj-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.reloj-icon svg {
+  fill: white;
+}
+
+.reloj-details {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.reloj-nombre {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1f2933;
+}
+
+.tag-admin {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.tag-supervisor {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.tag-empleado {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.empty-state .empty-icon {
+  width: 60px;
+  height: 60px;
+  fill: #d1d5db;
+  margin-bottom: 16px;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
 .file-input-wrapper {
   grid-column: 1 / -1;
   margin-top: 8px;
@@ -337,6 +430,48 @@ body {
 }
 
 .file-upload-btn svg {
+  fill: white;
+}
+
+.image-preview-container {
+  margin-top: 16px;
+  position: relative;
+  display: inline-block;
+}
+
+.image-preview {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+  object-fit: cover;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.remove-image-btn:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+.remove-image-btn svg {
   fill: white;
 }
 

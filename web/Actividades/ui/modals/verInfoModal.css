@@ -161,6 +161,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  position: relative;
 }
 
 .info-label {
@@ -221,6 +222,73 @@
 
 #field-rol option[value="admin"] {
   color: #ef6c73;
+}
+
+/* Reloj Status */
+.reloj-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #f3f4f6;
+  border-radius: 10px;
+  border: 2px solid #e3e5ed;
+  transition: all 0.3s;
+  min-height: 48px;
+}
+
+.reloj-status.connected {
+  background: #dcfce7;
+  border-color: #86efac;
+}
+
+.reloj-status.disconnected {
+  background: #f3f4f6;
+  border-color: #e3e5ed;
+}
+
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #9ca3af;
+  flex-shrink: 0;
+}
+
+.reloj-status.connected .status-indicator {
+  background: #16a34a;
+  animation: pulse 2s infinite;
+}
+
+.reloj-status.disconnected .status-indicator {
+  background: #9ca3af;
+  animation: none;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.4);
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 0 6px rgba(22, 163, 74, 0);
+  }
+}
+
+.status-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  flex: 1;
+}
+
+.reloj-status.connected .status-text {
+  color: #166534;
+}
+
+.reloj-status.disconnected .status-text {
+  color: #6b7280;
 }
 
 /* Credentials Section */
@@ -294,6 +362,14 @@
 .credential-input:not(:read-only):focus {
   outline: none;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.validation-feedback {
+  font-size: 12px;
+  margin-top: 6px;
+  min-height: 18px;
+  font-weight: 600;
+  transition: all 0.2s;
 }
 
 .btn-toggle-visibility {

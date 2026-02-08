@@ -61,6 +61,14 @@ function template() {
             <input id="imagen" name="imagen" type="file" accept="image/*" style="display: none;">
           </div>
           <div id="file-name-display" class="hint"></div>
+          <div id="image-preview-container" class="image-preview-container" style="display: none;">
+            <img id="image-preview" class="image-preview" alt="Preview">
+            <button type="button" class="remove-image-btn" id="remove-image">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
       <div class="actions-row">
@@ -84,10 +92,39 @@ function bind(form) {
   const formFeedback = form.querySelector('#form-feedback');
 
   if (fileInput && fileLabel) {
+    const previewContainer = form.querySelector('#image-preview-container');
+    const previewImg = form.querySelector('#image-preview');
+    const removeBtn = form.querySelector('#remove-image');
+
     fileInput.addEventListener('change', () => {
-      const name = fileInput.files?.[0]?.name;
-      fileLabel.textContent = name ? `📷 ${name}` : '';
+      const file = fileInput.files?.[0];
+      if (file) {
+        fileLabel.textContent = `📷 ${file.name}`;
+        
+        // Mostrar preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (previewImg && previewContainer) {
+            previewImg.src = e.target.result;
+            previewContainer.style.display = 'block';
+          }
+        };
+        reader.readAsDataURL(file);
+      } else {
+        fileLabel.textContent = '';
+        if (previewContainer) previewContainer.style.display = 'none';
+      }
     });
+
+    // Botón para remover imagen
+    if (removeBtn) {
+      removeBtn.addEventListener('click', () => {
+        fileInput.value = '';
+        fileLabel.textContent = '';
+        if (previewContainer) previewContainer.style.display = 'none';
+        if (previewImg) previewImg.src = '';
+      });
+    }
   }
 
   if (pinInput && pinFeedback) {
@@ -277,7 +314,15 @@ async function submitForm(form, submitBtn, formFeedback) {
       // Limpiar feedbacks
       const usernameFeedback = form.querySelector('#username-validation');
       const pinFeedback = form.querySelector('#pin-validation');
-      [usernameFeedback, pinFeedback, formFeedback].forEach((el) => { if (el) el.textContent = ''; });
+      const fileNameDisplay = form.querySelector('#file-name-display');
+      const previewContainer = form.querySelector('#image-preview-container');
+      const previewImg = form.querySelector('#image-preview');
+      
+      [usernameFeedback, pinFeedback, formFeedback, fileNameDisplay].forEach((el) => { if (el) el.textContent = ''; });
+      
+      // Limpiar preview de imagen
+      if (previewContainer) previewContainer.style.display = 'none';
+      if (previewImg) previewImg.src = '';
       
       // Resetear estado
       state.usernameValid = false;
