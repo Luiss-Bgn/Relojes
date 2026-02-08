@@ -340,6 +340,29 @@ class UsuarioManager:
                 "mensaje": f"Error al obtener usuario: {str(e)}"
             }
         
+    def buscar_por_usuario(self, username: str) -> Dict[str, Any]:
+        try:
+            usuario = self.usuario_dao.obtener_por_username(username)
+            
+            if usuario:
+                # logger.info(f"✓ USUARIO OBTENIDO - PIN: {pin}")
+                return {
+                    "status": "success",
+                    "usuario": usuario
+                }
+            else:
+                logger.warning(f"✗ USUARIO NO ENCONTRADO - USERNAME: {username}")
+                return {
+                    "status": "error",
+                    "mensaje": "Usuario no encontrado"
+                }
+        except Exception as e:
+            logger.error(f"✗ ERROR AL OBTENER USUARIO: {str(e)}")
+            return {
+                "status": "error",
+                "mensaje": f"Error al obtener usuario: {str(e)}"
+            }
+        
     def obtener_ids_por_roles(self, roles):
         with self.usuario_dao.db.get_connection() as conn:
             cursor = conn.cursor()

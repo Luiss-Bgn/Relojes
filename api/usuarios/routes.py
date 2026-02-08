@@ -246,3 +246,16 @@ async def buscar_usuario_por_pin(pin: str):
         )
     
     return resultado
+
+@router.get("/usuario/{usuario}", response_model=dict)
+async def buscar_usuario_por_usuario(usuario: str):
+    
+    resultado = usuario_manager.buscar_por_usuario(usuario)
+    
+    if not resultado or resultado.get("status") != "success":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail= resultado.get("mensaje")
+        )
+    
+    return resultado
