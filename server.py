@@ -69,6 +69,8 @@ async def ws_handler(request):
                 else:
                     conexiones.agregar_conexion(uuid_cliente, ws, "web" if es_web else "reloj")
                     
+                conexiones.actualizar_latido(uuid_cliente)
+                    
                 await Manager.AnalizarMensaje(data, uuid_cliente)
 
                 conectados = conexiones.obtener_conexiones()

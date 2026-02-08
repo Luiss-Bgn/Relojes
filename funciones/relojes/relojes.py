@@ -22,7 +22,8 @@ class Relojes():
             "empleado_seleccionado": self._actualizar_reloj,
             "actualizar_tareas": self._actualizar_reloj,
             "completar_tarea": self._completar_tarea,
-            "completar_extra": self._completar_extra
+            "completar_extra": self._completar_extra,
+            "pong": self._ping
         }
 
         self.dias = [
@@ -42,6 +43,9 @@ class Relojes():
             print(f"Error al procesar mensaje en Relojes: {e}")
 
         return
+    
+    async def _ping(self,mensaje,uuid):
+        conexiones.actualizar_latido(uuid)
     
     async def obtenerTareas(self,id_empleado):
         hoy = datetime.now()

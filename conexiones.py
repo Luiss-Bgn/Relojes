@@ -1,3 +1,4 @@
+import time
 
 class Conexiones():
     def __init__(self):
@@ -7,7 +8,8 @@ class Conexiones():
     def agregar_conexion(self, uuid, conexion, tipo):
         self.conexiones_activas[uuid] = {
             "ws": conexion,
-            "tipo": tipo
+            "tipo": tipo,
+            "last_seen": time.time()
         }
         print(f"Conexión agregada. Total conexiones: {len(self.conexiones_activas)}")
 
@@ -54,6 +56,23 @@ class Conexiones():
 
     def obtener_todos_los_uuids(self):
         return list(self.conexiones_activas.keys())
+    
+    def actualizar_latido(self, uuid):
+        if uuid in self.conexiones_activas:
+            self.conexiones_activas[uuid]["last_seen"] = time.time()
+
+    def limpiar_conexiones_muertas(self, timeout=30):
+        ahora = time.time()
+        muertos = []
+
+        for uuid, data in list(self.conexiones_activas.items()):
+            if ahora - data["last_seen"] > timeout:
+                muertos.append(uuid)
+
+        for uuid in muertos:
+            print(f"Conexión expirada: {uuid}")
+            self.eliminar_conexion(uuid)
+
 
     
 conexiones = Conexiones()
