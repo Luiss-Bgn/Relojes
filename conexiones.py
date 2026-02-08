@@ -66,7 +66,7 @@ class Conexiones():
         muertos = []
 
         for uuid, data in list(self.conexiones_activas.items()):
-            if ahora - data["last_seen"] > timeout:
+            if ahora - data["last_seen"] > timeout and data["tipo"] != "web":
                 muertos.append(uuid)
 
         for uuid in muertos:
