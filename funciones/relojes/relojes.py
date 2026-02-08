@@ -138,7 +138,7 @@ class Relojes():
             "source": "tareas",
             "target": "rol",
             "action": "update_tareas",
-            "notification": mensaje['tarea']['disponible_para_rol'],
+            "notification": tarea['registro']['disponible_para_rol'],
             "data": resultado
         })
 
