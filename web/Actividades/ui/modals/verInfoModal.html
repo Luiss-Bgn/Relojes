@@ -41,6 +41,7 @@
         <div class="info-field">
           <label class="info-label">USUARIO:</label>
           <input type="text" class="info-input" id="field-usuario" readonly>
+          <div id="username-validation-feedback" class="validation-feedback"></div>
         </div>
         
         <div class="info-field">
@@ -53,8 +54,11 @@
 
       <div class="info-grid secondary-grid">
         <div class="info-field">
-          <label class="info-label">RELOJ ASIGNADO:</label>
-          <input type="text" class="info-input" id="field-reloj" readonly placeholder="Sin reloj asignado">
+          <label class="info-label">ESTADO DEL RELOJ:</label>
+          <div class="reloj-status" id="reloj-status">
+            <span class="status-indicator"></span>
+            <span class="status-text">Verificando...</span>
+          </div>
         </div>
         
         <div class="info-field">
@@ -73,11 +77,12 @@
         <div class="credential-field">
           <label class="credential-label">PIN:</label>
           <div class="credential-input-wrapper">
-            <input type="password" class="credential-input" id="field-pin" readonly value="****">
+            <input type="password" class="credential-input" id="field-pin" readonly value="****" maxlength="4" pattern="\d{4}" inputmode="numeric">
             <button class="btn-toggle-visibility" data-target="field-pin">
               <span class="eye-icon">👁️</span>
             </button>
           </div>
+          <div id="pin-validation-feedback" class="validation-feedback"></div>
         </div>
         
         <div class="credential-field">

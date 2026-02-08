@@ -114,6 +114,7 @@ class Relojes():
         })
 
     async def _completar_extra(self, mensaje, uuid):
+        print(f"Mensaje para completar extra: {mensaje}")
         tarea_id = mensaje['tarea']['id']
         tarea = self.tareas_manager.obtener_registro(tarea_id)
 
@@ -138,11 +139,9 @@ class Relojes():
             "source": "tareas",
             "target": "rol",
             "action": "update_tareas",
-            "notification": tarea['registro']['disponible_para_rol'],
+            "notification": [tarea['registro']['disponible_para_rol']],
             "data": resultado
         })
-
-        
 
     async def _registrar_reloj_nuevo(self, mensaje, uuid):
         """Maneja el registro de un reloj nuevo"""
@@ -169,7 +168,7 @@ class Relojes():
             "vibrar": True
         }
         conexion = conexiones.obtener_conexion(uuid)
-        print(mensaje)
+        # print(mensaje)
         
         await conexion['ws'].send_json(self.adaptar_para_arduino(mensaje))
 

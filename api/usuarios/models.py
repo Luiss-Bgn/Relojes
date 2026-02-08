@@ -23,6 +23,7 @@ class UsuarioActualizar(BaseModel):
     nombre: Optional[str] = None
     contraseña: Optional[str] = None
     pin: Optional[int] = None
+    username: Optional[str] = None
     rol: Optional[str] = None
     puesto: Optional[str] = None
     imagen: Optional[str] = None

@@ -2,6 +2,15 @@ import { loadModalHTML } from './modalLoader.js';
 import { showToast } from '../toast.js';
 import { createNotificationMessage, NOTIFICATION_TYPES } from '../../services/notificationTypes.js';
 
+const state = {
+  pinTimer: null,
+  pinValid: true,
+  originalPin: null,
+  usernameTimer: null,
+  usernameValid: true,
+  originalUsername: null
+};
+
 const ROLE_LABELS = {
   empleado: '👤 Empleado',
   supervisor: '👔 Supervisor',
@@ -45,6 +54,8 @@ export const showVerInfoModal = async (emp) => {
   // Cerrar al hacer clic fuera
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) {
+      clearTimeout(state.pinTimer);
+      clearTimeout(state.usernameTimer);
       overlay.remove();
     }
   });
@@ -76,8 +87,10 @@ function fillEmployeeInfo(emp, modal, userRole) {
   rolSelect.style.backgroundColor = roleColors[displayedRole] || roleColors['empleado'];
   rolSelect.style.fontWeight = '600';
   
-  modal.querySelector('#field-reloj').value = emp.reloj_id || '';
   modal.querySelector('#field-id').value = emp.id || '';
+  
+  // Verificar estado de conexión del reloj
+  checkRelojConnection(emp.id, modal);
 
   // Foto del empleado (si existe)
   const photo = modal.querySelector('#employee-photo');
@@ -122,9 +135,21 @@ function setupVerInfoEventListeners(emp, modal, overlay, userRole) {
   const actionButtons = modal.querySelector('#action-buttons');
   const photoWrapper = modal.querySelector('.photo-wrapper');
   const photoInput = modal.querySelector('#photo-input');
+  const pinInput = modal.querySelector('#field-pin');
+  const pinFeedback = modal.querySelector('#pin-validation-feedback');
+  const usernameInput = modal.querySelector('#field-usuario');
+  const usernameFeedback = modal.querySelector('#username-validation-feedback');
+  
+  // Guardar PIN y username originales
+  state.originalPin = emp.pin;
+  state.originalUsername = emp.usuario;
 
   // Cerrar modal
-  closeBtn.addEventListener('click', () => overlay.remove());
+  closeBtn.addEventListener('click', () => {
+    clearTimeout(state.pinTimer);
+    clearTimeout(state.usernameTimer);
+    overlay.remove();
+  });
 
   // Toggle edit mode
   editBtn.addEventListener('click', () => {
@@ -134,6 +159,26 @@ function setupVerInfoEventListeners(emp, modal, overlay, userRole) {
     if (isEditing) {
       // Guardar datos originales
       originalData = captureCurrentData(modal);
+      
+      // Configurar validación de PIN si está visible
+      if (pinInput && userRole === 'admin') {
+        pinInput.addEventListener('input', () => handlePinChange(pinInput, pinFeedback, emp.id));
+      }
+      
+      // Configurar validación de username
+      if (usernameInput && usernameFeedback) {
+        usernameInput.addEventListener('input', () => handleUsernameChange(usernameInput, usernameFeedback, emp.id));
+      }
+    } else {
+      // Limpiar feedback al salir del modo edición
+      if (pinFeedback) {
+        pinFeedback.textContent = '';
+        pinFeedback.style.color = '';
+      }
+      if (usernameFeedback) {
+        usernameFeedback.textContent = '';
+        usernameFeedback.style.color = '';
+      }
     }
   });
 
@@ -142,6 +187,18 @@ function setupVerInfoEventListeners(emp, modal, overlay, userRole) {
     isEditing = false;
     toggleEditMode(false, modal, editBtn, actionButtons, photoWrapper);
     restoreOriginalData(originalData, modal);
+    
+    // Limpiar feedback de validación
+    if (pinFeedback) {
+      pinFeedback.textContent = '';
+      pinFeedback.style.color = '';
+    }
+    if (usernameFeedback) {
+      usernameFeedback.textContent = '';
+      usernameFeedback.style.color = '';
+    }
+    state.pinValid = true;
+    state.usernameValid = true;
   });
 
   // Guardar cambios
@@ -191,8 +248,7 @@ function toggleEditMode(editing, modal, editBtn, actionButtons, photoWrapper) {
   const fields = [
     modal.querySelector('#field-nombre'),
     modal.querySelector('#field-puesto'),
-    modal.querySelector('#field-usuario'),
-    modal.querySelector('#field-reloj')
+    modal.querySelector('#field-usuario')
   ];
 
   const selectFields = [
@@ -251,7 +307,6 @@ function captureCurrentData(modal) {
     puesto: modal.querySelector('#field-puesto').value,
     usuario: modal.querySelector('#field-usuario').value,
     rol: modal.querySelector('#field-rol').value,
-    reloj: modal.querySelector('#field-reloj').value,
     pin: modal.querySelector('#field-pin')?.value,
     password: modal.querySelector('#field-password')?.value,
     photo: modal.querySelector('#employee-photo').src
@@ -263,26 +318,50 @@ function restoreOriginalData(data, modal) {
   modal.querySelector('#field-puesto').value = data.puesto;
   modal.querySelector('#field-usuario').value = data.usuario;
   modal.querySelector('#field-rol').value = data.rol;
-  modal.querySelector('#field-reloj').value = data.reloj;
   
   if (data.pin) modal.querySelector('#field-pin').value = data.pin;
   if (data.password) modal.querySelector('#field-password').value = data.password;
   
   modal.querySelector('#employee-photo').src = data.photo;
+  
+  // Limpiar feedback de validación
+  const pinFeedback = modal.querySelector('#pin-validation-feedback');
+  const usernameFeedback = modal.querySelector('#username-validation-feedback');
+  if (pinFeedback) {
+    pinFeedback.textContent = '';
+    pinFeedback.style.color = '';
+  }
+  if (usernameFeedback) {
+    usernameFeedback.textContent = '';
+    usernameFeedback.style.color = '';
+  }
+  state.pinValid = true;
+  state.usernameValid = true;
 }
 
 async function saveEmployeeChanges(emp, modal, overlay) {
   const updatedData = {
     nombre: modal.querySelector('#field-nombre').value,
     puesto: modal.querySelector('#field-puesto').value,
-    usuario: modal.querySelector('#field-usuario').value,
-    rol: modal.querySelector('#field-rol').value,
-    reloj_id: modal.querySelector('#field-reloj').value || null
+    username: modal.querySelector('#field-usuario').value,
+    rol: modal.querySelector('#field-rol').value
   };
 
   // Validación básica
-  if (!updatedData.nombre || !updatedData.usuario) {
+  if (!updatedData.nombre || !updatedData.username) {
     showToast('Nombre y usuario son campos obligatorios', 'warning');
+    return;
+  }
+  
+  // Validar PIN si fue modificado
+  if (!state.pinValid) {
+    showToast('El PIN ingresado ya está registrado', 'error');
+    return;
+  }
+  
+  // Validar username si fue modificado
+  if (!state.usernameValid) {
+    showToast('El nombre de usuario ya está registrado', 'error');
     return;
   }
 
@@ -290,13 +369,21 @@ async function saveEmployeeChanges(emp, modal, overlay) {
   const credentialsSection = modal.querySelector('#credentials-section');
   if (credentialsSection.style.display !== 'none') {
     const pin = modal.querySelector('#field-pin').value;
-    const password = modal.querySelector('#field-password').value;
+    const contraseña = modal.querySelector('#field-password').value;
     
-    if (pin && pin !== '****') updatedData.pin = pin;
-    if (password && password !== '************') updatedData.password = password;
+    // Solo incluir PIN si cambió y es válido
+    if (pin && pin !== '****' && pin !== state.originalPin) {
+      if (!/^\d{4}$/.test(pin)) {
+        showToast('El PIN debe tener 4 dígitos numéricos', 'error');
+        return;
+      }
+      updatedData.pin = pin;
+    }
+    if (contraseña && contraseña !== '************') updatedData.contraseña = contraseña;
   }
 
   try {
+    console.log('Enviando datos actualizados al servidor:', updatedData);
     const response = await fetch(`http://localhost:8001/usuarios/${emp.id}`, {
       method: 'PUT',
       headers: {
@@ -309,7 +396,7 @@ async function saveEmployeeChanges(emp, modal, overlay) {
 
     if (response.ok) {
       showToast('Información actualizada exitosamente', 'success');
-      // Opcional: recargar la página o actualizar el panel
+      // Orecargar la página 
       setTimeout(() => {
         window.location.reload();
       }, 1000);
@@ -324,5 +411,167 @@ async function saveEmployeeChanges(emp, modal, overlay) {
   } catch (error) {
     console.error('Error:', error);
     showToast('Error al actualizar la información. Verifica tu conexión.', 'error');
+  }
+}
+
+function handlePinChange(pinInput, pinFeedback, empleadoId) {
+  clearTimeout(state.pinTimer);
+  let pin = pinInput.value.trim().replace(/\D/g, '');
+  pinInput.value = pin;
+
+  if (!pin || pin === '****') {
+    pinFeedback.textContent = '';
+    pinFeedback.style.color = '';
+    state.pinValid = true;
+    return;
+  }
+
+  if (pin.length !== 4) {
+    pinFeedback.textContent = `❌ El PIN debe tener 4 dígitos (${pin.length}/4)`;
+    pinFeedback.style.color = '#e11d48';
+    state.pinValid = false;
+    return;
+  }
+
+  // Si el PIN es el mismo que el original, no validar
+  if (pin === state.originalPin) {
+    pinFeedback.textContent = '';
+    pinFeedback.style.color = '';
+    state.pinValid = true;
+    return;
+  }
+
+  pinFeedback.textContent = '⏳ Verificando PIN...';
+  pinFeedback.style.color = '#6b7280';
+  state.pinValid = false;
+
+  state.pinTimer = setTimeout(async () => {
+    try {
+      const response = await fetch(`http://localhost:8001/usuarios/pin/${pin}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.status === 'success') {
+          // El PIN existe, verificar si es del mismo empleado
+          if (data.usuario && data.usuario.id === empleadoId) {
+            // Es el mismo empleado, PIN válido
+            pinFeedback.textContent = '';
+            pinFeedback.style.color = '';
+            state.pinValid = true;
+          } else {
+            // Es otro empleado
+            pinFeedback.textContent = '❌ Este PIN ya está registrado';
+            pinFeedback.style.color = '#e11d48';
+            state.pinValid = false;
+          }
+        } else {
+          // PIN disponible
+          pinFeedback.textContent = '✅ PIN disponible';
+          pinFeedback.style.color = '#16a34a';
+          state.pinValid = true;
+        }
+      }
+    } catch (err) {
+      console.error('Error al verificar PIN:', err);
+      pinFeedback.textContent = '⚠️ Error al verificar PIN';
+      pinFeedback.style.color = '#e11d48';
+      state.pinValid = false;
+    }
+  }, 500);
+}
+
+function handleUsernameChange(usernameInput, usernameFeedback, empleadoId) {
+  clearTimeout(state.usernameTimer);
+  const username = usernameInput.value.trim();
+
+  if (!username) {
+    usernameFeedback.textContent = '';
+    usernameFeedback.style.color = '';
+    state.usernameValid = true;
+    return;
+  }
+
+  // Si el username es el mismo que el original, no validar
+  if (username === state.originalUsername) {
+    usernameFeedback.textContent = '';
+    usernameFeedback.style.color = '';
+    state.usernameValid = true;
+    return;
+  }
+
+  usernameFeedback.textContent = '⏳ Verificando disponibilidad...';
+  usernameFeedback.style.color = '#6b7280';
+  state.usernameValid = false;
+
+  state.usernameTimer = setTimeout(async () => {
+    try {
+      const response = await fetch(`http://localhost:8001/usuarios/usuario/${username}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.status === 'success') {
+          // El username existe, verificar si es del mismo empleado
+          if (data.usuario && data.usuario.id === empleadoId) {
+            // Es el mismo empleado, username válido
+            usernameFeedback.textContent = '';
+            usernameFeedback.style.color = '';
+            state.usernameValid = true;
+          } else {
+            // Es otro empleado
+            usernameFeedback.textContent = '❌ Nombre de usuario ya registrado';
+            usernameFeedback.style.color = '#e11d48';
+            state.usernameValid = false;
+          }
+        } else {
+          // Username disponible
+          usernameFeedback.textContent = '✅ Nombre de usuario disponible';
+          usernameFeedback.style.color = '#16a34a';
+          state.usernameValid = true;
+        }
+      }
+    } catch (err) {
+      console.error('Error al verificar username:', err);
+      usernameFeedback.textContent = '⚠️ Error al verificar disponibilidad';
+      usernameFeedback.style.color = '#e11d48';
+      state.usernameValid = false;
+    }
+  }, 500);
+}
+
+async function checkRelojConnection(empleadoId, modal) {
+  const statusContainer = modal.querySelector('#reloj-status');
+  const statusIndicator = statusContainer?.querySelector('.status-indicator');
+  const statusText = statusContainer?.querySelector('.status-text');
+  
+  if (!statusContainer) return;
+  
+  try {
+    const response = await fetch('http://localhost:8001/relojes-conectados');
+    if (!response.ok) throw new Error('Error al cargar relojes');
+    
+    const relojes = await response.json();
+    console.log('Relojes conectados:', relojes);
+    console.log('Empleado ID:', empleadoId);
+    // Buscar si hay un reloj conectado para este empleado
+    const relojConectado = Array.isArray(relojes) 
+      ? relojes.find(r => r.empleado_id === empleadoId)
+      : null;
+    
+    if (relojConectado) {
+      // Reloj conectado
+      statusContainer.classList.add('connected');
+      statusContainer.classList.remove('disconnected');
+      if (statusIndicator) statusIndicator.style.background = '#16a34a';
+      if (statusText) statusText.textContent = 'Conectado';
+    } else {
+      // Reloj no conectado
+      statusContainer.classList.add('disconnected');
+      statusContainer.classList.remove('connected');
+      if (statusIndicator) statusIndicator.style.background = '#9ca3af';
+      if (statusText) statusText.textContent = 'Desconectado';
+    }
+  } catch (error) {
+    console.error('Error al verificar conexión del reloj:', error);
+    statusContainer.classList.add('disconnected');
+    if (statusIndicator) statusIndicator.style.background = '#ef4444';
+    if (statusText) statusText.textContent = 'Error';
   }
 }
