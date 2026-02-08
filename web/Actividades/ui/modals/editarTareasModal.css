@@ -144,6 +144,23 @@
   width: 140px;
 }
 
+.task-field-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid #e3e5ed;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.task-field-select:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
 /* Task Actions */
 .task-actions {
   display: flex;

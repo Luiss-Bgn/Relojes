@@ -59,7 +59,7 @@ export const showCrearTareaModal = async (emp) => {
     }
     
     const hora_ini = formData.get('hora_ini');
-    const hora_fin = formData.get('hora_fin') || null;
+    const hora_fin = formData.get('hora_fin');
     
     // Validación 1: hora final no puede ser igual o menor a hora inicio
     if (hora_fin && hora_ini && hora_fin <= hora_ini) {
