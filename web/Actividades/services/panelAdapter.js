@@ -112,6 +112,7 @@ export const adaptPanel = (payload, preferredDate) => {
     rol: p.rol,
     pin: p.pin,
     usuario: p.username,
+    contraseña: p.contraseña
   }));
 
   const rows = [];
