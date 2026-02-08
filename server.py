@@ -51,6 +51,7 @@ async def ws_handler(request):
 
     if es_web:
         uuid_cliente = f"web_{uuid.uuid4().hex[:8]}"
+        conexiones.agregar_conexion(uuid_cliente, ws, "web")
     else:
         uuid_cliente = None 
 
@@ -62,11 +63,11 @@ async def ws_handler(request):
                     uuid_cliente = data.get("uuid")
                 
                 # Si es la primera vez que recibimos el UUID, registrar la conexión
-                if uuid_cliente:
-                    conexiones.agregar_conexion(uuid_cliente, ws, "web" if es_web else "reloj")
-                else:
+                if not uuid_cliente:
                     data['ip'] = request.remote
                     conexiones.agregar_registro(request.remote, ws)
+                else:
+                    conexiones.agregar_conexion(uuid_cliente, ws, "web" if es_web else "reloj")
                     
                 await Manager.AnalizarMensaje(data, uuid_cliente)
 
@@ -75,8 +76,7 @@ async def ws_handler(request):
     finally:
         print("Cliente desconectado")
         # Eliminar con el UUID correcto
-        if uuid_cliente:
-            conexiones.eliminar_conexion(uuid_cliente)
+        conexiones.eliminar_conexion(uuid_cliente)
 
     return ws
 

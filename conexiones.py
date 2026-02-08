@@ -5,9 +5,6 @@ class Conexiones():
         self.conexiones_a_registrar = {}
 
     def agregar_conexion(self, uuid, conexion, tipo):
-        if uuid in self.conexiones_activas:
-            print("La conexión ya existe.")
-            return
         self.conexiones_activas[uuid] = {
             "ws": conexion,
             "tipo": tipo
