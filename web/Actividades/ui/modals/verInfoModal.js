@@ -57,6 +57,7 @@ function fillEmployeeInfo(emp, modal, userRole) {
   modal.querySelector('#field-puesto').value = emp.puesto || '';
   modal.querySelector('#field-usuario').value = emp.usuario || '';  // Cambio: username en lugar de usuario
   modal.querySelector('#field-pin').value = emp.pin || '';  // Cambio: username en lugar de usuario
+  modal.querySelector('#field-password').value = emp.contraseña || '';  // Cambio: username en lugar de usuario
   
   // Campo de rol con estilos visuales
   const rolSelect = modal.querySelector('#field-rol');
@@ -91,7 +92,7 @@ function fillEmployeeInfo(emp, modal, userRole) {
     
     // Cargar credenciales del JSON
     modal.querySelector('#field-pin').value = emp.pin || '****';
-    modal.querySelector('#field-password').value = emp.password || '************';
+    modal.querySelector('#field-password').value = emp.contraseña || '************';
   }
 }
 
