@@ -81,7 +81,7 @@ class UsuarioDAO:
         campos = []
         valores = []
         
-        campos_permitidos = ['nombre', 'contraseña', 'pin', 'rol', 'puesto', 'imagen']
+        campos_permitidos = ['nombre', 'contraseña', 'username', 'pin', 'rol', 'puesto', 'imagen']
         
         for campo, valor in kwargs.items():
             if campo in campos_permitidos:
