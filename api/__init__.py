@@ -204,7 +204,7 @@ async def relojes_conectados():
             relojes.append({
                 "uuid": uuid,
                 "empleado_id": r.get("empleado_id"),
-                "nombre": r.get("nombre_empleado"),
+                "nombre": r.get("nombre"),
                 "rol": r.get("rol")
             })
 
