@@ -136,9 +136,9 @@ class Relojes():
 
         await self.eventManager.emit("tareas_actualizadas", {
             "source": "tareas",
-            "target": "web",
+            "target": "rol",
             "action": "update_tareas",
-            "notification": [],
+            "notification": mensaje['tarea']['disponible_para_rol'],
             "data": resultado
         })
 
