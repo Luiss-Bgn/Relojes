@@ -72,7 +72,7 @@ class UsuarioDAO:
         """Obtiene todos los usuarios"""
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute('SELECT id, nombre, username, pin, rol, puesto, imagen FROM usuarios')
+            cursor.execute('SELECT id, nombre, username, contraseña, pin, rol, puesto, imagen FROM usuarios')
             rows = cursor.fetchall()
             return [dict(row) for row in rows]
     

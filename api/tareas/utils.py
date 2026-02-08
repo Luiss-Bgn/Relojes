@@ -16,12 +16,13 @@ async def construir_panel():
         empleados = usuario_manager.listar_usuarios()
 
         lista_empleados = {}
-
+    
         for emp in empleados['usuarios']:
             lista_empleados[emp['id']] = {
                 "id": emp['id'],
                 "nombre": emp['nombre'],
                 "username": emp['username'],
+                "contraseña": emp['contraseña'],
                 "pin": emp['pin'],
                 "rol": emp['rol'],
                 "puesto": emp['puesto'],
