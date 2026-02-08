@@ -172,9 +172,10 @@ class Relojes():
     async def _actualizar_reloj(self, mensaje, uuid):
         usuario_elegido = self.usuario_manager.obtener_usuario(mensaje['id'])
         rol = usuario_elegido['usuario']['rol']
+        nombre = usuario_elegido['usuario']['nombre']
 
         if mensaje['comando'] == "empleado_seleccionado":
-            resultado = self.reloj_manager.iniciar_sesion_reloj(uuid, mensaje['id'], rol)
+            resultado = self.reloj_manager.iniciar_sesion_reloj(uuid, mensaje['id'], rol, nombre)
 
         lista_tareas = await self.obtenerTareas(mensaje['id'])
         lista_extras = await self.obtenerExtras(rol, mensaje['id'])

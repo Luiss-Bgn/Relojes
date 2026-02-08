@@ -45,6 +45,7 @@ class DatabaseManager:
                 uuid TEXT UNIQUE NOT NULL,
                 empleado_id INTEGER,
                 rol TEXT,
+                nombre TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')

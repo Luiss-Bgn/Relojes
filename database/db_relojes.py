@@ -69,7 +69,7 @@ class RelojDAO:
         valores = []
         
         for campo, valor in kwargs.items():
-            if campo in ['empleado_id', 'rol']:
+            if campo in ['empleado_id', 'rol', 'nombre']:
                 campos.append(f'{campo} = ?')
                 valores.append(valor)
         
@@ -122,7 +122,7 @@ class RelojManager:
             "mensaje": "UUID asignado permanentemente al reloj"
         }
     
-    def iniciar_sesion_reloj(self, uuid_reloj: str, empleado_id: int, rol: str) -> Dict[str, Any]:
+    def iniciar_sesion_reloj(self, uuid_reloj: str, empleado_id: int, rol: str, nombre:str) -> Dict[str, Any]:
 
         reloj = self.reloj_dao.obtener_por_uuid(uuid_reloj)
 
@@ -135,7 +135,8 @@ class RelojManager:
         actualizado = self.reloj_dao.actualizar(
             reloj["id"],
             empleado_id=empleado_id,
-            rol=rol
+            rol=rol,
+            nombre = nombre
         )
 
         if not actualizado:

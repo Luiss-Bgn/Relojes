@@ -186,6 +186,31 @@ async def obtener_tareas_vencidas(quincena_actual: bool = True):
     
     return tareas_vencidas
 
+@app.get("/relojes-conectados", tags=["Relojes"])
+async def relojes_conectados():
+    from conexiones import conexiones
+    from database.database import DatabaseManager
+    from database.db_relojes import RelojManager
+
+    db = DatabaseManager("relojes.db")
+    reloj_manager = RelojManager(db)
+
+    uuids = conexiones.obtener_uuids_por_tipo("reloj")
+
+    relojes = []
+    for uuid in uuids:
+        r = reloj_manager.reloj_dao.obtener_por_uuid(uuid)
+        if r:
+            relojes.append({
+                "uuid": uuid,
+                "empleado_id": r.get("empleado_id"),
+                "nombre": r.get("nombre_empleado"),
+                "rol": r.get("rol")
+            })
+
+    return relojes
+
+
 
 # ==================== RUTAS DE VISTAS HTML ====================
 
