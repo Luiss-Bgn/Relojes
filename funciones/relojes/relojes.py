@@ -114,7 +114,7 @@ class Relojes():
         })
 
     async def _completar_extra(self, mensaje, uuid):
-        print(f"Mensaje para completar extra: {mensaje}")
+        # print(f"Mensaje para completar extra: {mensaje}")
         tarea_id = mensaje['tarea']['id']
         tarea = self.tareas_manager.obtener_registro(tarea_id)
 

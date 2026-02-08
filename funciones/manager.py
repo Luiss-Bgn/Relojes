@@ -160,22 +160,19 @@ class Manager():
     # Envio de mensaje
     async def _enviar_notificacion(self, destinatarios, mensaje):
         lista_mensajes = []
-        try:
-            # relojes específicos
-            for uuid in destinatarios:
-                ws = conexiones.obtener_conexion(uuid)
-                if ws:
-                    lista_mensajes.append(ws['ws'].send_json(mensaje))
+        
+        # relojes específicos
+        for uuid in destinatarios:
+            ws = conexiones.obtener_conexion(uuid)
+            if ws:
+                lista_mensajes.append(ws['ws'].send_json(mensaje))
 
-            # web siempre recibe
-            for ws in conexiones.obtener_web():
-                lista_mensajes.append(ws.send_json(mensaje))
+        # web siempre recibe
+        for ws in conexiones.obtener_web():
+            lista_mensajes.append(ws.send_json(mensaje))
 
-            # print(f"mensajes enviados: {lista_mensajes}")
-            await asyncio.gather(*lista_mensajes,return_exceptions=True)
-
-        except Exception as e:
-            print(f"Error enviando notificación consolidada: {e}")
+        # print(f"mensajes enviados: {lista_mensajes}")
+        await asyncio.gather(*lista_mensajes,return_exceptions=True)
 
 
     async def Actualizar(self):
