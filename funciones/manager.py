@@ -179,7 +179,7 @@ class Manager():
 
 
     async def Actualizar(self):
-        print("Actualizando funciones...")
+        # print("Actualizando funciones...")
         for funcion in self.funciones.values():
             if hasattr(funcion, 'Actualizar'):
                 await funcion.Actualizar()
