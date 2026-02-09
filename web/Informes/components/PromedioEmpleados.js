@@ -207,6 +207,8 @@ async function calcularDatosProgreso() {
     if (response.ok) {
       const panelData = await response.json();
       estadisticasDeHoy = panelData.empleados || [];
+      console.log("estadisticas de hoy",estadisticasDeHoy)
+      console.log(panelData)
       console.log(`🔥 [GraficaPromedio] Estadísticas en vivo cargadas para ${estadisticasDeHoy.length} empleados`);
     }
   } catch (error) {
@@ -287,6 +289,7 @@ async function calcularDatosProgreso() {
       
       // Procesar puntos (IGUAL QUE LA TABLA)
       tareasDelDia.forEach(tarea => {
+        console.log("tareas",tareasDelDia)
         const puntos = parseInt(tarea.puntaje) || 0;
         if (puntos === 0) return;
         

@@ -1046,7 +1046,7 @@ export async function mostrarResumenAgregado() {
       if (panelData?.status === 'success' && Array.isArray(panelData.panel)) {
         tareasTiempoRealPorEmpleado = {};
         for (const emp of panelData.panel) {
-          const tareasHoy = (emp.tareas_asignadas?.[diaHoyNombreResumen] || []).filter(t => t.estatus !== 'sin_iniciar');
+          const tareasHoy = (emp.tareas_asignadas?.[diaHoyNombreResumen] || []).filter(t => t.estatus !== ('sin_iniciar','futura'));
           if (tareasHoy.length) {
             tareasTiempoRealPorEmpleado[emp.id] = tareasHoy;
           }
