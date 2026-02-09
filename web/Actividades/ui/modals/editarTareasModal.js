@@ -4,6 +4,11 @@ import { createNotificationMessage, NOTIFICATION_TYPES } from '../../services/no
 import { checkTimeConflict, getSelectedDayKey } from './revisarConflictoHorario.js';
 
 export const showEditarTareasModal = async (emp) => {
+  // Obtener rol del usuario actual
+  const loggedUser = localStorage.getItem("loggedUser");
+  const user = loggedUser ? JSON.parse(loggedUser) : null;
+  const userRole = user?.role ? user.role.toLowerCase() : "empleado";
+
   // Crear overlay
   const overlay = document.createElement('div');
   overlay.id = 'editar-tareas-overlay';
@@ -12,6 +17,7 @@ export const showEditarTareasModal = async (emp) => {
   // Crear modal
   const modal = document.createElement('div');
   modal.className = 'editar-tareas-modal';
+  modal.dataset.userRole = userRole; // Guardar rol en el modal
 
   // Cargar HTML del modal
   const modalHTML = await loadModalHTML('/web/Actividades/ui/modals/editarTareasModal.html');
@@ -120,6 +126,33 @@ function createTaskCard(tarea, day, emp) {
   card.className = 'task-card';
   card.dataset.tareaId = tarea.id;
 
+  // Obtener rol del usuario desde el modal
+  const modal = document.querySelector('.editar-tareas-modal');
+  const userRole = modal?.dataset.userRole || 'empleado';
+  
+  // Determinar opciones de rol según el usuario
+  let roleOptions = '';
+  const disponibleRol = tarea.disponible_para_rol || 'todos';
+  
+  if (userRole === 'admin') {
+    roleOptions = `
+      <option value="todos" ${disponibleRol === 'todos' ? 'selected' : ''}>Todos</option>
+      <option value="empleado" ${disponibleRol === 'empleado' ? 'selected' : ''}>Empleado</option>
+      <option value="supervisor" ${disponibleRol === 'supervisor' ? 'selected' : ''}>Supervisor</option>
+      <option value="admin" ${disponibleRol === 'admin' ? 'selected' : ''}>Admin</option>
+    `;
+  } else if (userRole === 'supervisor') {
+    roleOptions = `
+      <option value="todos" ${disponibleRol === 'todos' ? 'selected' : ''}>Todos</option>
+      <option value="empleado" ${disponibleRol === 'empleado' ? 'selected' : ''}>Empleado</option>
+      <option value="supervisor" ${disponibleRol === 'supervisor' ? 'selected' : ''}>Supervisor</option>
+    `;
+  } else {
+    roleOptions = `
+      <option value="empleado" ${disponibleRol === 'empleado' ? 'selected' : ''}>Empleado</option>
+    `;
+  }
+
   card.innerHTML = `
     <div class="task-field">
       <label class="task-field-label">Nombre</label>
@@ -146,6 +179,13 @@ function createTaskCard(tarea, day, emp) {
     <div class="task-field">
       <label class="task-field-label">Puntos</label>
       <input type="number" class="task-field-input" name="puntos" value="${tarea.puntos || 1}" min="1" max="10" />
+    </div>
+    
+    <div class="task-field">
+      <label class="task-field-label">Disponible para</label>
+      <select class="task-field-select" name="disponible_para_rol">
+        ${roleOptions}
+      </select>
     </div>
     
     <div class="task-actions">
@@ -181,6 +221,7 @@ async function saveTaskChanges(card, tarea, day) {
   const hora_ini = card.querySelector('input[name="hora_ini"]').value;
   const hora_fin = card.querySelector('input[name="hora_fin"]').value;
   const puntos = parseInt(card.querySelector('input[name="puntos"]').value);
+  const disponible_para_rol = card.querySelector('select[name="disponible_para_rol"]')?.value || 'todos';
 
   if (!nombre || !descripcion || !hora_ini || !puntos) {
     showToast('Por favor completa todos los campos obligatorios', 'warning');
@@ -209,7 +250,8 @@ async function saveTaskChanges(card, tarea, day) {
     descripcion,
     hora_ini,
     hora_fin: hora_fin || null,
-    puntos
+    puntos,
+    disponible_para_rol
   };
 
   try {

@@ -208,7 +208,8 @@ export async function mostrarTareasEmpleado(empleado) {
         return normalizeDay(t.dia) === dayName;
       });
     // console.log("fue hoy",esHoy && tareasTiempoRealHoy)
-    // console.log("es hoy?", esHoy, "tareasDelDia:", tareasDelDia);
+    // 
+    console.log("es hoy?", esHoy, "tareasDelDia:", tareasDelDia);
     let puntosAsignados = 0;
     let puntosRealizados = 0;
     let puntosPerdidos = 0;
@@ -219,7 +220,7 @@ export async function mostrarTareasEmpleado(empleado) {
 
       // Puntos asignados: SIEMPRE se muestran (son las tareas que debe hacer)
       // Estado extra no se cuenta como asignado
-      if (tarea.estatus !== 'extra') {
+      if (tarea.estatus !== "sin_iniciar") {
         puntosAsignados += puntos;
       }
 
@@ -233,10 +234,10 @@ export async function mostrarTareasEmpleado(empleado) {
         puntosRealizados += puntos;
       }
       // 🔥 PUNTOS NO GANADOS: Estatus en_progreso y vencida
-      if (tarea.estatus === 'en_progreso' || tarea.estatus === 'vencida') {
+      if ((tarea.estatus === 'en_progreso' || tarea.estatus === 'vencida') && tarea.id_dueño === empleado.id) {
         puntosPerdidos += puntos;
       }
-      if (tarea.estatus === 'extra') {
+      if (tarea.estatus === 'extra' && tarea.id_dueño !== empleado.id) {
         puntosExtras += puntos;
       }
     });
