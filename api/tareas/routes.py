@@ -57,6 +57,110 @@ async def listar_tareas():
         )
     return resultado
 
+@router.get("/estadisticas", response_model=dict)
+async def estadisticas_hoy_por_empleado():
+    from database.database import DatabaseManager
+    from database.db_usuarios import UsuarioManager
+    from database.db_tareas import TareasManager
+    from datetime import datetime
+
+    db = DatabaseManager("relojes.db")
+    usuario_manager = UsuarioManager(db)
+    tareas_manager = TareasManager(db)
+
+    # Día de la semana actual (en minúsculas como lo usas en tus consultas)
+    dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+    dia_hoy = dias[datetime.now().weekday()]
+
+    empleados = [
+        u for u in usuario_manager.listar_usuarios()["usuarios"]
+        if str(u.get("rol", "")).lower() != "admin"
+    ]
+
+    resultado = []
+
+    for emp in empleados:
+        emp_id = emp["id"]
+
+        puntos_asignados = 0
+        puntos_ganados = 0          
+        puntos_perdidos = 0         
+        puntos_extras = 0           
+
+        # --- TAREAS DEL EMPLEADO (como dueño) ---
+        tareas_propias_hoy = tareas_manager.listar_por_usuario_y_fecha(emp_id, dia_hoy)["registros"]
+        # print(tareas_propias_hoy)
+
+        for tarea in tareas_propias_hoy:
+            estatus = str(tarea.get("estatus", "")).lower()
+            puntos = tarea.get("puntos", 0) or 0
+            completada_por = tarea.get("completadaPor", None)
+
+            # Ignorar estados que no cuentan
+            if estatus in ["futura", "sin_iniciar"]:
+                continue
+
+            # Asignadas: en_progreso, completada, extra, vencidas
+            if estatus in ["en_progreso", "completada", "vencida"]:
+                puntos_asignados += puntos
+
+            # Ganadas: solo completadas propias
+            if estatus == "completada":
+                puntos_ganados += puntos
+
+            # Perdidas:
+            if estatus in ["en_progreso", "vencida"]:
+                puntos_perdidos += puntos
+
+            # Extras
+            if estatus == "extra":
+                if tarea.get("id_dueño") == emp_id:
+                    puntos_asignados += puntos
+                    puntos_perdidos += puntos
+                elif completada_por == emp_id:
+                    puntos_extras += tarea.get("puntos", 0) or 0
+
+        # Efectividad (sin extras)
+        efectividad = round((puntos_ganados / puntos_asignados) * 100, 2) if puntos_asignados else 0
+
+        resultado.append({
+            "empleado_id": emp_id,
+            "nombre": emp["nombre"],
+            "puesto": emp["puesto"],
+            "dia": dia_hoy,
+            "puntos_asignados": puntos_asignados,
+            "puntos_obtenidos": puntos_ganados,   # (ganados sin extras)
+            "puntos_extras": puntos_extras,
+            "puntos_perdidos": puntos_perdidos,
+            "efectividad": efectividad
+        })
+
+    # opcional: ranking por efectividad
+    resultado.sort(key=lambda x: x["efectividad"], reverse=True)
+
+    # ===== TOTALES DEL EQUIPO =====
+    totales = {
+        "puntos_asignados": 0,
+        "puntos_obtenidos": 0,
+        "puntos_extras": 0,
+        "puntos_perdidos": 0
+    }
+
+    for emp in resultado:
+        totales["puntos_asignados"] += emp["puntos_asignados"]
+        totales["puntos_obtenidos"] += emp["puntos_obtenidos"]
+        totales["puntos_extras"] += emp["puntos_extras"]
+        totales["puntos_perdidos"] += emp["puntos_perdidos"]
+
+    # Efectividad del equipo (sin contar extras)
+    efectividad_equipo = (
+        round((totales["puntos_obtenidos"] / totales["puntos_asignados"]) * 100, 2)
+        if totales["puntos_asignados"] > 0
+        else 0
+    )
+
+    return {"status": "success","dia": dia_hoy,"equipo": {**totales,"efectividad_equipo": efectividad_equipo},"empleados": resultado}
+
 
 @router.get("/{registro_id}", response_model=dict)
 async def obtener_registro(registro_id: int):
@@ -297,3 +401,6 @@ async def asignar_tareas_empleado(empleado_id: int, datos: dict):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al asignar tareas: {str(e)}"
         )
+
+
+    

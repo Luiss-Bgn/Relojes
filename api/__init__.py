@@ -81,6 +81,7 @@ async def endpoints_info():
                 "actualizar": "PUT /tareas/{id}",
                 "eliminar": "DELETE /tareas/{id}",
                 "panel": "GET /tareas/panel/obtener"
+                "estadisticas: GET /tareas/estadisticas"
             }
         }
     }
