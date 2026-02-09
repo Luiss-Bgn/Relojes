@@ -186,8 +186,9 @@ function calcularDatosQuincenal() {
  * 🔥 CORREGIDO: Calcula según el modo (Quincena o Todo el historial)
  * - Modo Quincena: Solo días de la quincena actual hasta HOY
  * - Modo Todo: Desde FECHA_MINIMA_HISTORIAL hasta HOY
+ * 🔥 NUEVO: Usa estadísticas en vivo para el día actual
  */
-function calcularDatosProgreso() {
+async function calcularDatosProgreso() {
   const modoQuincena = modoActual === 'quincena';
   
   let puntosAsignados = 0;
@@ -198,6 +199,19 @@ function calcularDatosProgreso() {
   const hoy = new Date();
   const hoyDate = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
   hoyDate.setHours(0, 0, 0, 0);
+  
+  // 🔥 Obtener estadísticas en vivo para HOY
+  let estadisticasDeHoy = null;
+  try {
+    const response = await fetch(`http://localhost:8001/tareas/estadisticas`, { cache: 'no-store' });
+    if (response.ok) {
+      const panelData = await response.json();
+      estadisticasDeHoy = panelData.empleados || [];
+      console.log(`🔥 [GraficaPromedio] Estadísticas en vivo cargadas para ${estadisticasDeHoy.length} empleados`);
+    }
+  } catch (error) {
+    console.error('[GraficaPromedio] Error al obtener estadísticas en vivo:', error);
+  }
   
   // 🔥 Determinar fecha de inicio según el modo
   let fechaInicio, fechaFin;
@@ -224,8 +238,20 @@ function calcularDatosProgreso() {
     
     // Para cada empleado (IGUAL QUE LA TABLA)
     for (const empleado of empleadosGlobales) {
-      // 🔥 PRIMERO: Intentar obtener del historial si es día pasado O día actual
-      if ((esPasado || esHoy) && empleado.historial_puntos && empleado.historial_puntos[fechaBuscada]) {
+      // 🔥 PRIMERO: Si es HOY, usar estadísticas en vivo
+      if (esHoy && estadisticasDeHoy) {
+        const statsEmpleado = estadisticasDeHoy.find(e => Number(e.empleado_id) === Number(empleado.id));
+        if (statsEmpleado) {
+          puntosAsignados += statsEmpleado.puntos_asignados || 0;
+          puntosGanados += statsEmpleado.puntos_obtenidos || 0;
+          puntosNoGanados += statsEmpleado.puntos_perdidos || 0;
+          puntosExtras += statsEmpleado.puntos_extras || 0;
+          continue; // Siguiente empleado
+        }
+      }
+      
+      // 🔥 SEGUNDO: Intentar obtener del historial si es día pasado
+      if (esPasado && empleado.historial_puntos && empleado.historial_puntos[fechaBuscada]) {
         const hist = empleado.historial_puntos[fechaBuscada];
         puntosAsignados += hist.asignados || 0;
         puntosGanados += hist.completados || 0;
@@ -234,7 +260,7 @@ function calcularDatosProgreso() {
         continue; // Ya tenemos los datos del historial, siguiente empleado
       }
       
-      // 🔥 Si no hay historial o es día actual, calcular dinámicamente
+      // 🔥 TERCERO: Si no hay historial ni estadísticas, calcular dinámicamente
       const weekdayFull = ['domingo','lunes','martes','miercoles','jueves','viernes','sabado'];
       const dayName = normalizeDay(weekdayFull[currentDate.getDay()]);
       
@@ -283,13 +309,7 @@ function calcularDatosProgreso() {
 
   const pct = puntosAsignados > 0 ? (puntosGanados / puntosAsignados) * 100 : 0;
   
-  // const modoTexto = modoActual === 'quincena' ? 'QUINCENA' : 'TODO HISTORIAL';
-  // const fechaInicioStr = fechaInicio.toLocaleDateString('es-ES');
-  // const fechaFinStr = fechaFin.toLocaleDateString('es-ES');
-  
-  // console.log(`🎯 GRÁFICA (${modoTexto}) - Desde ${fechaInicioStr} hasta ${fechaFinStr}`);
-  // console.log(`   📊 Asignados: ${puntosAsignados} | Ganados: ${puntosGanados} | No Ganados: ${puntosNoGanados} | Extras: ${puntosExtras}`);
-  // console.log(`   📈 Porcentaje: ${pct.toFixed(1)}%`);
+  console.log(`🎯 GRÁFICA - Asignados: ${puntosAsignados} | Ganados: ${puntosGanados} | No Ganados: ${puntosNoGanados} | Extras: ${puntosExtras} | %: ${pct.toFixed(1)}%`);
   
   return {
     puntosAsignados,
@@ -494,11 +514,11 @@ function generarHTMLGraficaMini(datos) {
  * Renderiza la gráfica en el contenedor #grafica-promedio-content
  * Esta gráfica se muestra junto con tareas vencidas
  */
-export function renderizarGraficaPromedio() {
+export async function renderizarGraficaPromedio() {
   const container = document.getElementById('grafica-promedio-content');
   if (!container) return;
 
-  const datosProgreso = calcularDatosProgreso();
+  const datosProgreso = await calcularDatosProgreso();
 
   // console.log('🔄 [GraficaPromedio] Actualizado -', new Date().toLocaleTimeString(), {
   //   progreso: datosProgreso,

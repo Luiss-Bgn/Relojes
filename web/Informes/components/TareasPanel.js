@@ -4,6 +4,13 @@ import { ocultarPanelTareasVencidas, mostrarPanelTareasVencidas } from "./Tareas
 let tareasRealizadasMap = {};
 let empleadosGlobales = []; // 🔥 Nuevo: almacenar todos los empleados para detectar tareas extras
 
+// 🔥 HELPER: Obtener fecha de hoy normalizada (00:00:00.000)
+
+const today = new Date();
+const hoy = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+hoy.setHours(0, 0, 0, 0);
+
+
 export function setTareasRealizadasMap(map) {
   tareasRealizadasMap = map;
 }
@@ -49,35 +56,6 @@ export async function mostrarTareasEmpleado(empleado) {
   const year = today.getFullYear();
   const month = today.getMonth();
   const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-
-  // Calcular días del mes
-  const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
-
-  // Datos en vivo para el día actual (se usa para evitar el historial)
-  const weekdayBackend = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-  const diaHoyNombre = weekdayBackend[today.getDay()];
-  let tareasTiempoRealHoy = null;
-
-  try {
-    const response = await fetch(`http://localhost:8001/tareas/panel/obtener`, { cache: 'no-store' });
-    if (response.ok) {
-      const panelData = await response.json();
-      console.log("🔥 Panel en vivo cargado:", panelData);
-      console.log("empleado a buscar en panel:", empleado);
-      console.log("diaHoyNombre:", diaHoyNombre);
-
-      const empleadoPanel = panelData.panel.find(p => Number(p.id) === Number(empleado.id));
-      if (empleadoPanel?.tareas_asignadas && empleadoPanel.tareas_asignadas[diaHoyNombre]) {
-        const tareasHoy = empleadoPanel.tareas_asignadas[diaHoyNombre] || [];
-        tareasTiempoRealHoy = tareasHoy.filter(t => t.estatus !== 'sin_iniciar');
-      }
-
-    } else {
-      console.warn(`[TareasPanel] No se pudo obtener panel en vivo: ${response.status}`);
-    }
-  } catch (error) {
-    console.error('[TareasPanel] Error al obtener panel en vivo:', error);
-  }
 
   // Actualizar solo la parte derecha del título principal con nombre, fecha y botón volver
   // Crear o actualizar el header derecho al dar clic en un empleado
@@ -166,101 +144,27 @@ export async function mostrarTareasEmpleado(empleado) {
     }
     return null; // No hay historial para esta fecha
   }
+  let estadisticasDeHoy = null;
+  // Datos en vivo para el día actual (se usa para evitar el historial)
+  const weekdayBackend = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+  const diaHoyNombre = weekdayBackend[today.getDay()];
+  try {
+    const response = await fetch(`http://localhost:8001/tareas/estadisticas`, { cache: 'no-store' });
+    if (response.ok) {
+      const panelData = await response.json();
+      console.log("🔥 Panel en vivo cargado:", panelData.empleados);
+      console.log("empleado a buscar en panel:", empleado);
+      console.log("diaHoyNombre:", diaHoyNombre);
 
-  // Función para calcular puntos por FECHA ESPECÍFICA (acepta Date object)
-  function calcularPuntosPorDiaFecha(dayDate) {
-    const fechaBuscada = dayDate.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+      estadisticasDeHoy = panelData.empleados.find(e => Number(e.empleado_id) === Number(empleado.id))
 
-    // Determinar si esta fecha ya pasó o es futura
-    const hoy = new Date();
-    const hoyInicio = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()); // Hora 00:00:00
-    const fechaEvaluada = new Date(dayDate);
-    fechaEvaluada.setHours(0, 0, 0, 0);
-    const esFuturo = fechaEvaluada > hoyInicio;
-    const esHoy = fechaEvaluada.getTime() === hoyInicio.getTime();
-    const esPasado = fechaEvaluada < hoyInicio;
-
-    // console.log(`🔍 [${empleado.nombre}] calcularPuntosPorDiaFecha(${fechaBuscada}): esPasado=${esPasado}, esHoy=${esHoy}, esFuturo=${esFuturo}`);
-
-    // 🔥 USAR HISTORIAL GUARDADO solo para días pasados
-    if (esPasado) {
-      // console.log(`   ✅ Buscando en historial porque esPasado`);
-      const historial = obtenerPuntosHistorial(fechaBuscada);
-      if (historial) {
-        // console.log(`   ✅ ENCONTRADO EN HISTORIAL:`, historial);
-        return historial; // Usar snapshot guardado
-      }
-      // console.log(`   ⚠️ NO encontrado en historial, calculando fallback`);
-      // Si no hay historial, calcular (fallback)
+    } else {
+      console.warn(`[TareasPanel] No se pudo obtener panel en vivo: ${response.status}`);
     }
-
-    // Para día actual o si no hay historial: CALCULAR en tiempo real
-    const weekdayFull = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
-    const dayName = normalizeDay(weekdayFull[dayDate.getDay()]);
-
-    // Usar datos en vivo para el día actual si están disponibles
-    const tareasDelDia = (esHoy && tareasTiempoRealHoy)
-      ? tareasTiempoRealHoy
-      : merged.filter(t => {
-        if (t.fecha) {
-          return t.fecha === fechaBuscada;
-        }
-        return normalizeDay(t.dia) === dayName;
-      });
-    // console.log("fue hoy",esHoy && tareasTiempoRealHoy)
-    // 
-    console.log("es hoy?", esHoy, "tareasDelDia:", tareasDelDia);
-    let puntosAsignados = 0;
-    let puntosRealizados = 0;
-    let puntosPerdidos = 0;
-    let puntosExtras = 0;
-
-    tareasDelDia.forEach(tarea => {
-      const puntos = parseInt(tarea.puntaje ?? tarea.puntos) || 0;
-
-      // Puntos asignados: SIEMPRE se muestran (son las tareas que debe hacer)
-      // Estado extra no se cuenta como asignado
-      if (tarea.estatus !== "sin_iniciar") {
-        puntosAsignados += puntos;
-      }
-
-      // Si es un día FUTURO, NO contar puntos realizados ni perdidos
-      if (esFuturo) {
-        return; // Siguiente tarea
-      }
-
-      // Estados: sin_iniciar, en_progreso, completada, vencida, extra
-      if (tarea.estatus === 'completada') {
-        puntosRealizados += puntos;
-      }
-      // 🔥 PUNTOS NO GANADOS: Estatus en_progreso y vencida
-      if ((tarea.estatus === 'en_progreso' || tarea.estatus === 'vencida') && tarea.id_dueño === empleado.id) {
-        puntosPerdidos += puntos;
-      }
-      if (tarea.estatus === 'extra' && tarea.id_dueño !== empleado.id) {
-        puntosExtras += puntos;
-      }
-    });
-
-    const totalPuntos = puntosRealizados + puntosExtras;
-
-    return {
-      puntosAsignados,
-      puntosRealizados,
-      puntosPerdidos,
-      puntosExtras,
-      totalPuntos,
-      fecha: fechaBuscada,
-      esFuturo, // Útil para debug
-      esHistorial: false
-    };
+  } catch (error) {
+    console.error('[TareasPanel] Error al obtener panel en vivo:', error);
   }
-
-  // Función wrapper para compatibilidad con código existente
-  function calcularPuntosPorDia(dayNumber) {
-    const dayDate = new Date(year, month, dayNumber);
-    return calcularPuntosPorDiaFecha(dayDate);
-  }
+  console.log(`🔍 Estadísticas de hoy para ${empleado.nombre}:`, estadisticasDeHoy);
 
   /** =========================
    *  🎨 CELDAS PINTADAS (unidas)
@@ -461,6 +365,10 @@ export async function mostrarTareasEmpleado(empleado) {
     const weekdayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
     const today = new Date();
 
+    // 🔥 DECLARAR hoyInicio AL INICIO (antes de todos los loops que lo usen)
+    const hoyInicio = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    hoyInicio.setHours(0, 0, 0, 0);
+
     // Función para determinar el color según el porcentaje quincenal
     // 🔥 NUEVO: Escala de colores según porcentajes
     // 0-79: Rojo, 80-89: Amarillo, 90-100: Verde
@@ -482,9 +390,6 @@ export async function mostrarTareasEmpleado(empleado) {
     let tempAcumRealizadosSinExtras = 0; // 🔥 Solo realizados, SIN extras
     let colorColumnaQuincenal = '#d1d5db'; // Color por defecto (gris para sin tareas)
 
-    const hoyInicio = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    hoyInicio.setHours(0, 0, 0, 0);
-
     // 🔥 Determinar hasta qué fecha calcular: si la quincena ya terminó, usar fechaFin; si no, usar hoyInicio
     const fechaLimite = fechaFin <= hoyInicio ? fechaFin : hoyInicio;
 
@@ -492,10 +397,39 @@ export async function mostrarTareasEmpleado(empleado) {
     let sinTareasAsignadas = true;
 
     while (tempDate <= fechaLimite) {
+
       const tempDayDate = new Date(tempDate);
       tempDayDate.setHours(0, 0, 0, 0);
 
-      const puntosDia = calcularPuntosPorDiaFecha(tempDayDate);
+      // 🔥 CORREGIDO: Verificar si tempDayDate es el día de hoy
+      const fechaBuscadaTemp = tempDayDate.toISOString().split('T')[0];
+
+      let puntosDia;
+      if (hoy && estadisticasDeHoy) {
+        // Usar estadísticas en vivo para hoy
+        puntosDia = {
+          puntosAsignados: estadisticasDeHoy.puntos_asignados || 0,
+          puntosRealizados: estadisticasDeHoy.puntos_obtenidos || 0,
+          puntosPerdidos: estadisticasDeHoy.puntos_perdidos || 0,
+          puntosExtras: estadisticasDeHoy.puntos_extras || 0
+        };
+      } else {
+        // Usar historial para días pasados
+        const historial = obtenerPuntosHistorial(fechaBuscadaTemp);
+        if (historial) {
+          puntosDia = historial;
+        } else {
+          // Fallback: día sin datos
+          puntosDia = {
+            puntosAsignados: 0,
+            puntosRealizados: 0,
+            puntosPerdidos: 0,
+            puntosExtras: 0
+          };
+        }
+      }
+
+      console.log(`🔍 [${fechaBuscadaTemp}] puntosDia para color quincenal:`, puntosDia);
       tempAcumAsignados += puntosDia.puntosAsignados;
       tempAcumRealizadosSinExtras += puntosDia.puntosRealizados; // 🔥 Solo realizados
 
@@ -534,16 +468,53 @@ export async function mostrarTareasEmpleado(empleado) {
       const yearOfDay = dayDate.getFullYear();
       const weekday = weekdayNames[dayDate.getDay()];
 
-      // Calcular puntos usando la fecha específica
-      const puntos = calcularPuntosPorDiaFecha(dayDate);
+      const todayDate = new Date();
+      const isToday = dayDate.getDate() === todayDate.getDate() &&
+        dayDate.getMonth() === todayDate.getMonth() &&
+        dayDate.getFullYear() === todayDate.getFullYear();
+      const isDiaCorte = day === 12 || day === 27;
 
+      // Calcular puntos usando la fecha específica
+
+
+      const esHoyTemp = currentDate.getTime() === hoy;
+      const fechaBuscadaTemp = currentDate.toISOString().split('T')[0];
+
+      let puntos;
+      if (isToday && estadisticasDeHoy) {
+        // Usar estadísticas en vivo para hoy
+        console.log(`Usando estadísticas en vivo para ${fechaBuscadaTemp}:`, estadisticasDeHoy);
+        puntos = {
+          puntosAsignados: estadisticasDeHoy.puntos_asignados || 0,
+          puntosRealizados: estadisticasDeHoy.puntos_obtenidos || 0,
+          puntosPerdidos: estadisticasDeHoy.puntos_perdidos || 0,
+          puntosExtras: estadisticasDeHoy.puntos_extras || 0
+        };
+      } else {
+        // Usar historial para días pasados
+        const historial = obtenerPuntosHistorial(fechaBuscadaTemp);
+        if (historial) {
+          puntos = historial;
+        } else {
+          // Fallback: día sin datos
+          puntos = {
+            puntosAsignados: 0,
+            puntosRealizados: 0,
+            puntosPerdidos: 0,
+            puntosExtras: 0
+          };
+        }
+      }
+
+
+      console.log(`Calculando puntos para ${dayDate.toDateString()} (isToday: ${isToday}):`, puntos);
+      console.log(`Puntos para ${dayDate.toDateString()}:`, puntos);
       // Totales "clásicos"
       totalesQuincena.asignados += puntos.puntosAsignados;
       totalesQuincena.realizados += puntos.puntosRealizados;
       totalesQuincena.perdidos += puntos.puntosPerdidos;
       totalesQuincena.extras += puntos.puntosExtras;
-      totalesQuincena.total += puntos.totalPuntos;
-
+      totalesQuincena.total += puntos.puntosRealizados + puntos.puntosExtras;
       // Acumulados hasta este día
       acumAsignados += puntos.puntosAsignados;
 
@@ -566,11 +537,7 @@ export async function mostrarTareasEmpleado(empleado) {
       tr.onmouseenter = () => tr.style.backgroundColor = "#f8f9fa";
       tr.onmouseleave = () => tr.style.backgroundColor = "transparent";
 
-      const todayDate = new Date();
-      const isToday = dayDate.getDate() === todayDate.getDate() &&
-        dayDate.getMonth() === todayDate.getMonth() &&
-        dayDate.getFullYear() === todayDate.getFullYear();
-      const isDiaCorte = day === 12 || day === 27;
+
 
       if (isToday) {
         tr.style.backgroundColor = "#e8f4f8";
@@ -597,7 +564,7 @@ export async function mostrarTareasEmpleado(empleado) {
         <td style="padding: 4px 6px; text-align: center; color: #28a745; font-weight: 600; font-size: 11px;">${puntos.puntosRealizados}</td>
         <td style="padding: 4px 6px; text-align: center; color: #dc3545; font-weight: 600; font-size: 11px;">${puntos.puntosPerdidos}</td>
         <td style="padding: 4px 6px; text-align: center; color: #2d79f3; font-weight: 600; font-size: 11px;">${puntos.puntosExtras}</td>
-        <td style="padding: 4px 6px; text-align: center; color: #000; font-weight: 700; font-size: 12px;">${puntos.totalPuntos}</td>
+        <td style="padding: 4px 6px; text-align: center; color: #000; font-weight: 700; font-size: 12px;">${puntos.puntosRealizados + puntos.puntosExtras}</td>
       `;
 
       // ➕ Agregamos las 2 celdas PINTADAS (unidas)
@@ -614,7 +581,6 @@ export async function mostrarTareasEmpleado(empleado) {
       });
 
       // 🔥 QUINCENAL: Pintar morado días pasados (huella) + mostrar % solo en día actual/corte
-      const hoyInicio = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       const fechaEvaluada = new Date(yearOfDay, monthOfDay, day);
       fechaEvaluada.setHours(0, 0, 0, 0);
       hoyInicio.setHours(0, 0, 0, 0);
@@ -715,7 +681,7 @@ export async function mostrarTareasEmpleado(empleado) {
           height: 100%;
           display: table-cell;
           vertical-align: middle;
-          border: none !important;
+          border: 1px solid ${colorFinal} !important;
         `;
       });
     }
@@ -725,6 +691,23 @@ export async function mostrarTareasEmpleado(empleado) {
     trTotal.style.backgroundColor = "#f8f9fa";
     trTotal.style.fontWeight = "700";
     trTotal.style.borderTop = "2px solid #667eea";
+    
+    // 🔥 Calcular porcentajes totales para las columnas % Diario y % Quincenal
+    const pctDiarioTotal = totalesQuincena.asignados > 0 
+      ? (totalesQuincena.realizados / totalesQuincena.asignados) * 100 
+      : 0;
+    const pctQuincenalTotal = pctDiarioTotal; // Es el mismo porcentaje (realizados/asignados)
+    
+    // 🔥 Determinar colores según el porcentaje
+    function getColorForPercent(pct) {
+      if (pct >= 90) return { bg: '#10b981', text: '#fff' }; // Verde
+      if (pct >= 80) return { bg: '#f59e0b', text: '#fff' }; // Amarillo
+      return { bg: '#ef4444', text: '#fff' }; // Rojo
+    }
+    
+    const colorDiario = getColorForPercent(pctDiarioTotal);
+    const colorQuincenal = getColorForPercent(pctQuincenalTotal);
+    
     trTotal.innerHTML = `
       <td style="padding: 6px 8px; font-size: 11px; letter-spacing: 0.3px;">TOTAL ${titulo.toUpperCase()}</td>
       <td style="padding: 6px 8px; text-align: center; color: #555; font-size: 11px;">${totalesQuincena.asignados}</td>
@@ -732,8 +715,8 @@ export async function mostrarTareasEmpleado(empleado) {
       <td style="padding: 6px 8px; text-align: center; color: #dc3545; font-size: 11px;">${totalesQuincena.perdidos}</td>
       <td style="padding: 6px 8px; text-align: center; color: #2d79f3; font-size: 11px;">${totalesQuincena.extras}</td>
       <td style="padding: 6px 8px; text-align: center; color: #000; font-size: 12px;">${totalesQuincena.total}</td>
-      <td></td>
-      <td></td>
+      <td style="padding: 6px 8px; text-align: center; font-size: 11px; background: ${colorDiario.bg}; color: ${colorDiario.text}; font-weight: 700;">${Math.round(pctDiarioTotal)}%</td>
+      <td style="padding: 6px 8px; text-align: center; font-size: 11px; background: ${colorQuincenal.bg}; color: ${colorQuincenal.text}; font-weight: 700;">${Math.round(pctQuincenalTotal)}%</td>
     `;
     tbody.appendChild(trTotal);
 
@@ -1202,12 +1185,12 @@ export async function mostrarResumenAgregado() {
       const tareasDelDia = (esHoy && tareasTiempoRealPorEmpleado && tareasTiempoRealPorEmpleado[empleado.id])
         ? tareasTiempoRealPorEmpleado[empleado.id]
         : merged.filter(t => {
-            if (t.fecha) {
-              return t.fecha === fechaBuscada;
-            }
-            // Compatibilidad con claves de día y nombres normalizados
-            return normalizeDay(t.dia) === dayName || t.fecha === dayNamePanel;
-          });
+          if (t.fecha) {
+            return t.fecha === fechaBuscada;
+          }
+          // Compatibilidad con claves de día y nombres normalizados
+          return normalizeDay(t.dia) === dayName || t.fecha === dayNamePanel;
+        });
 
 
       tareasDelDia.forEach(tarea => {
@@ -1224,7 +1207,7 @@ export async function mostrarResumenAgregado() {
           totalRealizados += puntos;
         } else if (tarea.estatus === 'vencida') {
           totalPerdidos += puntos;
-        } else if (tarea.estatus === 'extra' && tarea.completadaPor !==null) {
+        } else if (tarea.estatus === 'extra' && tarea.completadaPor !== null) {
           totalExtras += puntos;
         }
       });
