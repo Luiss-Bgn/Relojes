@@ -357,8 +357,6 @@ class HistorialDAO:
             if fecha_inicio and fecha_fin:
                 query += " AND fecha BETWEEN ? AND ?"
                 params.extend([fecha_inicio, fecha_fin])
-            else:
-                query += " AND fecha < date('now')"
 
             query += """
                 GROUP BY nombre
@@ -783,7 +781,18 @@ class HistorialManager:
                 mes = hoy.month
                 año = hoy.year
 
-                quincena = 1 if dia <= 12 else 2
+                if dia <= 12:
+                    quincena = 1
+                elif dia <= 27:
+                    quincena = 2
+                else:
+                    quincena = 1
+                    if mes == 12:
+                        mes = 1
+                        año += 1
+                    else:
+                        mes += 1
+
                 fechas = self.calcular_fechas_quincena(año, mes, quincena)
 
                 fecha_inicio = fechas["fecha_inicio"]
@@ -826,7 +835,18 @@ class HistorialManager:
                 mes = hoy.month
                 año = hoy.year
 
-                quincena = 1 if dia <= 12 else 2
+                if dia <= 12:
+                    quincena = 1
+                elif dia <= 27:
+                    quincena = 2
+                else:
+                    quincena = 1
+                    if mes == 12:
+                        mes = 1
+                        año += 1
+                    else:
+                        mes += 1
+
                 fechas = self.calcular_fechas_quincena(año, mes, quincena)
 
                 fecha_inicio = fechas["fecha_inicio"]

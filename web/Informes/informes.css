@@ -311,15 +311,9 @@ body {
   min-height: 0;
 }
 
-/* Override específico para #informes-content cuando tiene .fade-in */
-#informes-content.fade-in {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
+/* Animación de entrada: se activa al agregar .show */
 #informes-content.fade-in.show {
-  animation: fadeUp 0.8s ease forwards;
+  animation: fadeUp 0.6s ease forwards;
 }
 
 /*==================================================
@@ -751,12 +745,13 @@ body {
 /* Panel de Tareas Vencidas */
 #tareas-vencidas-panel {
   display: flex;
-  flex: 0 0 auto;  /* 🔥 No expandir, dejar que el contenido defina el tamaño */
+  flex: 0 0 auto;
   flex-direction: column;
   width: 100%;
   overflow: hidden;
   min-height: 0;
   gap: 20px;
+  opacity: 0;  /* Invisible por defecto; .show lo anima a 1 */
 }
 
 #tareas-vencidas-panel.show {
@@ -1058,4 +1053,102 @@ body {
     padding: 0;
     min-height: 0;
   }
+}
+
+/*==================================================
+   TABLAS QUINCENALES (refactorizadas)
+==================================================*/
+
+.puntos-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.tabla-header-row {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.tabla-header-row th {
+  padding: 2px 4px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.puntos-table tbody tr {
+  border-bottom: 1px solid #e8e8e8;
+  transition: background-color 0.2s;
+}
+
+.puntos-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.puntos-table td {
+  padding: 4px 6px;
+  text-align: center;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.row-today {
+  background-color: #e8f4f8 !important;
+}
+
+.row-today:hover {
+  background-color: #d1e7f0 !important;
+}
+
+.row-corte {
+  background-color: #fff9e6 !important;
+}
+
+.row-corte:hover {
+  background-color: #fff3cc !important;
+}
+
+.row-total {
+  background-color: #f8f9fa;
+  font-weight: 700;
+  border-top: 2px solid #667eea;
+}
+
+.percent-cell {
+  text-align: center;
+  padding: 8px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.percent-nd {
+  background: repeating-linear-gradient(45deg, #f3f4f6, #f3f4f6 8px, #e5e7eb 8px, #e5e7eb 16px) !important;
+  color: #9ca3af !important;
+}
+
+.quincenal-empty {
+  font-weight: 700;
+  text-align: center;
+}
+
+.promedio-btn-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  transition: all 0.3s ease;
+}
+
+.promedio-btn-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
 }
