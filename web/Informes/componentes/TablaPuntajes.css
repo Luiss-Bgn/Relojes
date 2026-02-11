@@ -1,0 +1,262 @@
+.tabla-puntajes-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.tabla-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.tabla-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+
+.tabla-wrapper {
+    overflow-x: auto;
+    border-radius: 8px;
+}
+
+.tabla-puntajes {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.tabla-puntajes thead {
+    background: linear-gradient(135deg, #6366f1 40%, #8b5cf6 100%);
+    color: white;
+}
+
+.tabla-puntajes th {
+    padding: 14px 12px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 13px;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tabla-puntajes th:first-child {
+    background: rgba(255, 255, 255, 0.15);
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.tabla-puntajes th:last-child {
+    border-right: none;
+}
+
+.tabla-puntajes td {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 14px;
+}
+
+.tabla-puntajes tbody tr {
+    background: white;
+    transition: background-color 0.2s;
+}
+
+.tabla-puntajes tbody tr:hover {
+    background: #f8fafc;
+}
+
+.tabla-puntajes tbody tr:nth-child(even) {
+    background: #fafbfc;
+}
+
+.tabla-puntajes tbody tr:nth-child(even):hover {
+    background: #f1f5f9;
+}
+
+/* Estilos para los valores - se aplican a TODAS las celdas de cada columna */
+.tabla-puntajes tbody td:nth-child(2) { /* Puntos Asignados */
+    color: #1e293b !important;
+    font-weight: 600;
+}
+
+.tabla-puntajes tbody td:nth-child(3) { /* Puntos Ganados */
+    color: #10b981 !important;
+    font-weight: 600;
+}
+
+.tabla-puntajes tbody td:nth-child(4) { /* Puntos no Ganados */
+    color: #ef4444 !important;
+    font-weight: 600;
+}
+
+.tabla-puntajes tbody td:nth-child(5) { /* Puntos Extra */
+    color: #5cb1f6 !important;
+    font-weight: 600;
+}
+
+.tabla-puntajes tbody td:nth-child(6) { /* Puntos Totales */
+    color: #10b981 !important;
+    font-weight: 600;
+}
+
+.fila-hoy {
+    background: #dbeafe !important;
+    font-weight: bold;
+}
+
+.fila-corte {
+    background: #fef3c7 !important;
+    font-weight: bold;
+}
+
+/* Columnas de porcentaje */
+.col-rojo {
+    background: #dc2626;
+    color: white;
+    font-weight: 700;
+    border-radius: 4px;
+    padding: 8px 12px !important;
+}
+
+.col-verde {
+    background: #059669;
+    color: white;
+    font-weight: 700;
+    border-radius: 4px;
+    padding: 8px 12px !important;
+}
+
+.col-amarillo {
+    background: #d97706;
+    color: white;
+    font-weight: 700;
+    border-radius: 4px;
+    padding: 8px 12px !important;
+}
+
+.col-nd {
+    background: #f1f5f9;
+    color: #94a3b8;
+    font-weight: 600;
+    font-style: italic;
+}
+
+/* Celda vacía para días futuros */
+.col-vacio {
+    background: #ffffff;
+}
+
+/* Columna de porcentaje quincenal - color sólido para días pasados */
+.col-quincenal-solido {
+    padding: 8px 12px !important;
+    border-radius: 0;
+    min-width: 80px;
+}
+
+/* Columna de porcentaje quincenal - día actual con texto */
+.col-quincenal-hoy {
+    padding: 8px 12px !important;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 15px;
+}
+
+/* Asegurar que los bordes tengan el mismo color que el fondo */
+.col-quincenal-solido.col-rojo,
+.col-quincenal-hoy.col-rojo {
+    border: 2px solid #dc2626;
+}
+
+.col-quincenal-solido.col-verde,
+.col-quincenal-hoy.col-verde {
+    border: 2px solid #059669;
+}
+
+.col-quincenal-solido.col-amarillo,
+.col-quincenal-hoy.col-amarillo {
+    border: 2px solid #d97706;
+}
+
+/* Footer - Total */
+.tabla-puntajes tfoot tr {
+    background: #f8fafc;
+    font-weight: 700;
+    font-size: 15px;
+    border-top: #3b82f6 2px solid;
+}
+
+.tabla-puntajes tfoot td {
+    padding: 14px 12px;
+    border-bottom: none;
+    color: #1e293b;
+}
+
+.tabla-puntajes tfoot td:first-child {
+    text-align: left;
+    padding-left: 20px;
+    background: #e2e8f0;
+}
+
+/* Estilos específicos para las columnas de valores en el footer */
+.tabla-puntajes tfoot td:nth-child(2) { /* Puntos Asignados */
+    color: #1e293b;
+    font-weight: 700;
+}
+
+.tabla-puntajes tfoot td:nth-child(3) { /* Puntos Ganados */
+    color: #10b981;
+    font-weight: 700;
+}
+
+.tabla-puntajes tfoot td:nth-child(4) { /* Puntos no Ganados */
+    color: #ef4444;
+    font-weight: 700;
+}
+
+.tabla-puntajes tfoot td:nth-child(5) { /* Puntos Extra */
+    color: #5cb1f6;
+    font-weight: 700;
+}
+
+.tabla-puntajes tfoot td:nth-child(6) { /* Puntos Totales */
+    color: #10b981;
+    font-weight: 700;
+}
+
+/* ========================================
+   VISTA COMPACTA - Para empleados individuales
+   ======================================== */
+.tabla-compacta .tabla-puntajes th {
+    padding: 8px 10px;
+    font-size: 12px;
+}
+
+.tabla-compacta .tabla-puntajes td {
+    padding: 6px 10px;
+    font-size: 13px;
+}
+
+.tabla-compacta .tabla-puntajes tfoot td {
+    padding: 8px 10px;
+    font-size: 14px;
+}
+
+.tabla-compacta .col-rojo,
+.tabla-compacta .col-verde,
+.tabla-compacta .col-amarillo {
+    padding: 4px 8px !important;
+    font-size: 13px;
+}
+
+.tabla-compacta .col-quincenal-hoy {
+    padding: 4px 8px !important;
+    font-size: 14px;
+}
+
+.tabla-compacta .col-quincenal-solido {
+    padding: 4px 8px !important;
+}

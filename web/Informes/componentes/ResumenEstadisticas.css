@@ -1,0 +1,114 @@
+.resumen-estadisticas {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 16px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.grafica-container {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+.grafica-container canvas {
+    width: 100%;
+    height: 100%;
+}
+
+.porcentaje-centro {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 28px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.leyendas {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+}
+
+.leyendas-superiores {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.leyenda-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.leyenda-extras {
+    display: flex;
+    flex-direction: column;
+    padding-top: 16px;
+    padding-left: 10px;
+    border-left: 1px solid #c7c7c7;
+}
+
+.leyenda-extras .leyenda-item {
+    gap: 16px;
+}
+
+.indicador {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.indicador.verde {
+    background: #10b981;
+}
+
+.indicador.rojo {
+    background: #ef4444;
+}
+
+.indicador.morado {
+    background: #8b5cf6;
+}
+
+.leyenda-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.leyenda-extras .leyenda-info {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+}
+
+.leyenda-label {
+    font-size: 14px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.leyenda-valor {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.leyenda-extras {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.leyenda-valor {
+    font-size: 20px;
+    font-weight: 700;
+    color: #5cb1f6;
+}
