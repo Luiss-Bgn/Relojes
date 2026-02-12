@@ -163,6 +163,8 @@ void AppManager::processMessage(String message)
         String out;
         serializeJson(message, out);
         NetworkService::send(out);
+
+        handled = true;
     }
     /* ===============================
        2️⃣ MENSAJES DEPENDIENTES DE ESTADO
