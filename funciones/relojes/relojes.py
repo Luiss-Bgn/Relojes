@@ -165,7 +165,7 @@ class Relojes():
 
         mensaje = {
             "lista_usuarios": lista_empleados["usuarios"],
-            "vibrar": True
+            "vibrar": False
         }
         conexion = conexiones.obtener_conexion(uuid)
         # print(mensaje)
@@ -187,7 +187,7 @@ class Relojes():
         mensaje = {
             "comando": "tareas",
             "tareas": lista_tareas['registros'],
-            "vibrar": True
+            "vibrar": False
         }
         await conexion['ws'].send_json(self.adaptar_para_arduino(mensaje))
 
