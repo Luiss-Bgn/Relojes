@@ -1,0 +1,186 @@
+.tareas-vencidas-component {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.tareas-vencidas-header {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.tareas-vencidas-header h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.tareas-vencidas-content {
+    min-height: 200px;
+}
+
+.tareas-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    color: #64748b;
+    font-style: italic;
+}
+
+.tareas-vencidas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.tarea-vencida-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.3s ease;
+    animation: slideInUp 0.5s ease-out;
+}
+
+.tarea-vencida-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.tarea-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.tarea-titulo {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+    flex: 1;
+    padding-right: 8px;
+}
+
+.tarea-badge {
+    background: #ef4444;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.tarea-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #475569;
+}
+
+.stat-icon {
+    font-size: 14px;
+    width: 16px;
+    flex-shrink: 0;
+}
+
+.tareas-paginacion {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.paginacion-btn {
+    background: #6366f1;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.paginacion-btn:hover:not(:disabled) {
+    background: #5855eb;
+    box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);
+}
+
+.paginacion-btn:disabled {
+    background: #cbd5e1;
+    cursor: not-allowed;
+}
+
+.paginacion-info {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.tareas-vencidas-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    text-align: center;
+}
+
+.empty-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.empty-text {
+    font-size: 18px;
+    font-weight: 600;
+    color: #10b981;
+    margin-bottom: 4px;
+}
+
+.empty-subtext {
+    font-size: 14px;
+    color: #64748b;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .tareas-vencidas-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .tareas-vencidas-grid {
+        grid-template-columns: 1fr;
+    }
+}

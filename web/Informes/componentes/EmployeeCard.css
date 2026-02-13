@@ -1,0 +1,185 @@
+/* ===============================
+   EMPLOYEE CARD (SIDEBAR)
+   =============================== */
+
+.empleado-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    cursor: pointer;
+    background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.empleado-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: left 0.5s;
+}
+
+.empleado-card:hover {
+    background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%);
+    border-color: #c7d2fe;
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.15);
+}
+
+.empleado-card:hover::before {
+    left: 100%;
+}
+
+/* Avatar */
+
+.empleado-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    color: white;
+    font-weight: 700;
+    font-size: 16px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+    border: 3px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    transition: all 0.3s ease;
+}
+
+.empleado-card:hover .empleado-avatar {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+}
+
+/* Efecto de resplandor en hover */
+.empleado-card:hover {
+    background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%);
+    border-color: #c7d2fe;
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.15), 0 0 20px rgba(99, 102, 241, 0.1);
+}
+
+.empleado-card:active {
+    transform: translateY(-1px) scale(1.01);
+    transition-duration: 0.1s;
+}
+
+/* Info */
+
+.empleado-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow: hidden;
+    flex: 1;
+}
+
+.empleado-nombre {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+}
+
+.empleado-puesto {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-transform: capitalize;
+}
+
+/* Badge de estado */
+.empleado-badge {
+    color: #10b981;
+    font-size: 16px;
+    line-height: 1;
+    flex-shrink: 0;
+    opacity: 0.8;
+    transition: all 0.3s ease;
+}
+
+.empleado-card:hover .empleado-badge {
+    color: #059669;
+    opacity: 1;
+    transform: scale(1.2);
+}
+
+.sidebar-item.active.empleado-card .empleado-badge {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Estado activo (cuando está seleccionado) */
+.sidebar-item.active.empleado-card {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px) scale(1.02);
+}
+
+.sidebar-item.active.empleado-card .empleado-nombre,
+.sidebar-item.active.empleado-card .empleado-puesto {
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-item.active.empleado-card .empleado-avatar {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transform: scale(1.05);
+}
+
+.sidebar-item.active.empleado-card::before {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+}
+
+/* Animaciones y efectos adicionales */
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Animación inicial para las cards */
+.empleado-card {
+    opacity: 0;
+    animation: slideInLeft 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Mejoras adicionales para el contenedor de empleados */
+#empleados-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}

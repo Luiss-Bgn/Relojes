@@ -18,7 +18,7 @@ const ROLE_LABELS = {
 };
 
 export const showVerInfoModal = async (emp) => {
-  console.log('Mostrando modal de información para el empleado:', emp);
+  // console.log('Mostrando modal de información para el empleado:', emp);
   // Crear overlay
   const overlay = document.createElement('div');
   overlay.id = 'ver-info-overlay';
@@ -62,7 +62,7 @@ export const showVerInfoModal = async (emp) => {
 };
 
 function fillEmployeeInfo(emp, modal, userRole) {
-  console.log('Llenando información del empleado:', emp);
+  // console.log('Llenando información del empleado:', emp);
   // Campos básicos
   modal.querySelector('#field-nombre').value = emp.nombre || '';
   modal.querySelector('#field-puesto').value = emp.puesto || '';
@@ -548,8 +548,8 @@ async function checkRelojConnection(empleadoId, modal) {
     if (!response.ok) throw new Error('Error al cargar relojes');
     
     const relojes = await response.json();
-    console.log('Relojes conectados:', relojes);
-    console.log('Empleado ID:', empleadoId);
+    // console.log('Relojes conectados:', relojes);
+    // console.log('Empleado ID:', empleadoId);
     // Buscar si hay un reloj conectado para este empleado
     const relojConectado = Array.isArray(relojes) 
       ? relojes.find(r => r.empleado_id === empleadoId)
