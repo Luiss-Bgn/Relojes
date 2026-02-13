@@ -350,6 +350,7 @@ class HistorialDAO:
                     MAX(fecha) as ultima_fecha
                 FROM historial
                 WHERE estatus = 'vencida'
+                OR estatus = 'extra'
             """
 
             params = []

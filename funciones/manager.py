@@ -108,7 +108,8 @@ class Manager():
         mensaje = {
             "tipo": "notificacion",
             "comando": key[1],
-            "data": data_acumulada
+            "data": data_acumulada,
+            "vibrar": payload.get("vibrar")
         }
 
         # 📡 3. Enviar ya con UUIDs reales
@@ -125,7 +126,6 @@ class Manager():
 
             for uuid in uuids:
                 if conexiones.obtener_conexion(uuid):
-                    print(uuid)
                     destinatarios.add(uuid)
 
         # Roles 

@@ -33,7 +33,13 @@ bool TaskService::parseTasks(const JsonDocument &doc, const bool isExtra)
             task.id = obj["id"].as<String>();
         }
 
-        if (AuthService::getCurrentEmployeeId() == obj["id_dueno"].as<String>() && !obj["completadaPor"].isNull())
+        DEBUG_PRINTF("datos tarea id: %s, estatus: %s, id_dueno: %s, completadaPor: %s\n",
+                     task.id.c_str(),
+                     obj["estatus"].is<const char *>() ? obj["estatus"].as<const char *>() : "null",
+                     obj["id_dueno"].is<int>() ? String(obj["id_dueno"].as<int>()) : "null",
+                     obj["completadaPor"].is<const char *>() ? obj["completadaPor"].as<const char *>() : "null");
+                     
+        if (AuthService::getCurrentEmployeeId() == obj["id_dueno"].as<String>() && !obj["completadaPor"].isNull() || obj["estatus"].as<String>() == "extra" && AuthService::getCurrentEmployeeId() == String(obj["id_dueno"].as<int>()))
         {
             task.status = "vencida";
         }

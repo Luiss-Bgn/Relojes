@@ -11,5 +11,6 @@ class Notificaciones:
             "action": "update_tareas",
             "notification": "todos",
             "data": mensaje,
+            "vibrar": False
         })
 
