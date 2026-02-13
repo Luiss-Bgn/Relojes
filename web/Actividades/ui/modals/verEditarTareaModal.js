@@ -4,6 +4,8 @@ import { showPinKeypadModal } from '../pinKeypadModal.js';
 import { completeTaskWithPin, hasActiveSession } from '../pinAuth.js';
 import { createNotificationMessage, NOTIFICATION_TYPES } from '../../services/notificationTypes.js';
 import { checkTimeConflict, getSelectedDayKey } from './revisarConflictoHorario.js';
+import {obtenerEmpleado} from '../../api/apiClient.js';
+
 const STATUS_LABELS = {
   'sin_iniciar': 'Sin Iniciar',
   'en_progreso': 'En Progreso',
@@ -226,7 +228,8 @@ function setupPermissions(modal, canEdit, canComplete, canCompleteExtra, tarea, 
   }
 }
 
-function showWarnings(modal, tarea, targetEmployeeId = null, isOriginalOwner = false) {
+
+async function showWarnings(modal, tarea, targetEmployeeId = null, isOriginalOwner = false) {
   const warningBox = modal.querySelector('#warning-box');
   const warningText = modal.querySelector('#warning-text');
 
@@ -252,11 +255,13 @@ function showWarnings(modal, tarea, targetEmployeeId = null, isOriginalOwner = f
       warningText.style.color = '#1e40af';
     }
   } else if (tarea.estatus === 'extra' && tarea.completadaPor) {
+    const Empleado = await obtenerEmpleado(tarea.completadaPor);  
+    // console.log("Empleado que completó la tarea extra:", Empleado);
     // Tarea extra completada
     warningBox.style.display = 'flex';
     warningBox.style.background = '#dbeafe';
     warningBox.style.borderLeftColor = '#3b82f6';
-    warningText.textContent = `Tarea extra completada por empleado ID: ${tarea.completadaPor}`;
+    warningText.textContent = `Tarea extra completada por: ${Empleado.nombre}`;
     warningText.style.color = '#1e40af';
   } else if (tarea.estatus === 'sin_iniciar') {
     // Calcular tiempo faltante

@@ -7,9 +7,6 @@
 }
 
 .tareas-vencidas-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     margin-bottom: 20px;
     padding-bottom: 16px;
     border-bottom: 2px solid #f1f5f9;
@@ -20,31 +17,6 @@
     font-size: 20px;
     font-weight: 700;
     color: #1e293b;
-}
-
-.tareas-toggle-buttons {
-    display: flex;
-    background: #f1f5f9;
-    border-radius: 10px;
-    padding: 4px;
-}
-
-.tareas-toggle-btn {
-    background: transparent;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #64748b;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.tareas-toggle-btn.active {
-    background: #6366f1;
-    color: white;
-    box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);
 }
 
 .tareas-vencidas-content {

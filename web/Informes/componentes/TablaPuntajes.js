@@ -32,7 +32,7 @@ class TablaPuntajes {
         const diaInicio = this.fechaInicio.getDate();
         const quincena = diaInicio >= Q1_INICIO || diaInicio <= Q1_FIN ? 1 : 2;
         const mesCapitalizado = mes.charAt(0).toUpperCase() + mes.slice(1);
-        titulo.textContent = `Quincena ${quincena} - ${mesCapitalizado} - Resumen de Todos los Empleados`;
+        // titulo.textContent = `Quincena ${quincena} - ${mesCapitalizado} - Resumen de Todos los Empleados`;
 
         tbody.innerHTML = "";
         tfoot.innerHTML = "";

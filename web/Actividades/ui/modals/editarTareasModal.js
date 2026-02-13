@@ -129,19 +129,12 @@ function createTaskCard(tarea, day, emp) {
   // Obtener rol del usuario desde el modal
   const modal = document.querySelector('.editar-tareas-modal');
   const userRole = modal?.dataset.userRole || 'empleado';
-  
+
   // Determinar opciones de rol según el usuario
   let roleOptions = '';
   const disponibleRol = tarea.disponible_para_rol || 'todos';
-  
-  if (userRole === 'admin') {
-    roleOptions = `
-      <option value="todos" ${disponibleRol === 'todos' ? 'selected' : ''}>Todos</option>
-      <option value="empleado" ${disponibleRol === 'empleado' ? 'selected' : ''}>Empleado</option>
-      <option value="supervisor" ${disponibleRol === 'supervisor' ? 'selected' : ''}>Supervisor</option>
-      <option value="admin" ${disponibleRol === 'admin' ? 'selected' : ''}>Admin</option>
-    `;
-  } else if (userRole === 'supervisor') {
+
+  if (userRole === 'supervisor' || userRole === 'admin') {
     roleOptions = `
       <option value="todos" ${disponibleRol === 'todos' ? 'selected' : ''}>Todos</option>
       <option value="empleado" ${disponibleRol === 'empleado' ? 'selected' : ''}>Empleado</option>

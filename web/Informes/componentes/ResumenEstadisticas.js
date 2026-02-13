@@ -28,7 +28,7 @@ class ResumenEstadisticas {
     }
 
     actualizar(estadisticas) {
-        const { ganados = 0, noGanados = 0, extras = 0, asignados = 1 } = estadisticas;
+        const { ganados = 0, noGanados = 0, extras = 0, asignados = 0 } = estadisticas;
 
         // Calcular porcentaje
         const porcentaje = asignados > 0 ? Math.round((ganados / asignados) * 100) : 0;

@@ -7,7 +7,7 @@ export default class TareasVencidasInformes {
     constructor() {
         this.mostrandoQuincena = true;
         this.paginaActual = 1;
-        this.itemsPorPagina = 6;
+        this.itemsPorPagina = 12;
         this.tareasCache = [];
     }
 
@@ -23,39 +23,11 @@ export default class TareasVencidasInformes {
             const html = await this.cargar();
             container.innerHTML = html;
 
-            // Configurar eventos
-            this.configurarEventos();
-
             // Cargar datos iniciales
             await this.actualizarTareasVencidas();
         } catch (error) {
             console.error('Error inicializando TareasVencidasInformes:', error);
             container.innerHTML = '<div class="error-message">Error cargando tareas vencidas</div>';
-        }
-    }
-
-    configurarEventos() {
-        const btnQuincena = document.getElementById('tareas-btn-quincena');
-        const btnTodo = document.getElementById('tareas-btn-todo');
-
-        if (btnQuincena) {
-            btnQuincena.addEventListener('click', () => {
-                this.mostrandoQuincena = true;
-                this.paginaActual = 1;
-                btnQuincena.classList.add('active');
-                btnTodo.classList.remove('active');
-                this.actualizarTareasVencidas();
-            });
-        }
-
-        if (btnTodo) {
-            btnTodo.addEventListener('click', () => {
-                this.mostrandoQuincena = false;
-                this.paginaActual = 1;
-                btnTodo.classList.add('active');
-                btnQuincena.classList.remove('active');
-                this.actualizarTareasVencidas();
-            });
         }
     }
 
@@ -199,19 +171,8 @@ export default class TareasVencidasInformes {
         this.mostrandoQuincena = !mostrarTodas;
         this.paginaActual = 1;
         
-        // Actualizar botones
-        const btnQuincena = document.getElementById('tareas-btn-quincena');
-        const btnTodo = document.getElementById('tareas-btn-todo');
-        
-        if (btnQuincena && btnTodo) {
-            if (mostrarTodas) {
-                btnTodo.classList.add('active');
-                btnQuincena.classList.remove('active');
-            } else {
-                btnQuincena.classList.add('active');
-                btnTodo.classList.remove('active');
-            }
-        }
+        // Ya no necesitamos actualizar botones locales
+        // Los botones principales de Informes.html manejan el estado visual
         
         await this.actualizarTareasVencidas();
     }

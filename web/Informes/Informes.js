@@ -50,14 +50,14 @@ sidebarOptions.addEventListener("click", async (e) => {
     if (type === "promedio") {
         VISTA_ACTUAL = { type: 'promedio', empleadoId: null, empleadoNombre: null };
         contentTitle.textContent = "Promedio de todos los empleados";
-        
+
         // Mostrar controles y tareas vencidas para promedio
         document.querySelector('.toggle-buttons').style.display = 'flex';
         if (tareasVencidasContainer) {
             tareasVencidasContainer.style.display = 'block';
             tareasVencidasContainer.style.visibility = 'visible';
         }
-        
+
         await mostrarTablaPromedio(mostrarTodos);
     }
 
@@ -66,14 +66,14 @@ sidebarOptions.addEventListener("click", async (e) => {
         const empleadoNombre = item.dataset.nombre;
         VISTA_ACTUAL = { type: 'empleado', empleadoId, empleadoNombre };
         contentTitle.textContent = empleadoNombre;
-        
+
         // Ocultar controles y tareas vencidas para empleado individual
         document.querySelector('.toggle-buttons').style.display = 'none';
         if (tareasVencidasContainer) {
             tareasVencidasContainer.style.display = 'none';
         }
         limpiarResumen();
-        
+
         await mostrarTablaEmpleado(empleadoId, empleadoNombre, true);
     }
 });
@@ -88,7 +88,7 @@ toggleButtons.forEach(btn => {
         btn.classList.add("active");
 
         const mostrarTodos = btn.dataset.mode === "todas";
-        
+
         // Actualizar tareas vencidas si existe
         if (tareasVencidasComponent) {
             await tareasVencidasComponent.actualizarPorModo(mostrarTodos);
@@ -175,6 +175,9 @@ async function mostrarTablaPromedio(mostrarTodos = false) {
         // Limpiar contenedor y preparar para múltiples tablas
         contentBody.innerHTML = '';
 
+        // Acumulador para todas las quincenas
+        let totalesGenerales = { ganados: 0, noGanados: 0, extras: 0, asignados: 0 };
+
         // Generar una tabla para cada quincena
         resultado.quincenas.forEach((quincena, index) => {
             // Crear contenedor para esta quincena
@@ -227,12 +230,29 @@ async function mostrarTablaPromedio(mostrarTodos = false) {
             // console.log("Generando tabla para quincena: mostrar tabla promedio todos", quincena.numero, quincena.mesAnio, "con fechas:", quincena.inicio, quincena.fin);
             tabla.generar(quincenaContainer);
 
+            // Acumular totales de esta quincena
+            const totalesQuincena = historialAdaptado.reduce((acc, dia) => ({
+                ganados: acc.ganados + dia.ganados,
+                noGanados: acc.noGanados + dia.noGanados,
+                extras: acc.extras + dia.extra,
+                asignados: acc.asignados + dia.asignados
+            }), { ganados: 0, noGanados: 0, extras: 0, asignados: 0 });
+
+            // Sumar al total general
+            totalesGenerales.ganados += totalesQuincena.ganados;
+            totalesGenerales.noGanados += totalesQuincena.noGanados;
+            totalesGenerales.extras += totalesQuincena.extras;
+            totalesGenerales.asignados += totalesQuincena.asignados;
+
             // Actualizar título con número de quincena y mes
             const tablaTitulo = quincenaContainer.querySelector('#tabla-titulo');
             if (tablaTitulo) {
                 tablaTitulo.textContent = `Quincena ${quincena.numero} - ${quincena.mesAnio} - Todos los Empleados`;
             }
         });
+
+        // Actualizar resumen con totales de todas las quincenas
+        await actualizarResumen(totalesGenerales);
     } else {
         // Mostrar solo quincena actual (comportamiento original)
         contentBody.innerHTML = html;
@@ -294,6 +314,13 @@ async function mostrarTablaPromedio(mostrarTodos = false) {
             asignados: acc.asignados + dia.asignados
         }), { ganados: 0, noGanados: 0, extras: 0, asignados: 0 });
 
+        // Actualizar título con información completa de la quincena
+        const quincenaInfo = determinarQuincena();
+        const tablaTitulo = document.querySelector('#tabla-titulo');
+        if (tablaTitulo) {
+            tablaTitulo.textContent = `Quincena ${quincenaInfo.numero} - ${quincenaInfo.mesAnio} - Todos los Empleados`;
+        }
+
         await actualizarResumen(totalesQuincena);
     }
 }
@@ -326,6 +353,8 @@ async function mostrarTablaEmpleado(empleadoId, empleadoNombre, mostrarTodos = f
 
         // Calcular estadísticas individuales
         const resultado = estadisticasGenerales(histData, empleado, true, mostrarTodos);
+
+        let totalesGeneralesEmpleado = { ganados: 0, noGanados: 0, extras: 0, asignados: 0 };
 
         if (mostrarTodos) {
             // Limpiar resumen cuando se muestran todas las quincenas
@@ -392,12 +421,29 @@ async function mostrarTablaEmpleado(empleadoId, empleadoNombre, mostrarTodos = f
                 tabla.generar(quincenaContainer);
                 // console.log("Generando tabla para quincena: mostrar tabla empleados todos", quincena.numero, quincena.mesAnio, "con fechas:", quincena.inicio, quincena.fin);
 
+                // Calcular totales de esta quincena
+                const totalesQuincena = historialAdaptado.reduce((acc, dia) => ({
+                    ganados: acc.ganados + dia.ganados,
+                    noGanados: acc.noGanados + dia.noGanados,
+                    extras: acc.extras + dia.extra,
+                    asignados: acc.asignados + dia.asignados
+                }), { ganados: 0, noGanados: 0, extras: 0, asignados: 0 });
+
+                // Sumar al total general
+                totalesGeneralesEmpleado.ganados += totalesQuincena.ganados;
+                totalesGeneralesEmpleado.noGanados += totalesQuincena.noGanados;
+                totalesGeneralesEmpleado.extras += totalesQuincena.extras;
+                totalesGeneralesEmpleado.asignados += totalesQuincena.asignados;
+
                 // Actualizar título con número de quincena y mes
                 const titulo = quincenaContainer.querySelector('#tabla-titulo');
                 if (titulo) {
                     titulo.textContent = `Quincena ${quincena.numero} - ${quincena.mesAnio} - ${empleadoNombre}`;
                 }
             });
+
+            // Actualizar resumen con totales de todas las quincenas
+            // await actualizarResumen(totalesGeneralesEmpleado);
         } else {
             // Mostrar solo quincena actual (comportamiento original)
             contentBody.innerHTML = html;
@@ -450,7 +496,7 @@ async function mostrarTablaEmpleado(empleadoId, empleadoNombre, mostrarTodos = f
                 historial: historialAdaptado,
             });
 
-            console.log("Generando tabla para quincena: mostrar tabla empleados uno solo", "con fechas:", inicio,fin);
+            // console.log("Generando tabla para quincena: mostrar tabla empleados uno solo", "con fechas:", inicio, fin);
 
             tabla.generar();
 
@@ -462,7 +508,7 @@ async function mostrarTablaEmpleado(empleadoId, empleadoNombre, mostrarTodos = f
                 asignados: acc.asignados + dia.asignados
             }), { ganados: 0, noGanados: 0, extras: 0, asignados: 0 });
 
-            await actualizarResumen(totalesQuincena);
+            // await actualizarResumen(totalesQuincena);
 
             // Actualizar el título de la tabla
             const titulo = document.getElementById("tabla-titulo");
@@ -494,7 +540,7 @@ async function mostrarTablaEmpleado(empleadoId, empleadoNombre, mostrarTodos = f
  * @returns {Object} Objeto con inicio, fin, numero, mesAnio de la quincena
  */
 function determinarQuincena(fecha) {
-    const f = fecha 
+    const f = fecha
         ? (typeof fecha === 'string' ? parsearFechaLocal(fecha) : fecha)
         : new Date();
     const dia = f.getDate();
@@ -706,9 +752,9 @@ init();
 
 async function init() {
     const { role, userId, username } = rolUsuario();
-    
+
     await cargarInformes();
-    
+
     if (role === 'empleado') {
         // Empleado ve directamente todas sus quincenas
         document.querySelector('.sidebar').style.display = 'none';
@@ -717,16 +763,16 @@ async function init() {
         if (tareasVencidasContainer) {
             tareasVencidasContainer.style.display = 'none';
         }
-        
+
         contentTitle.textContent = `Informe de ${username}`;
         VISTA_ACTUAL = { type: 'empleado', empleadoId: userId, empleadoNombre: username };
-        
+
         await mostrarTablaEmpleado(userId, username, true);
-        
+
     } else {
         // Supervisor/admin ve cards y tabla promedio por defecto
         await cargarEmpleados();
-        
+
         // Inicializar componente de tareas vencidas
         tareasVencidasComponent = new TareasVencidasInformes();
         try {
@@ -737,20 +783,20 @@ async function init() {
         } catch (error) {
             console.error("Error inicializando componente de tareas vencidas:", error);
         }
-        
+
         // Seleccionar promedio por defecto
         const promedioItem = sidebarOptions.querySelector('[data-type="promedio"]');
         if (promedioItem) {
             promedioItem.classList.add('active');
         }
-        
+
         contentTitle.textContent = "Promedio de todos los empleados";
         VISTA_ACTUAL = { type: 'promedio', empleadoId: null, empleadoNombre: null };
-        
+
         // Activar modo quincena actual
         document.querySelector('.toggle-btn[data-mode="actual"]').classList.add('active');
         document.querySelector('.toggle-btn[data-mode="todas"]').classList.remove('active');
-        
+
         await mostrarTablaPromedio(false);
     }
 }
