@@ -349,8 +349,7 @@ class HistorialDAO:
                     MIN(fecha) as primera_fecha,
                     MAX(fecha) as ultima_fecha
                 FROM historial
-                WHERE estatus = 'vencida'
-                OR estatus = 'extra'
+                WHERE estatus IN ('vencida', 'extra')
             """
 
             params = []
@@ -373,6 +372,7 @@ class HistorialDAO:
             cursor.execute(query, params)
             rows = cursor.fetchall()
             return [dict(row) for row in rows]
+
 
 
 

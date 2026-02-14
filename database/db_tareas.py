@@ -160,6 +160,20 @@ class TareasDAO:
             ''', (fecha,usuario_id, rol))
             rows = cursor.fetchall()
             return [dict(row) for row in rows]
+        
+    def obtener_no_reseteadas_por_fecha(self, fecha: str) -> List[Dict[str, Any]]:
+        with self.db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, nombre, descripcion, id_dueño, hora_ini, hora_fin,
+                    fecha, puntos, estatus, completadaPor, disponible_para_rol
+                FROM tareas_semana
+                WHERE fecha = ?
+                AND estatus NOT IN ('sin_iniciar', 'futura')
+            """, (fecha,))
+            rows = cursor.fetchall()
+            return [dict(row) for row in rows]
+
 
 
 
@@ -411,4 +425,20 @@ class TareasManager:
                 "mensaje": f"Error al listar tareas extra: {str(e)}"
             }
 
+    def listar_no_reseteadas(self, fecha: str) -> Dict[str, Any]:
+        try:
+            registros = self.tareas_dao.obtener_no_reseteadas_por_fecha(fecha)
+
+            return {
+                "status": "success",
+                "registros": registros,
+                "total": len(registros)
+            }
+
+        except Exception as e:
+            logger.error(f"ERROR AL LISTAR NO RESETEADAS: {str(e)}")
+            return {
+                "status": "error",
+                "mensaje": str(e)
+            }
 

@@ -134,6 +134,9 @@ def run_backup_scheduler():
     print("="*60 + "\n")
     
     backup_manager = BackupManager()
+
+    print("🔎 Verificando si hay backups pendientes al iniciar...")
+    backup_manager.realizar_backup_diario()
     
     # Programar backup diario a las 00:10 (12:10 AM)
     schedule.every().day.at("00:01").do(backup_manager.realizar_backup_diario)
