@@ -2,7 +2,7 @@
 Rutas  para usuarios 
 """
 
-from fastapi import APIRouter, HTTPException, status, File, UploadFile, Form
+from fastapi import APIRouter, HTTPException, status, File, UploadFile, Form, Request
 from database.database import DatabaseManager
 from database.db_usuarios import UsuarioManager
 from .models import UsuarioCrear, UsuarioActualizar, AutenticarRequest
@@ -152,30 +152,101 @@ async def obtener_usuario(usuario_id: int):
 
 
 @router.put("/{usuario_id}", response_model=dict)
-async def actualizar_usuario(usuario_id: int, datos: UsuarioActualizar):
-    
-    #Actualiza datos de un usuario
-    # Filtrar solo los campos que se van a actualizar
-    datos_dict = {k: v for k, v in datos.dict().items() if v is not None}
-    
-    if not datos_dict:
+async def actualizar_usuario(
+    request: Request,
+    usuario_id: int,
+    nombre: Optional[str] = Form(None),
+    username: Optional[str] = Form(None),
+    contraseña: Optional[str] = Form(None),
+    pin: Optional[str] = Form(None),
+    rol: Optional[str] = Form(None),
+    puesto: Optional[str] = Form(None),
+    imagen: Optional[UploadFile] = File(None)
+):
+    """
+    Actualiza un usuario.
+    Permite actualizar datos normales y opcionalmente la imagen.
+    Recibe multipart/form-data.
+    """
+
+    # 🔎 Verificar que el usuario exista
+    usuario_resultado = usuario_manager.obtener_usuario(usuario_id)
+
+    if usuario_resultado.get("status") != "success":
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail= "Se requiere al menos un campo para actualizar"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Usuario no encontrado"
         )
-    
-    resultado = usuario_manager.actualizar_usuario(usuario_id, **datos_dict)
-    
+
+    usuario_actual = usuario_resultado["usuario"]
+
+    # 📦 Construir diccionario dinámico de actualización
+    datos_actualizar = {}
+
+    if nombre is not None:
+        datos_actualizar["nombre"] = nombre
+
+    if username is not None:
+        datos_actualizar["username"] = username
+
+    if contraseña is not None:
+        datos_actualizar["contraseña"] = contraseña
+
+    if pin is not None:
+        datos_actualizar["pin"] = pin
+
+    if rol is not None:
+        datos_actualizar["rol"] = rol
+
+    if puesto is not None:
+        datos_actualizar["puesto"] = puesto
+
+    # 🖼 Manejo de imagen
+    if imagen and imagen.filename:
+
+        # Validar tipo
+        if not imagen.content_type.startswith("image/"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="El archivo debe ser una imagen válida"
+            )
+
+        # Eliminar imagen anterior si existe
+        imagen_anterior = usuario_actual.get("imagen")
+        if imagen_anterior:
+            eliminar_imagen_usuario(imagen_anterior)
+
+        # Guardar nueva imagen con nombre canónico
+        ext = Path(imagen.filename).suffix or ".jpg"
+        filename = f"{usuario_id}{ext}"
+        file_path = IMAGES_DIR / filename
+
+        try:
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(imagen.file, buffer)
+
+            datos_actualizar["imagen"] = filename
+
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error al guardar imagen: {str(e)}"
+            )
+
+    # 🚀 Delegar actualización al Manager (NO tocamos DAO directo)
+    resultado = usuario_manager.actualizar_usuario(usuario_id, **datos_actualizar)
+
     if resultado.get("status") != "success":
         raise HTTPException(
-            status_code= status.HTTP_404_NOT_FOUND,
-            detail =resultado.get("mensaje")
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=resultado.get("mensaje")
         )
-    
-    #  actualización a relojes
+
+    # 🔔 Notificar relojes
     notificar_relojes_async(usuario_manager)
-    
+
     return resultado
+
 
 
 @router.delete("/{usuario_id}", response_model=dict)

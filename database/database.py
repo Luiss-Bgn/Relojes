@@ -23,6 +23,7 @@ class DatabaseManager:
         #obtener conexión a la db
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA foreign_keys = ON")
         try:
             yield conn
         finally:
@@ -100,7 +101,7 @@ class DatabaseManager:
                 completadaPor INTEGER,
                 disponible_para_rol TEXT DEFAULT 'todos',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (id_dueño) REFERENCES usuarios(id),
+                FOREIGN KEY (id_dueño) REFERENCES usuarios(id) ON DELETE CASCADE,
                 FOREIGN KEY (completadaPor) REFERENCES usuarios(id)
             )
         ''')
