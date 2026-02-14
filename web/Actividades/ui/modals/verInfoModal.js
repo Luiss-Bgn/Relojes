@@ -382,24 +382,41 @@ async function saveEmployeeChanges(emp, modal, overlay) {
     if (contraseña && contraseña !== '************') updatedData.contraseña = contraseña;
   }
 
+  // Verificar si hay una nueva imagen seleccionada
+  const photoInput = modal.querySelector('#photo-input');
+  const hasNewImage = photoInput && photoInput.files && photoInput.files.length > 0;
+
   try {
     console.log('Enviando datos actualizados al servidor:', updatedData);
+    
+    // Usar FormData para enviar todos los datos
+    const formData = new FormData();
+    formData.append('nombre', updatedData.nombre);
+    formData.append('puesto', updatedData.puesto);
+    formData.append('username', updatedData.username);
+    formData.append('rol', updatedData.rol);
+    
+    if (updatedData.pin) formData.append('pin', updatedData.pin);
+    if (updatedData.contraseña) formData.append('contraseña', updatedData.contraseña);
+    
+    // Agregar la imagen si existe
+    if (hasNewImage) {
+      formData.append('imagen', photoInput.files[0]);
+    }
+    
     const response = await fetch(`http://localhost:8001/usuarios/${emp.id}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(updatedData)
+      body: formData
     });
 
     const result = await response.json();
 
     if (response.ok) {
       showToast('Información actualizada exitosamente', 'success');
-      // Orecargar la página 
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      // Recargar la página 
+      // setTimeout(() => {
+      //   window.location.reload();
+      // }, 1000);
 
       createNotificationMessage(NOTIFICATION_TYPES.EMPLEADO_ACTUALIZADO, {
         employeeId: emp.id,

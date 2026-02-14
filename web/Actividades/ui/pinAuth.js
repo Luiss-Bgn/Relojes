@@ -75,7 +75,7 @@ export const validateTaskPermissions = (user, task) => {
     // Verificar disponibilidad por rol (usando la propiedad correcta)
     const rolRequerido = task.rol_disponible || task.disponible_para_rol;
     if (rolRequerido && rolRequerido !== 'todos') {
-        if (user.rol !== rolRequerido) {
+        if (user.rol !== rolRequerido && task.empleadoId !== user.id) {
             console.log(`❌ Rol insuficiente: Usuario tiene "${user.rol}", se requiere "${rolRequerido}"`);
             return {
                 canComplete: false,
