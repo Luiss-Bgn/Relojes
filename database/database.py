@@ -80,9 +80,7 @@ class DatabaseManager:
                 estatus TEXT,
                 completadaPor INTEGER,
                 disponible_para_rol TEXT DEFAULT 'todos',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (id_dueño) REFERENCES usuarios(id),
-                FOREIGN KEY (completadaPor) REFERENCES usuarios(id)
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
         
@@ -102,7 +100,7 @@ class DatabaseManager:
                 disponible_para_rol TEXT DEFAULT 'todos',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (id_dueño) REFERENCES usuarios(id) ON DELETE CASCADE,
-                FOREIGN KEY (completadaPor) REFERENCES usuarios(id)
+                FOREIGN KEY (completadaPor) REFERENCES usuarios(id) ON DELETE SET NULL
             )
         ''')
 
