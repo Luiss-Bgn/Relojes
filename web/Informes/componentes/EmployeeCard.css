@@ -150,9 +150,11 @@
 .sidebar-item.active.empleado-card .empleado-avatar {
     background: rgba(255, 255, 255, 0.2);
     color: white;
-    border-color: rgba(255, 255, 255, 0.3);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     transform: scale(1.05);
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
 }
 
 .sidebar-item.active.empleado-card::before {
