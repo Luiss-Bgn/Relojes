@@ -1,6 +1,4 @@
-"""
-Rutas (endpoints) para historial
-"""
+
 from fastapi import APIRouter, HTTPException, status, Query
 from database.database import DatabaseManager
 from database.db_historial import HistorialManager
@@ -14,31 +12,6 @@ router = APIRouter(prefix="/historial", tags=["Historial"])
 db_manager = DatabaseManager("relojes.db") #iniciaizamos manager ocn la db real
 historial_manager = HistorialManager(db_manager)
 
-
-@router.post( "", response_model=dict, status_code =status.HTTP_201_CREATED)
-async def crear_registro(registro: HistorialCrear):
-    #Crea un nuevo registro en el historial
-    #aqui se agregaran condiciones por cada endpoint
-    resultado = historial_manager.crear_registro(
-        nombre=registro.nombre,
-        descripcion=registro.descripcion,
-        id_dueño=registro.id_dueño,
-        hora_ini=registro.hora_ini,
-        hora_fin=registro.hora_fin,
-        fecha=registro.fecha,
-        puntos=registro.puntos,
-        estatus=registro.estatus,
-        disponible_para_rol=registro.disponible_para_rol
-    )
-    
-    if resultado.get("status") != "success":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=resultado.get("mensaje")
-        )
-    resultado["registro"] = enriquecer_historial(resultado.get("registro", {}))
-    
-    return resultado
 
 @router.get("", response_model=dict)
 async def listar_historial():
@@ -56,7 +29,6 @@ async def listar_historial():
         resultado["registros"] = [enriquecer_historial(r) for r in resultado["registros"]]
     
     return resultado
-
 
 @router.get("/quincenas-disponibles", response_model=dict)
 async def obtener_quincenas_disponibles():
@@ -80,37 +52,6 @@ async def obtener_quincenas_disponibles():
             detail=resultado.get("mensaje")
         )
     
-    return resultado
-
-
-@router.get("/vencidas", response_model=dict)
-async def obtener_actividades_vencidas(solo_quincena_actual: bool = Query(default=True,description="Si es true, solo devuelve las vencidas de la quincena actual")):
-    """
-    Obtiene actividades vencidas
-
-    - Por defecto: solo quincena actual
-    - solo_quincena_actual=false → todas las vencidas históricas
-
-    Ejemplos:
-    - /historial/vencidas
-    - /historial/vencidas?solo_quincena_actual=false
-    """
-
-    resultado = historial_manager.obtener_actividades_vencidas(
-        solo_quincena_actual=solo_quincena_actual
-    )
-
-    if resultado.get("status") != "success":
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=resultado.get("mensaje")
-        )
-
-    if "registros" in resultado:
-        resultado["registros"] = [
-            enriquecer_historial(r) for r in resultado["registros"]
-        ]
-
     return resultado
 
 @router.get("/top-vencidas", response_model=dict)

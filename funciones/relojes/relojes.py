@@ -156,6 +156,20 @@ class Relojes():
         conexiones.agregar_conexion(uuid, conexion['ws'], "reloj")
         conexion = conexiones.obtener_conexion(uuid)
 
+        ahora = datetime.now()
+
+        fecha = {
+            "comando": "actualizar_hora",
+            "anio": ahora.year,
+            "mes": ahora.month,
+            "dia": ahora.day,
+            "hora": ahora.hour,
+            "minuto": ahora.minute,
+            "segundo": ahora.second
+        }
+
+        await conexion['ws'].send_json(fecha)
+        
         await conexion['ws'].send_json(resultado)
         
         return

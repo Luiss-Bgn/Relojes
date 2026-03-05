@@ -1,4 +1,3 @@
-#funcioens auxiliares ára resgistro de tareas en el historial
 import logging
 logger = logging.getLogger(__name__)
 
