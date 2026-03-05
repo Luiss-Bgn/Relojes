@@ -11,9 +11,44 @@ const state = {
 export function initCrearEmpleado(target) {
   if (!target) return;
   target.innerHTML = template();
+  configurarOpcionesRol(target);
   bind(target.querySelector('form'));
 }
 
+function configurarOpcionesRol(target) {
+  const form = target.querySelector('form');
+  // Filtro de roles según el usuario actual
+  const rolSelect = form?.querySelector('#role');
+  const loggedUser = localStorage.getItem("loggedUser");
+  const user = loggedUser ? JSON.parse(loggedUser) : null;
+  const userRole = user?.role ?? "visitante";
+
+  const allowedRoles = userRole === 'admin'
+    ? ['empleado', 'supervisor', 'admin']
+    : ['empleado'];
+
+  const ROLE_LABELS = {
+    empleado: 'Empleado',
+    supervisor: 'Supervisor',
+    admin: 'Administrador'
+  };
+
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = 'Rol:';
+  placeholder.disabled = true;
+  placeholder.selected = true;
+  placeholder.hidden = true;
+  rolSelect.appendChild(placeholder);
+
+  allowedRoles.forEach(role => {
+    const option = document.createElement('option');
+    option.value = role;
+    option.textContent = ROLE_LABELS[role] || role;
+    rolSelect.appendChild(option);
+  });
+
+}
 function template() {
   return `
     <div class="panel-header">
@@ -43,12 +78,7 @@ function template() {
           <div id="pin-validation" class="hint"></div>
         </div>
         <div class="input">
-          <select id="role" name="role" required>
-            <option value="" disabled selected>Rol:</option>
-            <option value="empleado">Empleado</option>
-            <option value="supervisor">Supervisor</option>
-            <option value="admin">Admin</option>
-          </select>
+          <select id="role" name="role" required></select>
         </div>
         <div class="input file-input-wrapper">
           <div class="file-upload-btn-wrapper">
@@ -260,7 +290,7 @@ async function submitForm(form, submitBtn, formFeedback) {
   if (state.isSubmitting) return;
 
   const formData = new FormData(form);
-  const cleanUsername = (formData.get('username') || '').trim();
+  const cleanUsername = (formData.get('username') || '').trim().toLowerCase();
   const password = (formData.get('password') || '').trim();
   const pin = (formData.get('pin') || '').trim();
   const role = (formData.get('role') || '').trim();
@@ -304,6 +334,16 @@ async function submitForm(form, submitBtn, formFeedback) {
   payload.append('puesto', puesto);
   const imagenFile = form.querySelector('#imagen')?.files?.[0];
   if (imagenFile) payload.append('imagen', imagenFile);
+
+  console.log("payload:", {
+    nombre,
+    username: cleanUsername,
+    contraseña: password,
+    pin,
+    rol: role,
+    puesto,
+    imagen: imagenFile
+  });
 
   try {
     const response = await fetch('/usuarios', { method: 'POST', body: payload });

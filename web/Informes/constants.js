@@ -8,10 +8,10 @@
  * Q2: Del día 13 al día 27 del mes actual
  */
 
-export const Q1_INICIO = 28;  // Q1 inicia el día 28 del mes anterior
-export const Q1_FIN = 12;     // Q1 termina el día 12 del mes actual
-export const Q2_INICIO = 13;  // Q2 inicia el día 13
-export const Q2_FIN = 27;     // Q2 termina el día 27
+export const Q1_INICIO = 26;  // Q1 inicia el día 28 del mes anterior
+export const Q1_FIN = 10;     // Q1 termina el día 12 del mes actual
+export const Q2_INICIO = 11;  // Q2 inicia el día 13
+export const Q2_FIN = 25;     // Q2 termina el día 27
 
 /**
  * Convierte una fecha a string YYYY-MM-DD usando zona horaria local

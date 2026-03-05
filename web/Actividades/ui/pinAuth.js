@@ -1,5 +1,46 @@
 import { createNotificationMessage, NOTIFICATION_TYPES } from "../services/notificationTypes.js";
 
+// ─── Configuración de bloqueo por intentos fallidos ───────────────────────────
+const MAX_INTENTOS = 3;            // Número máximo de intentos antes de bloquear
+const TIEMPO_BLOQUEO_MS = 5 * 60 * 1000; // Tiempo de bloqueo en milisegundos (5 minutos)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Registro de intentos fallidos por tarea: { [taskId]: { intentos: number, bloqueadoHasta: number|null } }
+const _intentosFallidos = {};
+
+function _getTareaState(taskId) {
+  if (!_intentosFallidos[taskId]) {
+    _intentosFallidos[taskId] = { intentos: 0, bloqueadoHasta: null };
+  }
+  return _intentosFallidos[taskId];
+}
+
+function _estaBloquada(taskId) {
+  const s = _getTareaState(taskId);
+  if (s.bloqueadoHasta && Date.now() < s.bloqueadoHasta) {
+    return s.bloqueadoHasta;
+  }
+  // Si el bloqueo ya expiró, reiniciar
+  if (s.bloqueadoHasta && Date.now() >= s.bloqueadoHasta) {
+    s.intentos = 0;
+    s.bloqueadoHasta = null;
+  }
+  return null;
+}
+
+function _registrarFallo(taskId) {
+  const s = _getTareaState(taskId);
+  s.intentos += 1;
+  if (s.intentos >= MAX_INTENTOS) {
+    s.bloqueadoHasta = Date.now() + TIEMPO_BLOQUEO_MS;
+  }
+  return s.intentos;
+}
+
+function _reiniciarIntentos(taskId) {
+  delete _intentosFallidos[taskId];
+}
+
 /**
  * Valida un PIN contra la base de datos y devuelve el usuario correspondiente
  * @param {string} pin - PIN a validar
@@ -132,13 +173,37 @@ export const completeTaskWithPin = async (task, pin) => {
     try {
         console.log('🚀 Iniciando completado de tarea con PIN:', task);
 
+        // Verificar si la tarea está bloqueada por intentos fallidos
+        const bloqueadoHasta = _estaBloquada(task.id);
+        if (bloqueadoHasta) {
+            const segundosRestantes = Math.ceil((bloqueadoHasta - Date.now()) / 1000);
+            const minutos = Math.floor(segundosRestantes / 60);
+            const segundos = segundosRestantes % 60;
+            const tiempoStr = minutos > 0
+                ? `${minutos}m ${segundos}s`
+                : `${segundos}s`;
+            return {
+                success: false,
+                message: `Demasiados intentos fallidos. Intenta de nuevo en ${tiempoStr}`
+            };
+        }
+
         // Validar PIN
         const userPin = await validatePin(pin);
         if (!userPin.valid) {
             console.log('❌ PIN inválido');
+            const intentos = _registrarFallo(task.id);
+            const restantes = MAX_INTENTOS - intentos;
+            if (restantes <= 0) {
+                const minutos = Math.floor(TIEMPO_BLOQUEO_MS / 60000);
+                return {
+                    success: false,
+                    message: `PIN incorrecto. Bloqueado por ${minutos} minutos por demasiados intentos`
+                };
+            }
             return {
                 success: false,
-                message: userPin.error || 'PIN incorrecto'
+                message: `PIN incorrecto. Intentos restantes: ${restantes}`
             };
         }
         const user = userPin.user;
@@ -154,6 +219,9 @@ export const completeTaskWithPin = async (task, pin) => {
                 message: validation.error
             };
         }
+
+        // PIN correcto y permisos válidos: reiniciar intentos
+        _reiniciarIntentos(task.id);
 
         // Preparar datos para enviar al servidor
         let updateData = {};
