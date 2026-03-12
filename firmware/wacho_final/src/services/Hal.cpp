@@ -4,7 +4,18 @@
 Hal::VibrationState Hal::vibState = {false, 0, 0};
 
 void Hal::init() {
-    watch.begin();
+    LilyGoLib::LilyGoInitOptions opts;
+    opts.useDisplay  = true;
+    opts.useTouch    = true;
+    opts.useVibrator = true;
+    opts.useFFat     = false;   // archivos en FFat
+    opts.useAccel    = false;
+    opts.useRTC      = true;
+    opts.useGPS      = false;
+    opts.useRadio    = false;
+    opts.scanI2C     = false;  // evita escaneo al iniciar
+
+    watch.begin(opts);
     beginLvglHelper();
     watch.setBrightness(200); // Default brightness
     

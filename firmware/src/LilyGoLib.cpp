@@ -43,6 +43,7 @@ void deviceScan(TwoWire *_port, Stream *stream)
 
 
 LilyGoLib::LilyGoLib()
+    : brightness(0), stream(nullptr), sleepMode(PMU_BTN_WAKEUP), devices_probe(0)
 {
 }
 
@@ -69,7 +70,7 @@ uint32_t LilyGoLib::getDeviceProbe()
     return devices_probe;
 }
 
-bool LilyGoLib::begin(Stream *stream)
+bool LilyGoLib::begin(const LilyGoInitOptions &options, Stream *stream)
 {
     bool res;
 
@@ -83,12 +84,12 @@ bool LilyGoLib::begin(Stream *stream)
     pinMode(BOARD_TOUCH_INT, INPUT);
 
     Wire.begin(BOARD_I2C_SDA, BOARD_I2C_SCL);
-    if (stream) {
+    if (options.scanI2C && stream) {
         deviceScan(&Wire, stream);
     }
 
     Wire1.begin(BOARD_TOUCH_SDA, BOARD_TOUCH_SCL);
-    if (stream) {
+    if (options.scanI2C && stream) {
         deviceScan(&Wire1, stream);
     }
 
@@ -101,101 +102,128 @@ bool LilyGoLib::begin(Stream *stream)
         log_println("Initializing PMU succeeded");
     }
 
-    log_println("Init LEDC");
-#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,0,0)
-    ledcAttach(BOARD_TFT_BL, LEDC_BACKLIGHT_FREQ, LEDC_BACKLIGHT_BIT_WIDTH);
-#else
-    ledcSetup(LEDC_BACKLIGHT_CHANNEL, LEDC_BACKLIGHT_FREQ, LEDC_BACKLIGHT_BIT_WIDTH);
-    ledcAttachPin(BOARD_TFT_BL, LEDC_BACKLIGHT_CHANNEL);
-#endif
-
-
-    log_println("Init TFT");
-    TFT_eSPI::init();
-    setRotation(2);
-    setTextDatum(MC_DATUM);
-    setTextFont(2);
-    fillScreen(TFT_BLACK);
-
-    log_println("Init FFat");
-    if (!FFat.begin()) {
-
-        if (bootDisplay) {
-            setBrightness(50);
-            drawString("Format FFat...", 120, 120);
-        }
-        FFat.format();
+    // Immediately gate off rails we don't need to keep them dark.
+    if (!options.useTouch) {
+        disableALDO3();
+    }
+    if (!options.useRadio) {
+        disableALDO4();
+    }
+    if (!options.useGPS) {
+        disableDC3();
+    }
+    if (!options.useVibrator) {
+        disableBLDO2();
     }
 
-    if (bootDisplay) {
+    if (options.useDisplay) {
+        log_println("Init LEDC");
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,0,0)
+        ledcAttach(BOARD_TFT_BL, LEDC_BACKLIGHT_FREQ, LEDC_BACKLIGHT_BIT_WIDTH);
+#else
+        ledcSetup(LEDC_BACKLIGHT_CHANNEL, LEDC_BACKLIGHT_FREQ, LEDC_BACKLIGHT_BIT_WIDTH);
+        ledcAttachPin(BOARD_TFT_BL, LEDC_BACKLIGHT_CHANNEL);
+#endif
+
+        log_println("Init TFT");
+        TFT_eSPI::init();
+        setRotation(2);
+        setTextDatum(MC_DATUM);
+        setTextFont(2);
+        fillScreen(TFT_BLACK);
+    }
+
+    if (options.useFFat) {
+        log_println("Init FFat");
+        if (!FFat.begin()) {
+            if (bootDisplay && options.useDisplay) {
+                setBrightness(50);
+                drawString("Format FFat...", 120, 120);
+            }
+            FFat.format();
+        }
+    }
+
+    if (bootDisplay && options.useDisplay) {
         fillScreen(TFT_BLACK);
         drawString("Hello T-Watch", 120, 120);
         setBrightness(50);
     }
 
-    log_println("Init Touch");
-    res = TouchDrvFT6X36::begin(Wire1, FT6X36_SLAVE_ADDRESS, BOARD_TOUCH_SDA, BOARD_TOUCH_SCL);
-    if (!res) {
-        log_println("Failed to find FT6X36 - check your wiring!");
-    } else {
-        log_println("Initializing FT6X36 succeeded");
-        interruptTrigger(); //enable Interrupt
-        devices_probe |= WATCH_TOUCH_ONLINE;
+    if (options.useTouch) {
+        log_println("Init Touch");
+        res = TouchDrvFT6X36::begin(Wire1, FT6X36_SLAVE_ADDRESS, BOARD_TOUCH_SDA, BOARD_TOUCH_SCL);
+        if (!res) {
+            log_println("Failed to find FT6X36 - check your wiring!");
+        } else {
+            log_println("Initializing FT6X36 succeeded");
+            interruptTrigger(); //enable Interrupt
+            devices_probe |= WATCH_TOUCH_ONLINE;
+        }
     }
 
-    log_println("Init BMA423");
-    res = SensorBMA423::init(Wire);
-    if (!res) {
-        log_println("Failed to find BMA423 - check your wiring!");
-    } else {
-        log_println("Initializing BMA423 succeeded");
-        setReampAxes(REMAP_BOTTOM_LAYER_TOP_RIGHT_CORNER);
-        setStepCounterWatermark(1);
-        devices_probe |= WATCH_BMA_ONLINE;
+    if (options.useAccel) {
+        log_println("Init BMA423");
+        res = SensorBMA423::init(Wire);
+        if (!res) {
+            log_println("Failed to find BMA423 - check your wiring!");
+        } else {
+            log_println("Initializing BMA423 succeeded");
+            setReampAxes(REMAP_BOTTOM_LAYER_TOP_RIGHT_CORNER);
+            setStepCounterWatermark(1);
+            devices_probe |= WATCH_BMA_ONLINE;
+        }
     }
 
-    log_println("Init PCF8563 RTC");
-    res = SensorPCF8563::init(Wire);
-    if (!res) {
-        log_println("Failed to find PCF8563 - check your wiring!");
-    } else {
-        log_println("Initializing PCF8563 succeeded");
-        disableCLK();   //Disable clock output ， Conserve Backup Battery Current Consumption
-        hwClockRead();  //Synchronize RTC clock to system clock
-        devices_probe |= WATCH_RTC_ONLINE;
+    if (options.useRTC) {
+        log_println("Init PCF8563 RTC");
+        res = SensorPCF8563::init(Wire);
+        if (!res) {
+            log_println("Failed to find PCF8563 - check your wiring!");
+        } else {
+            log_println("Initializing PCF8563 succeeded");
+            disableCLK();   //Disable clock output ， Conserve Backup Battery Current Consumption
+            hwClockRead();  //Synchronize RTC clock to system clock
+            devices_probe |= WATCH_RTC_ONLINE;
+        }
     }
 
-    log_println("Init DRV2605");
-    res = SensorDRV2605::init(Wire);
-    if (!res) {
-        log_println("Failed to find DRV2605 - check your wiring!");
-    } else {
-        log_println("Initializing DRV2605 succeeded");
-        SensorDRV2605::selectLibrary(1);
-        SensorDRV2605::setMode(DRV2605_MODE_INTTRIG);
-        SensorDRV2605::useERM();
-        SensorDRV2605::setWaveform(0, 15);  // play effect
-        SensorDRV2605::setWaveform(1, 0);  // end waveform
-        SensorDRV2605::run();
-        devices_probe |= WATCH_DRV_ONLINE;
+    if (options.useVibrator) {
+        log_println("Init DRV2605");
+        res = SensorDRV2605::init(Wire);
+        if (!res) {
+            log_println("Failed to find DRV2605 - check your wiring!");
+        } else {
+            log_println("Initializing DRV2605 succeeded");
+            SensorDRV2605::selectLibrary(1);
+            SensorDRV2605::setMode(DRV2605_MODE_INTTRIG);
+            SensorDRV2605::useERM();
+            SensorDRV2605::setWaveform(0, 15);  // play effect
+            SensorDRV2605::setWaveform(1, 0);  // end waveform
+            SensorDRV2605::run();
+            devices_probe |= WATCH_DRV_ONLINE;
+        }
     }
 
-    log_println("Init GPS");
-    res = initGPS();
-    if (res) {
-        log_println("UBlox GPS init succeeded, using UBlox GPS Module\n");
-        devices_probe |= WATCH_GPS_ONLINE;
-    } else {
-        log_println("Warning: Failed to find UBlox GPS Module\n");
-        // if not detect gps , turn off dc3
-        disableDC3();
+    if (options.useGPS) {
+        log_println("Init GPS");
+        res = initGPS();
+        if (res) {
+            log_println("UBlox GPS init succeeded, using UBlox GPS Module\n");
+            devices_probe |= WATCH_GPS_ONLINE;
+        } else {
+            log_println("Warning: Failed to find UBlox GPS Module\n");
+            disableDC3();
+        }
     }
 
 #ifdef USING_TWATCH_S3
-    log_println("Init Radio SPI Bus");
-    radioBus.begin(BOARD_RADIO_SCK,
-                   BOARD_RADIO_MISO,
-                   BOARD_RADIO_MOSI);
+    if (options.useRadio) {
+        log_println("Init Radio SPI Bus");
+        radioBus.begin(BOARD_RADIO_SCK,
+                       BOARD_RADIO_MISO,
+                       BOARD_RADIO_MOSI);
+    }
 #endif
 
     beginCore();
@@ -203,6 +231,18 @@ bool LilyGoLib::begin(Stream *stream)
     delay(1000);
 
     return true;
+}
+
+bool LilyGoLib::begin(Stream *stream)
+{
+    LilyGoInitOptions defaults;
+    // Preserve previous behavior: enable everything and scan I2C when a stream is provided.
+    defaults.useAccel = true;
+    defaults.useRTC = true;
+    defaults.useGPS = true;
+    defaults.useRadio = true;
+    defaults.scanI2C = (stream != NULL);
+    return begin(defaults, stream);
 }
 
 void LilyGoLib::beginCore()

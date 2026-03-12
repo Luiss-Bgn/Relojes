@@ -151,6 +151,19 @@ public:
     LilyGoLib();
     ~LilyGoLib();
 
+    struct LilyGoInitOptions {
+        bool useDisplay   = true;
+        bool useTouch     = true;
+        bool useVibrator  = true;
+        bool useFFat      = true;
+        bool useAccel     = false;
+        bool useRTC       = true;
+        bool useGPS       = false;
+        bool useRadio     = false;
+        bool scanI2C      = false;
+    };
+
+    bool begin(const LilyGoInitOptions &options, Stream *stream = NULL);
     bool begin(Stream *stream = NULL);
     void attachPMU(void (*cb)(void));
     void attachBMA(void(*cb)(void));
