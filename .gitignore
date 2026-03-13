@@ -8,3 +8,9 @@ __pycache__/
 .vscode/
 firmware/.pio
 relojes.db
+
+# ejecutable
+
+build
+dist
+Gestor_De_Tareas.spec

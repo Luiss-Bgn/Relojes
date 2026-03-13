@@ -2,6 +2,7 @@
 // MÓDULO DE HISTORIAL - Rankings Dinámicos
 // ============================================
 // Este módulo usa los endpoints de la API /historial/top-empleados y /historial/top-extras
+import { API_BASE } from "../config.js";
 
 // Variables globales
 let quincenasDetectadas = [];
@@ -12,7 +13,7 @@ let quincenaSeleccionada = null;
 // ==================================================
 async function cargarDatosHistorial() {
   try {
-    console.log('🔄 Iniciando carga de datos usando endpoints /historial/top-*...');
+    // console.log('🔄 Iniciando carga de datos usando endpoints /historial/top-*...');
 
     // Obtener quincenas disponibles desde la API
     await cargarQuincenasDisponibles();
@@ -36,9 +37,9 @@ async function cargarDatosHistorial() {
 // ==================================================
 async function cargarQuincenasDisponibles() {
   try {
-    const url = 'http://localhost:8001/historial/quincenas-disponibles';
-    console.log('🔄 Obteniendo quincenas disponibles desde:', url);
-    
+    const url = `${API_BASE}/historial/quincenas-disponibles`;
+    // console.log('🔄 Obteniendo quincenas disponibles desde:', url);
+
     const response = await fetch(url);
     if (!response.ok) {
       console.error('Error al obtener quincenas disponibles:', response.status, response.statusText);
@@ -46,10 +47,10 @@ async function cargarQuincenasDisponibles() {
       generarQuincenasDisponibles();
       return;
     }
-    
+
     const data = await response.json();
-    console.log('✅ Quincenas disponibles recibidas:', data);
-    
+    // console.log('✅ Quincenas disponibles recibidas:', data);
+
     if (data.status === 'success' && data.quincenas && data.quincenas.length > 0) {
       // Mapear las quincenas recibidas al formato esperado
       quincenasDetectadas = data.quincenas.map(q => ({
@@ -77,26 +78,26 @@ function generarQuincenasDisponibles() {
   // Generar quincenas de los últimos 6 meses
   const hoy = new Date();
   const quincenas = [];
-  
+
   // Generar quincenas hacia atrás desde hoy
   for (let i = 0; i < 12; i++) { // 12 quincenas = 6 meses aproximadamente
     const fecha = new Date(hoy);
     fecha.setDate(fecha.getDate() - (i * 15)); // Retroceder 15 días por cada iteración
-    
+
     const dia = fecha.getDate();
     const mes = fecha.getMonth() + 1;
     const ano = fecha.getFullYear();
-    
+
     const q = calcularQuincena(dia, mes, ano);
     const key = `${q.ano}-${q.mes}-${q.quincena}`;
-    
+
     // Evitar duplicados
     if (!quincenas.find(quin => quin.key === key)) {
       const label = `Q${q.quincena} - ${obtenerNombreMes(q.mes)} ${q.ano}`;
       quincenas.push({ ano: q.ano, mes: q.mes, quincena: q.quincena, label, key });
     }
   }
-  
+
   // Ordenar por fecha descendente
   quincenasDetectadas = quincenas.sort((a, b) => {
     if (a.ano !== b.ano) return b.ano - a.ano;
@@ -111,7 +112,7 @@ function calcularQuincena(dia, mes, ano) {
   // 
   // Retorna { quincena, mes, ano } donde mes/ano pueden ser del mes siguiente
   // si el día >= 28
-  
+
   if (dia >= 28) {
     // Días 28+ pertenecen a Q1 del MES SIGUIENTE
     let nuevoMes = mes + 1;
@@ -132,7 +133,7 @@ function calcularQuincena(dia, mes, ano) {
 
 function obtenerNombreMes(mes) {
   const meses = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
   return meses[mes] || '';
 }
 
@@ -158,8 +159,8 @@ function poblarSelectorQuincenas() {
 // ==================================================
 async function fetchTopEmpleados(quincenaData = null) {
   try {
-    let url = 'http://localhost:8001/historial/top-empleados?limite=100';
-    
+    let url = `${API_BASE}/historial/top-empleados?limite=100`;
+
     // Si hay quincena seleccionada, agregar parámetros
     if (quincenaData) {
       url += `&año=${quincenaData.ano}&mes=${quincenaData.mes}&quincena=${quincenaData.quincena}`;
@@ -167,7 +168,7 @@ async function fetchTopEmpleados(quincenaData = null) {
     } else {
       console.log('📊 Fetching top empleados (histórico general)', url);
     }
-    
+
     const response = await fetch(url);
     if (!response.ok) {
       console.error('Error en fetch top empleados:', response.status, response.statusText);
@@ -175,7 +176,7 @@ async function fetchTopEmpleados(quincenaData = null) {
       console.error('Error details:', errorText);
       return { top_empleados: [], periodo: 'Error' };
     }
-    
+
     const data = await response.json();
     console.log('✅ Top empleados recibido:', data);
     return data;
@@ -190,8 +191,8 @@ async function fetchTopEmpleados(quincenaData = null) {
 // ==================================================
 async function fetchTopExtras(quincenaData = null) {
   try {
-    let url = 'http://localhost:8001/historial/top-extras?limite=100';
-    
+    let url = `${API_BASE}/historial/top-extras?limite=100`;
+
     // Si hay quincena seleccionada, agregar parámetros
     if (quincenaData) {
       url += `&año=${quincenaData.ano}&mes=${quincenaData.mes}&quincena=${quincenaData.quincena}`;
@@ -199,7 +200,7 @@ async function fetchTopExtras(quincenaData = null) {
     } else {
       console.log('⭐ Fetching top extras (histórico general)', url);
     }
-    
+
     const response = await fetch(url);
     if (!response.ok) {
       console.error('Error en fetch top extras:', response.status, response.statusText);
@@ -207,7 +208,7 @@ async function fetchTopExtras(quincenaData = null) {
       console.error('Error details:', errorText);
       return { top_extras: [], periodo: 'Error' };
     }
-    
+
     const data = await response.json();
     console.log('✅ Top extras recibido:', data);
     return data;
@@ -244,7 +245,7 @@ async function mostrarRankingEmpleados(quincenaIndex = null) {
   if (rankings.length === 0) {
     console.log('⚠️  Sin datos para mostrar en empleados');
     tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 30px; color: #999;">No hay datos para mostrar</td></tr>';
-    
+
     // Actualizar total a 0
     const elTotal = document.getElementById('totalTareasRanking');
     if (elTotal) elTotal.textContent = '0';
@@ -328,7 +329,7 @@ async function mostrarRankingExtras(quincenaIndex = null) {
 
   if (rankingsExtra.length === 0) {
     tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 30px; color: #999;">No hay tareas extra completadas</td></tr>';
-    
+
     // Actualizar total a 0
     const elTotal = document.getElementById('totalTareasExtraRanking');
     if (elTotal) elTotal.textContent = '0';

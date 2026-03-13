@@ -2,6 +2,7 @@
  * TareasVencidasInformes.js
  * Componente específico para mostrar tareas vencidas en el sistema de informes
  */
+import { API_BASE } from "../../config.js";
 
 export default class TareasVencidasInformes {
     constructor() {
@@ -34,8 +35,8 @@ export default class TareasVencidasInformes {
     async obtenerTareasVencidasAPI() {
         try {
             const url = this.mostrandoQuincena 
-                ? 'http://localhost:8001/historial/top-vencidas?solo_quincena_actual=true' 
-                : 'http://localhost:8001/historial/top-vencidas?solo_quincena_actual=false';
+                ? `${API_BASE}/historial/top-vencidas?solo_quincena_actual=true` 
+                : `${API_BASE}/historial/top-vencidas?solo_quincena_actual=false`;
             
             const response = await fetch(url, { cache: 'no-store' });
             

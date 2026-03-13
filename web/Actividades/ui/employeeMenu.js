@@ -3,6 +3,7 @@ import { showEditarTareasModal } from './modals/editarTareasModal.js';
 import { showVerInfoModal } from './modals/verInfoModal.js';
 import { showToast, showConfirm } from './toast.js';
 import { NOTIFICATION_TYPES, createNotificationMessage } from '../services/notificationTypes.js';
+import { API_BASE } from "../../config.js";
 export const showEmployeeMenu = (emp, event) => {
 
   // Cerrar menú anterior si existe
@@ -107,7 +108,7 @@ async function eliminarEmpleado(emp) {
   }
 
   try {
-    const response = await fetch(`http://localhost:8001/usuarios/${emp.id}`, {
+    const response = await fetch(`${API_BASE}/usuarios/${emp.id}`, {
       method: 'DELETE'
     });
 

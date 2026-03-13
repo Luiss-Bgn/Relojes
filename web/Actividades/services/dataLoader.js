@@ -1,6 +1,7 @@
+import { API_BASE } from "../../config.js";
 export const loadPanelData = async () => {
   try {
-    const response = await fetch(`http://localhost:8001/tareas/panel/obtener`);
+    const response = await fetch(`${API_BASE}/tareas/panel/obtener`);
     if (!response.ok) throw new Error(`Error al obtener panel: ${response.status}`);
     const data = await response.json();
     console.log("Datos del panel cargados:", data);

@@ -2,6 +2,7 @@ import { loadModalHTML } from './modalLoader.js';
 import { showToast, showConfirm } from '../toast.js';
 import { createNotificationMessage, NOTIFICATION_TYPES } from '../../services/notificationTypes.js';
 import { checkTimeConflict, getSelectedDayKey } from './revisarConflictoHorario.js';
+import { API_BASE } from "../../../config.js";
 
 export const showEditarTareasModal = async (emp) => {
   // Obtener rol del usuario actual
@@ -71,7 +72,7 @@ export const showEditarTareasModal = async (emp) => {
 async function loadEmployeeTasks(emp, modal) {
   try {
 
-    const response = await fetch(`http://localhost:8001/tareas/panel/obtener`);
+    const response = await fetch(`${API_BASE}/tareas/panel/obtener`);
     const result = await response.json();
 
     if (result.status === 'success' && result.panel) {
@@ -248,7 +249,7 @@ async function saveTaskChanges(card, tarea, day) {
   };
 
   try {
-    const response = await fetch(`http://localhost:8001/tareas/${tarea.id}`, {
+    const response = await fetch(`${API_BASE}/tareas/${tarea.id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -288,7 +289,7 @@ async function deleteTask(card, tareaId, emp) {
   }
 
   try {
-    const response = await fetch(`http://localhost:8001/tareas/${tareaId}`, {
+    const response = await fetch(`${API_BASE}/tareas/${tareaId}`, {
       method: 'DELETE'
     });
 

@@ -1,6 +1,7 @@
 import { loadModalHTML } from './modalLoader.js';
 import { showToast } from '../toast.js';
 import { createNotificationMessage, NOTIFICATION_TYPES } from '../../services/notificationTypes.js';
+import { API_BASE } from "../../../config.js";
 
 const state = {
   pinTimer: null,
@@ -404,7 +405,7 @@ async function saveEmployeeChanges(emp, modal, overlay) {
       formData.append('imagen', photoInput.files[0]);
     }
     
-    const response = await fetch(`http://localhost:8001/usuarios/${emp.id}`, {
+    const response = await fetch(`${API_BASE}/usuarios/${emp.id}`, {
       method: 'PUT',
       body: formData
     });
@@ -464,7 +465,7 @@ function handlePinChange(pinInput, pinFeedback, empleadoId) {
 
   state.pinTimer = setTimeout(async () => {
     try {
-      const response = await fetch(`http://localhost:8001/usuarios/pin/${pin}`);
+      const response = await fetch(`${API_BASE}/usuarios/pin/${pin}`);
       if (response.ok) {
         const data = await response.json();
         if (data.status === 'success') {
@@ -521,7 +522,7 @@ function handleUsernameChange(usernameInput, usernameFeedback, empleadoId) {
 
   state.usernameTimer = setTimeout(async () => {
     try {
-      const response = await fetch(`http://localhost:8001/usuarios/usuario/${username}`);
+      const response = await fetch(`${API_BASE}/usuarios/usuario/${username}`);
       if (response.ok) {
         const data = await response.json();
         if (data.status === 'success') {
@@ -561,7 +562,7 @@ async function checkRelojConnection(empleadoId, modal) {
   if (!statusContainer) return;
   
   try {
-    const response = await fetch('http://localhost:8001/relojes-conectados');
+    const response = await fetch(`${API_BASE}/relojes-conectados`);
     if (!response.ok) throw new Error('Error al cargar relojes');
     
     const relojes = await response.json();

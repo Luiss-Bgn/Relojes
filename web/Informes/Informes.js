@@ -12,7 +12,7 @@ const resumenContainer = document.getElementById("resumen-container");
 const tareasVencidasContainer = document.getElementById("tareas-vencidas-container");
 const toggleButtons = document.querySelectorAll(".toggle-btn");
 
-const API_BASE = "http://localhost:8001";
+import { API_BASE } from "../config.js";
 
 // ===============================
 // ESTADO GLOBAL

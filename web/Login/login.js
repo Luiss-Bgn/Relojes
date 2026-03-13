@@ -6,10 +6,9 @@ if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         
-        const username = document.getElementById("username").value.trim();
+        const username = document.getElementById("username").value.trim().toLowerCase();
         const contraseña = document.getElementById("password").value;
         const mensajeElement = document.getElementById("mensaje");
-
         try {
             const response = await fetch("/usuarios/autenticar", {
                 method: "POST",

@@ -5,6 +5,7 @@ import { completeTaskWithPin, hasActiveSession } from '../pinAuth.js';
 import { createNotificationMessage, NOTIFICATION_TYPES } from '../../services/notificationTypes.js';
 import { checkTimeConflict, getSelectedDayKey } from './revisarConflictoHorario.js';
 import {obtenerEmpleado} from '../../api/apiClient.js';
+import { API_BASE } from "../../../config.js";
 
 const STATUS_LABELS = {
   'sin_iniciar': 'Sin Iniciar',
@@ -395,7 +396,7 @@ async function saveTaskChanges(modal, tarea, overlay) {
   };
 
   try {
-    const response = await fetch(`http://localhost:8001/tareas/${tarea.id}`, {
+    const response = await fetch(`${API_BASE}/tareas/${tarea.id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -433,7 +434,7 @@ async function deleteTask(tareaId, overlay) {
   }
 
   try {
-    const response = await fetch(`http://localhost:8001/tareas/${tareaId}`, {
+    const response = await fetch(`${API_BASE}/tareas/${tareaId}`, {
       method: 'DELETE'
     });
 
@@ -466,7 +467,7 @@ async function completeTask(tareaId, overlay) {
   }
 
   try {
-    const response = await fetch(`http://localhost:8001/tareas/${tareaId}`, {
+    const response = await fetch(`${API_BASE}/tareas/${tareaId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -503,7 +504,7 @@ async function completeExtraTask(tareaId, employeeId, overlay) {
     return;
   }
   try {
-    const response = await fetch(`http://localhost:8001/tareas/${tareaId}`, {
+    const response = await fetch(`${API_BASE}/tareas/${tareaId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

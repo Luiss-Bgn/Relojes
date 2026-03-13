@@ -1,4 +1,4 @@
-const WS_URL = "ws://localhost:8000/ws";
+import { WS_URL } from "../../config.js";
 const RETRY_MS = 4000;
 
 export const createSocketClient = ({ onMessage, onStatus }) => {

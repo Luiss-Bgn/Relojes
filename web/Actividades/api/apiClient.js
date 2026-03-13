@@ -1,5 +1,4 @@
-const API_BASE = "http://localhost:8001";
-
+import { API_BASE } from "../../config.js";
 export const api = {
   async getPanel(fecha = "a") {
     const response = await fetch(`${API_BASE}/tareas/panel/${fecha}`);
@@ -10,7 +9,7 @@ export const api = {
 
 export async function obtenerEmpleado(empleadoId) {
   try {
-    const response = await fetch(`http://localhost:8001/usuarios/${empleadoId}`, { cache: 'no-store' });
+    const response = await fetch(`${API_BASE}/usuarios/${empleadoId}`, { cache: 'no-store' });
     if (response.ok) {
       const empleado = await response.json();
       // console.log('Empleado obtenido:', empleado);

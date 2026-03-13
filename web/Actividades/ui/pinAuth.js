@@ -1,4 +1,5 @@
 import { createNotificationMessage, NOTIFICATION_TYPES } from "../services/notificationTypes.js";
+import { API_BASE } from "../../config.js";
 
 // ─── Configuración de bloqueo por intentos fallidos ───────────────────────────
 const MAX_INTENTOS = 3;            // Número máximo de intentos antes de bloquear
@@ -49,7 +50,7 @@ function _reiniciarIntentos(taskId) {
 export const validatePin = async (pin) => {
     try {
         // Obtener información del empleado por PIN desde el endpoint específico
-        const response = await fetch(`http://localhost:8001/usuarios/pin/${pin}`);
+        const response = await fetch(`${API_BASE}/usuarios/pin/${pin}`);
 
         // console.log("respuesta", response);
         if (!response.ok) {
@@ -250,7 +251,7 @@ export const completeTaskWithPin = async (task, pin) => {
 
         // Enviar al servidor
         console.log('📡 Enviando actualización al servidor:', updateData);
-        const response = await fetch(`http://localhost:8001/tareas/${task.id}`, {
+        const response = await fetch(`${API_BASE}/tareas/${task.id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
