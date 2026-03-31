@@ -3,26 +3,26 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
-    padding: 0;
-    background-color: #f4f4f4;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background: #f4f4f4;
+    color: var(--gray-900);
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
+    text-align: left;
 }
 
 /* Contenedor principal - idéntico a Informes y Gestión */
 .container {
-    background-color: #ffffff;
-    padding: 20px;
-    border-radius: 15px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-    width: 90%;
-    height: 85%;
-    margin: 0 auto;
+    width: 98%;
+    background: #ffffff;
+    margin: 60px auto 10px;
+    padding: 0;
+    border-radius: 14px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+    min-height: calc(100vh - 80px);
     overflow-y: auto;
 }
 
@@ -51,7 +51,8 @@ body {
 }
 
 .header p {
-    display: none; /* Ocultar subtítulo para ahorrar espacio */
+    display: none;
+    /* Ocultar subtítulo para ahorrar espacio */
 }
 
 /* Filtros mejorados */
@@ -154,7 +155,7 @@ body {
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
     transition: left 0.5s;
 }
 
@@ -177,9 +178,12 @@ body {
 }
 
 @keyframes pulse {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 1;
     }
+
     50% {
         opacity: 0.7;
     }
@@ -468,12 +472,12 @@ body {
 }
 
 /* Aplicar max-height al parent directo */
-.dashboard-unified > .ranking-section:last-child {
+.dashboard-unified>.ranking-section:last-child {
     flex: 0 0 auto;
     max-height: 700px;
 }
 
-.dashboard-unified > .ranking-section:last-child .tabla-empleados-scroll {
+.dashboard-unified>.ranking-section:last-child .tabla-empleados-scroll {
     flex: 0 0 auto;
     max-height: 500px !important;
     overflow-y: auto !important;
@@ -482,21 +486,21 @@ body {
 }
 
 /* Scrollbar personalizado para tabla de extras */
-.dashboard-unified > .ranking-section:last-child .tabla-empleados-scroll::-webkit-scrollbar {
+.dashboard-unified>.ranking-section:last-child .tabla-empleados-scroll::-webkit-scrollbar {
     width: 8px;
 }
 
-.dashboard-unified > .ranking-section:last-child .tabla-empleados-scroll::-webkit-scrollbar-track {
+.dashboard-unified>.ranking-section:last-child .tabla-empleados-scroll::-webkit-scrollbar-track {
     background: #f1f5f9;
     border-radius: 10px;
 }
 
-.dashboard-unified > .ranking-section:last-child .tabla-empleados-scroll::-webkit-scrollbar-thumb {
+.dashboard-unified>.ranking-section:last-child .tabla-empleados-scroll::-webkit-scrollbar-thumb {
     background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
     border-radius: 10px;
 }
 
-.dashboard-unified > .ranking-section:last-child .tabla-empleados-scroll::-webkit-scrollbar-thumb:hover {
+.dashboard-unified>.ranking-section:last-child .tabla-empleados-scroll::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
 }
 
@@ -507,7 +511,7 @@ body {
     background: white;
     border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 #tablaTareasExtraTop {
@@ -517,7 +521,7 @@ body {
     background: white;
     border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 #tablaEmpleadosTop thead tr {
@@ -744,7 +748,7 @@ body {
     font-size: 0.85rem;
     background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
     color: #6b7280;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .rank-badge.gold {
@@ -767,10 +771,13 @@ body {
 }
 
 @keyframes pulseGold {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: scale(1);
         box-shadow: 0 3px 12px rgba(251, 191, 36, 0.4);
     }
+
     50% {
         transform: scale(1.05);
         box-shadow: 0 4px 16px rgba(251, 191, 36, 0.6);
@@ -804,7 +811,7 @@ body {
     background: #f0f0f0;
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .progress-fill {
@@ -841,7 +848,7 @@ body {
     font-size: 0.7rem;
     font-weight: 700;
     color: #1f2937;
-    text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
 }
 
 /* Tareas Problemáticas mejoradas */
@@ -859,10 +866,11 @@ table {
     background: white;
     border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-th, td {
+th,
+td {
     padding: 12px 8px;
     text-align: left;
     font-size: 0.8rem;
@@ -969,9 +977,12 @@ td strong {
 }
 
 @keyframes warningPulse {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 1;
     }
+
     50% {
         opacity: 0.6;
     }
@@ -1032,11 +1043,11 @@ td strong {
         grid-template-columns: 1fr;
         grid-template-rows: auto 1fr;
     }
-    
+
     .dashboard-left {
         grid-row: 1;
     }
-    
+
     .dashboard-right {
         grid-row: 2;
     }
@@ -1140,15 +1151,15 @@ td strong {
     .filters {
         flex-direction: column;
     }
-    
+
     .filter-item {
         width: 100%;
     }
-    
+
     .stats-compact {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
     #tablaEmpleadosTop th,
     #tablaEmpleadosTop td {
         padding: 8px 6px;

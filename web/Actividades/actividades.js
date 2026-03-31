@@ -30,8 +30,6 @@ const createAverageProgressChart = (percentage) => {
   const wrapper = document.createElement("div");
   wrapper.style.cssText = `
     position: relative;
-    width: 120px;
-    height: 120px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -39,9 +37,9 @@ const createAverageProgressChart = (percentage) => {
 
   // Crear SVG circular
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("width", "120");
-  svg.setAttribute("height", "120");
-  svg.setAttribute("viewBox", "0 0 120 120");
+  svg.setAttribute("width", "102");
+  svg.setAttribute("height", "102");
+  svg.setAttribute("viewBox", "9 9 102 102");
 
   // Círculo de fondo (rojo - puntos no ganados)
   const backgroundCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");

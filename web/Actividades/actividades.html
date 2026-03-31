@@ -43,7 +43,7 @@
       <div class="legend-container">
         <div class="legend" id="legend"></div>
       </div>
-      
+
       <!-- Contenedor 2: Fecha y resumen del día -->
       <div class="date-container">
         <div class="date-block">
@@ -55,29 +55,35 @@
           <p class="muted" id="current-time">--</p>
         </div>
       </div>
-      
+
       <!-- Contenedor 3: Stats/Promedio empleados -->
       <div class="stats-container">
         <div class="stats" id="stats">
           <div class="stat-card main-stat">
-            <h3 class="stat-title">Promedio de todos los empleados</h3>
             <div class="stat-content">
               <div class="progress-section">
                 <div id="average-progress-chart"></div>
-                <div class="legend-section">
-                  <div class="legend-item">
-                    <span class="legend-dot" style="background-color: #22c55e;"></span>
-                    <span>Total puntos ganados</span>
+              </div>
+                <div style="display: flex; flex-direction: column; justify-content: space-between;">
+                <h3 class="stat-title">Promedio de todos los empleados</h3>
+
+                <div style="display: flex;  gap: 16px;">
+                  <div class="legend-section">
+                    <div class="legend-item">
+                      <span class="legend-dot" style="background-color: #22c55e;"></span>
+                      <span>Total puntos ganados</span>
+                    </div>
+                    <div class="legend-item">
+                      <span class="legend-dot" style="background-color: #ef4444;"></span>
+                      <span>Puntos no ganados</span>
+                    </div>
                   </div>
-                  <div class="legend-item">
-                    <span class="legend-dot" style="background-color: #ef4444;"></span>
-                    <span>Puntos no ganados</span>
+                  <div class="extra-section">
+                    <div class="stat-label">Puntos extras ganados</div>
+                    <div class="stat-value" id="total-extra-points">0</div>
                   </div>
                 </div>
-              </div>
-              <div class="extra-section">
-                <div class="stat-label">Puntos extras ganados</div>
-                <div class="stat-value" id="total-extra-points">0</div>
+
               </div>
             </div>
           </div>

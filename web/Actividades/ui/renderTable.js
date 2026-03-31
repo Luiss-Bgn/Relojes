@@ -123,7 +123,7 @@ const createProgressChart = (percentage) => {
   backgroundCircle.setAttribute("r", "24");
   backgroundCircle.setAttribute("fill", "none");
   backgroundCircle.setAttribute("stroke", "#e5e7eb");
-  backgroundCircle.setAttribute("stroke-width", "6");
+  backgroundCircle.setAttribute("stroke-width", "8");
 
   // Círculo de progreso
   const progressCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -132,7 +132,7 @@ const createProgressChart = (percentage) => {
   progressCircle.setAttribute("r", "24");
   progressCircle.setAttribute("fill", "none");
   progressCircle.setAttribute("stroke", color);
-  progressCircle.setAttribute("stroke-width", "6");
+  progressCircle.setAttribute("stroke-width", "8");
   progressCircle.setAttribute("stroke-linecap", "round");
   
   const circumference = 2 * Math.PI * 24;

@@ -317,7 +317,7 @@ function createUserCard() {
     userNameDisplay.id = 'user-name-display';
     userNameDisplay.style.cssText = `
       position: fixed;
-      top: 20px;
+      top: 10px;
       left: 20px;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
