@@ -15,7 +15,7 @@ export const showCrearTareaModal = async (emp) => {
 
   // Cargar HTML del modal
   const modalHTML = await loadModalHTML('/web/Actividades/ui/modals/crearTareaModal.html');
-  
+
   if (!modalHTML) {
     showToast('Error al cargar el modal', 'error');
     return;
@@ -35,11 +35,11 @@ export const showCrearTareaModal = async (emp) => {
   // Event listeners para botones de cerrar
   const closeBtn = modal.querySelector('#close-crear-tarea');
   const cancelBtn = modal.querySelector('#cancel-crear-tarea');
-  
+
   if (closeBtn) {
     closeBtn.addEventListener('click', () => overlay.remove());
   }
-  
+
   if (cancelBtn) {
     cancelBtn.addEventListener('click', () => overlay.remove());
   }
@@ -48,75 +48,95 @@ export const showCrearTareaModal = async (emp) => {
   const form = modal.querySelector('#crear-tarea-form');
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     const formData = new FormData(form);
-    const diasSeleccionados = Array.from(form.querySelectorAll('input[name="dias"]:checked'))
-      .map(cb => cb.value);
-    
+    const diasSeleccionados = Array.from(
+      form.querySelectorAll('input[name="dias"]:checked')
+    ).map(cb => cb.value);
+
     if (diasSeleccionados.length === 0) {
       showToast('Debes seleccionar al menos un día de la semana', 'warning');
       return;
     }
-    
+
     const hora_ini = formData.get('hora_ini');
     const hora_fin = formData.get('hora_fin');
-    
+
     // Validación 1: hora final no puede ser igual o menor a hora inicio
     if (hora_fin && hora_ini && hora_fin <= hora_ini) {
       showToast('La hora final debe ser mayor a la hora de inicio', 'warning');
       return;
     }
-    
-    // Determinar estatus según si la hora ya pasó
-    const estatus = determinarEstatus(diasSeleccionados, hora_ini);
-    
-    const tareaData = {
+
+    // Validación 2: verificar solapamiento de horarios
+    const conflictInfo = await checkTimeConflict(emp.id, diasSeleccionados, hora_ini, hora_fin);
+    if (conflictInfo) {
+      showToast(
+        `Ya existe "${conflictInfo.nombre}" el ${conflictInfo.dia} de ${conflictInfo.hora_ini} a ${conflictInfo.hora_fin}`,
+        'error',
+        5000
+      );
+      return;
+    }
+
+    // Crear una tarea independiente por cada día seleccionado
+    // IMPORTANTE: fecha se manda como arreglo con un solo elemento
+    // para que siga siendo compatible con el backend actual.
+    const tareasPorCrear = diasSeleccionados.map(dia => ({
       nombre: formData.get('nombre'),
       descripcion: formData.get('descripcion'),
       hora_ini: hora_ini,
       hora_fin: hora_fin,
-      puntos: parseInt(formData.get('puntos')),
+      puntos: parseInt(formData.get('puntos'), 10),
       disponible_para_rol: formData.get('disponible_para_rol'),
-      fecha: diasSeleccionados,
+      fecha: [dia],
       id_dueño: emp.id,
-      estatus: estatus,
-    };
-    
-    // Validación 2: verificar solapamiento de horarios
-    const conflictInfo = await checkTimeConflict(emp.id, diasSeleccionados, hora_ini, hora_fin);
-    if (conflictInfo) {
-      showToast(`Ya existe "${conflictInfo.nombre}" el ${conflictInfo.dia} de ${conflictInfo.hora_ini} a ${conflictInfo.hora_fin}`, 'error', 5000);
-      return;
-    }
-    
-    console.log('Crear tarea:', tareaData);
-    
-    try {
-      const response = await fetch(`/tareas`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(tareaData)
-      });
-      
-      const result = await response.json();
-      
-      if (response.ok) {
-        if(estatus === 'futura'){
-          showToast('Tarea creada exitosamente para la siguiente semana ya que la hora de inicio ya pasó para hoy.', 'info', 7000);
-        } else {
-        showToast('Tarea creada exitosamente', 'success');
-        }
-        overlay.remove();
-        // Actualizar panel sin recargar página
-        const event = new CustomEvent('refreshPanel');
+      estatus: determinarEstatusPorDia(dia, hora_ini),
+    }));
 
-        createNotificationMessage(NOTIFICATION_TYPES.TAREA_CREADA,{id_dueño:emp.id});
-        window.dispatchEvent(event);
-      } else {
-        showToast('Error al crear la tarea: ' + (result.message || 'Error desconocido'), 'error');
+    console.log('Tareas a crear:', tareasPorCrear);
+
+    try {
+      for (const tareaData of tareasPorCrear) {
+        const response = await fetch('/tareas', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(tareaData),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          console.error('Respuesta con error:', result);
+          showToast(
+            `Error al crear la tarea para ${tareaData.fecha[0]}: ${result.detail || result.message || 'Error desconocido'}`,
+            'error'
+          );
+          return;
+        }
       }
+
+      const algunaFutura = tareasPorCrear.some(t => t.estatus === 'futura');
+
+      if (algunaFutura) {
+        showToast(
+          'Tareas creadas exitosamente. La del día de hoy se marcó como futura porque la hora de inicio ya pasó.',
+          'info',
+          7000
+        );
+      } else {
+        showToast('Tareas creadas exitosamente', 'success');
+      }
+
+      overlay.remove();
+
+      // Actualizar panel sin recargar página
+      const event = new CustomEvent('refreshPanel');
+      createNotificationMessage(NOTIFICATION_TYPES.TAREA_CREADA, { id_dueño: emp.id });
+      window.dispatchEvent(event);
+
     } catch (error) {
       console.error('Error:', error);
       showToast('Error al crear la tarea. Verifica tu conexión.', 'error');
@@ -138,24 +158,19 @@ function timeToMinutes(timeStr) {
   return h * 60 + m;
 }
 
-// Función para determinar el estatus según si la hora ya pasó
-function determinarEstatus(dias, hora_ini) {
+// Determina el estatus de una tarea para un día específico
+function determinarEstatusPorDia(dia, hora_ini) {
   const ahora = new Date();
-  const diaActual = ahora.toLocaleDateString("es-ES", { weekday: "long" });
+  const diaActual = ahora.toLocaleDateString('es-ES', { weekday: 'long' });
   const diaActualCapitalizado = diaActual.charAt(0).toUpperCase() + diaActual.slice(1);
-  
+
   const horaActualMinutos = ahora.getHours() * 60 + ahora.getMinutes();
   const horaIniMinutos = timeToMinutes(hora_ini);
-  
-  // Verificar si alguno de los días seleccionados es hoy
-  const incluyeHoy = dias.includes(diaActualCapitalizado);
-  
-  if (incluyeHoy && horaIniMinutos < horaActualMinutos) {
-    // La tarea es para hoy pero la hora ya pasó
+
+  // Solo se marca como futura si el día evaluado es hoy y la hora ya pasó
+  if (dia === diaActualCapitalizado && horaIniMinutos < horaActualMinutos) {
     return 'futura';
   }
-  
+
   return 'sin_iniciar';
 }
-
-// checkTimeConflict ahora está en ./modalTimeConflict.js
