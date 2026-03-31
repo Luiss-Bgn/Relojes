@@ -14,6 +14,7 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
+    flex-shrink: 0;
 }
 
 .empleado-card::before {
@@ -184,4 +185,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
 }
