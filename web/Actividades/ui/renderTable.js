@@ -3,6 +3,8 @@ import { showEmployeeMenu } from "./employeeMenu.js";
 import { showVerEditarTareaModal } from "./modals/verEditarTareaModal.js";
 import { showToast } from "./toast.js";
 
+import { INACTIVITY_TIMEOUT } from "../../config.js";
+
 const headEl = document.getElementById("panel-head");
 const bodyEl = document.getElementById("panel-body");
 const legendEl = document.getElementById("legend");
@@ -626,7 +628,6 @@ function openTaskModal(row, clickedEmployeeId = null) {
 // Sistema de auto-scroll para centrar fila activa
 let lastActivityTime = Date.now();
 let autoScrollTimer = null;
-const INACTIVITY_TIMEOUT = 30000; // 30 segundos
 
 // Función para detectar si hay scroll vertical activo
 const hasVerticalScroll = () => {
@@ -683,12 +684,17 @@ const scrollToRowCenter = (row) => {
   const tableWrapper = document.querySelector('.table-wrapper');
   if (!tableWrapper) return;
   
-  const rowTop = row.offsetTop;
-  const rowHeight = row.offsetHeight;
-  const wrapperHeight = tableWrapper.clientHeight;
+  const headerHeight = headEl?.getBoundingClientRect().height || 0;
+  const visibleBodyHeight = tableWrapper.clientHeight - headerHeight;
+
+  if (visibleBodyHeight <= 0) return;
+
+  const rowTop = row.offsetTop;//Es la distancia desde el inicio del contenedor de posicionamiento hasta la parte superior de la fila
+  const rowHeight = row.offsetHeight;//altura de la fila
+  const rowCenter = rowTop + (rowHeight / 2);//distancia desde el centro de la fila hasta el inicio del contenedor
   
-  // Calcular posición para centrar la fila
-  const scrollPosition = rowTop - (wrapperHeight / 2) + (rowHeight / 2);
+  // Centrar la fila en el area visible del tbody, excluyendo el thead sticky
+  const scrollPosition = rowCenter - headerHeight - (visibleBodyHeight / 2);
   
   // Hacer scroll suave
   tableWrapper.scrollTo({
