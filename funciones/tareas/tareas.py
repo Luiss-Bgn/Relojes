@@ -2,6 +2,8 @@ from datetime import datetime
 from database.database import DatabaseManager
 from database.db_historial import HistorialManager
 from database.db_tareas import TareasManager
+from database.db_ciclo import CicloOperativoService
+from backup_scheduler import BACKUP_MORNING_TIME
 from conexiones import conexiones
 
 class Tareas():
@@ -19,10 +21,12 @@ class Tareas():
         try:
             self.db_manager = DatabaseManager("relojes.db")
             self.tareas_manager = TareasManager(self.db_manager)
+            self.ciclo = CicloOperativoService(self.db_manager)
             print("✓ TareasManager inicializado correctamente en Tareas")
         except Exception as e:
             print(f"✗ Error al inicializar TareasManager: {e}")
             self.tareas_manager = None
+            self.ciclo = None
 
         self.comandos = {
             "crear_tarea": self.CrearTarea,
@@ -199,8 +203,29 @@ class Tareas():
         lista_modificaciones = []
         lista_notificaciones = []
 
+        # Guard 1: Si hay un backup corriendo en este momento, no tocar tareas
+        if self.ciclo and self.ciclo.is_backup_running():
+            return
+
         ahora = datetime.now()
         dia = self.dias[ahora.weekday()]
+
+        # Guard 2: Determinar si el corte matutino ya cerró para hoy
+        fecha_real_hoy = ahora.strftime('%Y-%m-%d')
+        morning_cerrado = (
+            self.ciclo is not None
+            and self.ciclo.is_cutoff_done(
+                fecha_real_hoy, dia, CicloOperativoService.CORTE_MORNING
+            )
+        )
+
+        # Calcular límite del corte matutino una sola vez
+        try:
+            morning_cutoff_time = datetime.strptime(BACKUP_MORNING_TIME, "%H:%M").replace(
+                year=ahora.year, month=ahora.month, day=ahora.day
+            )
+        except ValueError:
+            morning_cutoff_time = None
 
         lista_tareas = self.tareas_manager.listar_por_fecha(dia)
 
@@ -215,6 +240,11 @@ class Tareas():
                 year=ahora.year, month=ahora.month, day=ahora.day
             )
 
+            # Guard 3: Si el corte matutino ya cerró y esta tarea pertenece
+            # a ese corte (hora_fin <= morning_cutoff), no actualizar su estado
+            # (el historial ya tiene el snapshot correcto de esa tarea).
+            if morning_cerrado and morning_cutoff_time and hora_fin <= morning_cutoff_time:
+                continue
 
             if tarea['estatus'] in ['completada', 'extra', 'vencida', 'futura']:
                 continue
@@ -223,22 +253,18 @@ class Tareas():
             elif ahora > hora_fin:
                 tarea['estatus'] = 'vencida'
                 hubo_cambios = True
-                # print(f"Tarea vencida: {tarea['nombre']}")
 
             # En progreso
             elif hora_inicio <= ahora <= hora_fin and tarea['estatus'] == 'sin_iniciar':
                 tarea['estatus'] = 'en_progreso'
                 hubo_cambios = True
-                # print(f"Tarea en progreso: {tarea['nombre']}")
 
             if hubo_cambios:
                 lista_modificaciones.append(tarea)
                 lista_notificaciones.append(tarea['id_dueño'])
 
-            
         if lista_modificaciones:
             resultado = self.tareas_manager.actualizar_varios(lista_modificaciones)
-            # print(resultado)
 
             await self.eventManager.emit("tareas_actualizadas", {
                 "source": "tareas",

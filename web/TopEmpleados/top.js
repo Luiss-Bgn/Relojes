@@ -61,8 +61,9 @@ async function cargarQuincenasDisponibles() {
         key: `${q.año}-${q.mes}-${q.quincena}`
       }));
     } else {
-      console.warn('⚠️  No se encontraron quincenas con datos, usando generación por defecto');
-      generarQuincenasDisponibles();
+      // API devolvió éxito pero sin datos: no inventar quincenas
+      console.warn('⚠️  No se encontraron quincenas con datos');
+      quincenasDetectadas = [];
     }
   } catch (error) {
     console.error('Error al cargar quincenas disponibles:', error);
@@ -72,61 +73,35 @@ async function cargarQuincenasDisponibles() {
 }
 
 // ==================================================
-// 3. GENERAR QUINCENAS DISPONIBLES (FALLBACK)
+// 3. GENERAR QUINCENAS DISPONIBLES (FALLBACK DE ERROR)
 // ==================================================
 function generarQuincenasDisponibles() {
-  // Generar quincenas de los últimos 6 meses
+  // Fallback solo cuando hay un error de red/servidor.
+  // Genera únicamente la quincena actual para no inventar datos.
   const hoy = new Date();
-  const quincenas = [];
+  const dia = hoy.getDate();
+  const mes = hoy.getMonth() + 1;
+  const ano = hoy.getFullYear();
 
-  // Generar quincenas hacia atrás desde hoy
-  for (let i = 0; i < 12; i++) { // 12 quincenas = 6 meses aproximadamente
-    const fecha = new Date(hoy);
-    fecha.setDate(fecha.getDate() - (i * 15)); // Retroceder 15 días por cada iteración
-
-    const dia = fecha.getDate();
-    const mes = fecha.getMonth() + 1;
-    const ano = fecha.getFullYear();
-
-    const q = calcularQuincena(dia, mes, ano);
-    const key = `${q.ano}-${q.mes}-${q.quincena}`;
-
-    // Evitar duplicados
-    if (!quincenas.find(quin => quin.key === key)) {
-      const label = `Q${q.quincena} - ${obtenerNombreMes(q.mes)} ${q.ano}`;
-      quincenas.push({ ano: q.ano, mes: q.mes, quincena: q.quincena, label, key });
-    }
-  }
-
-  // Ordenar por fecha descendente
-  quincenasDetectadas = quincenas.sort((a, b) => {
-    if (a.ano !== b.ano) return b.ano - a.ano;
-    if (a.mes !== b.mes) return b.mes - a.mes;
-    return b.quincena - a.quincena;
-  });
+  const q = calcularQuincena(dia, mes, ano);
+  const key = `${q.ano}-${q.mes}-${q.quincena}`;
+  const label = `Q${q.quincena} - ${obtenerNombreMes(q.mes)} ${q.ano}`;
+  quincenasDetectadas = [{ ano: q.ano, mes: q.mes, quincena: q.quincena, label, key }];
 }
 
 function calcularQuincena(dia, mes, ano) {
-  // Q1: días 28-31 del mes anterior + días 1-12 del mes actual
-  // Q2: días 13-27 del mes actual
-  // 
-  // Retorna { quincena, mes, ano } donde mes/ano pueden ser del mes siguiente
-  // si el día >= 28
-
-  if (dia >= 28) {
-    // Días 28+ pertenecen a Q1 del MES SIGUIENTE
+  // Regla de negocio:
+  //   día 26-31 → Q1 del MES SIGUIENTE
+  //   día 1-10  → Q1 del mes actual
+  //   día 11-25 → Q2 del mes actual
+  if (dia >= 26) {
     let nuevoMes = mes + 1;
     let nuevoAno = ano;
-    if (nuevoMes > 12) {
-      nuevoMes = 1;
-      nuevoAno = ano + 1;
-    }
+    if (nuevoMes > 12) { nuevoMes = 1; nuevoAno = ano + 1; }
     return { quincena: 1, mes: nuevoMes, ano: nuevoAno };
-  } else if (dia <= 12) {
-    // Días 1-12 pertenecen a Q1 del mes actual
+  } else if (dia <= 10) {
     return { quincena: 1, mes: mes, ano: ano };
   } else {
-    // Días 13-27 pertenecen a Q2 del mes actual
     return { quincena: 2, mes: mes, ano: ano };
   }
 }
@@ -401,6 +376,9 @@ async function aplicarFiltroQuincena() {
   await mostrarRankingEmpleados(quincenaIndex);
   await mostrarRankingExtras(quincenaIndex);
 }
+
+// Compatibilidad con handlers inline en top.html (onchange="aplicarFiltroQuincena()")
+window.aplicarFiltroQuincena = aplicarFiltroQuincena;
 
 // ==================================================
 // 10. INICIALIZACIÓN AL CARGAR LA PÁGINA

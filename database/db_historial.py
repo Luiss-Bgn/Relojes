@@ -1,14 +1,20 @@
 import sqlite3
+import calendar
 from contextlib import contextmanager
 from typing import Optional, List, Dict, Any
 import logging
 from datetime import datetime, timedelta
 
 class QuincenaConfig:
-    DIA_INICIO_Q1 = 26
-    DIA_FIN_Q1 = 10
-    DIA_INICIO_Q2 = 11
-    DIA_FIN_Q2 = 25
+    """
+    Regla de negocio de quincenas:
+      Q1 del mes M: del día 26 del mes anterior al día 10 del mes M.
+      Q2 del mes M: del día 11 al día 25 del mes M.
+    """
+    DIA_INICIO_Q1 = 26   # Inicio Q1: día 26 del mes anterior
+    DIA_FIN_Q1    = 10   # Fin Q1:    día 10 del mes actual
+    DIA_INICIO_Q2 = 11   # Inicio Q2: día 11 del mes actual
+    DIA_FIN_Q2    = 25   # Fin Q2:    día 25 del mes actual
 
 # Configurar logging pa tener loghs
 logging.basicConfig(
@@ -282,22 +288,26 @@ class HistorialDAO:
                     mes = fecha.month
                     año = fecha.year
                     
-                    # Calcular a qué quincena pertenece esta fecha
-                    if dia >= QuincenaConfig.DIA_FIN_Q1:
-                        # Días 28+ pertenecen a Q1 del MES SIGUIENTE
-                        mes += 1
-                        if mes > 12:
-                            mes = 1
-                            año += 1
+                    # Clasificar según regla de negocio:
+                    #   día 26-31  → Q1 del MES SIGUIENTE
+                    #   día 1-10   → Q1 del mes actual
+                    #   día 11-25  → Q2 del mes actual
+                    if dia >= QuincenaConfig.DIA_INICIO_Q1:  # 26-31
+                        # Pertenece a Q1 del mes siguiente
+                        mes_q = mes + 1
+                        año_q = año
+                        if mes_q > 12:
+                            mes_q = 1
+                            año_q = año + 1
                         quincena = 1
-                    elif dia <= QuincenaConfig.DIA_INICIO_Q1:
-                        # Días 1-12 pertenecen a Q1 del mes actual
+                    elif dia <= QuincenaConfig.DIA_FIN_Q1:  # 1-10
                         quincena = 1
-                    else:
-                        # Días 13-27 pertenecen a Q2 del mes actual
+                        mes_q, año_q = mes, año
+                    else:  # 11-25
                         quincena = 2
+                        mes_q, año_q = mes, año
                     
-                    quincenas_set.add((año, mes, quincena))
+                    quincenas_set.add((año_q, mes_q, quincena))
                 except Exception as e:
                     logger.warning(f"Error al procesar fecha {fecha_str}: {e}")
                     continue
@@ -565,12 +575,15 @@ class HistorialManager:
     
     def calcular_fechas_quincena(self, año: int, mes: int, quincena: int) -> Dict[str, str]:
         """
-        Calcula las fechas de inicio y fin de una quincena específica
-        
-        Patrón de quincenas:
-        - Q1 de cada mes: del día 28 del mes anterior al día 12 del mes actual
-        - Q2 de cada mes: del día 13 al día 27 del mes actual
-        
+        Calcula las fechas de inicio y fin de una quincena específica.
+
+        Regla de negocio:
+          Q1 del mes M: del día 26 del mes anterior al día 10 del mes M.
+          Q2 del mes M: del día 11 al día 25 del mes M.
+
+        Casos especiales:
+          Q1 de enero: inicio = 26 de diciembre del año anterior.
+
         Args:
             año: Año de la quincena
             mes: Mes de la quincena (1-12)
@@ -581,16 +594,17 @@ class HistorialManager:
         """
         try:
             if quincena == 1:
-                # Q1: del 28 del mes anterior al 12 del mes actual
+                # Q1: del día 26 del mes anterior al día 10 del mes actual
                 if mes == 1:
-                    fecha_inicio = datetime(año - 1, QuincenaConfig.DIA_INICIO_Q1, QuincenaConfig.DIA_FIN_Q1).strftime('%Y-%m-%d')
+                    mes_ant, año_ant = 12, año - 1
                 else:
-                    fecha_inicio = datetime(año, mes - 1, QuincenaConfig.DIA_INICIO_Q1, QuincenaConfig.DIA_FIN_Q1).strftime('%Y-%m-%d')
-                fecha_fin = datetime(año, mes, QuincenaConfig.DIA_FIN_Q1).strftime('%Y-%m-%d')
+                    mes_ant, año_ant = mes - 1, año
+                fecha_inicio = datetime(año_ant, mes_ant, QuincenaConfig.DIA_INICIO_Q1).strftime('%Y-%m-%d')
+                fecha_fin    = datetime(año,     mes,     QuincenaConfig.DIA_FIN_Q1).strftime('%Y-%m-%d')
             elif quincena == 2:
-                # Q2: del 13 al 27 del mes actual
+                # Q2: del día 11 al día 25 del mes actual
                 fecha_inicio = datetime(año, mes, QuincenaConfig.DIA_INICIO_Q2).strftime('%Y-%m-%d')
-                fecha_fin = datetime(año, mes, QuincenaConfig.DIA_FIN_Q2).strftime('%Y-%m-%d')
+                fecha_fin    = datetime(año, mes, QuincenaConfig.DIA_FIN_Q2).strftime('%Y-%m-%d')
             else:
                 raise ValueError("La quincena debe ser 1 o 2")
             
@@ -790,7 +804,19 @@ class HistorialManager:
                 mes = hoy.month
                 año = hoy.year
 
-                quincena = 1 if dia <= QuincenaConfig.DIA_INICIO_Q1 else 2
+                # Regla: día 26-31 → Q1 del mes siguiente
+                #        día 1-10  → Q1 del mes actual
+                #        día 11-25 → Q2 del mes actual
+                if dia >= QuincenaConfig.DIA_INICIO_Q1:  # 26-31
+                    quincena = 1
+                    mes = mes + 1
+                    if mes > 12:
+                        mes = 1
+                        año = año + 1
+                elif dia <= QuincenaConfig.DIA_FIN_Q1:   # 1-10
+                    quincena = 1
+                else:                                     # 11-25
+                    quincena = 2
                 fechas = self.calcular_fechas_quincena(año, mes, quincena)
 
                 fecha_inicio = fechas["fecha_inicio"]
@@ -833,7 +859,19 @@ class HistorialManager:
                 mes = hoy.month
                 año = hoy.year
 
-                quincena = 1 if dia <= QuincenaConfig.DIA_INICIO_Q1 else 2
+                # Regla: día 26-31 → Q1 del mes siguiente
+                #        día 1-10  → Q1 del mes actual
+                #        día 11-25 → Q2 del mes actual
+                if dia >= QuincenaConfig.DIA_INICIO_Q1:  # 26-31
+                    quincena = 1
+                    mes = mes + 1
+                    if mes > 12:
+                        mes = 1
+                        año = año + 1
+                elif dia <= QuincenaConfig.DIA_FIN_Q1:   # 1-10
+                    quincena = 1
+                else:                                     # 11-25
+                    quincena = 2
                 fechas = self.calcular_fechas_quincena(año, mes, quincena)
 
                 fecha_inicio = fechas["fecha_inicio"]

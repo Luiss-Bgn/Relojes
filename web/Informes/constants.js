@@ -4,14 +4,14 @@
 
 /**
  * Configuración de los períodos de las quincenas
- * Q1: Del día 28 del mes anterior al día 12 del mes actual
- * Q2: Del día 13 al día 27 del mes actual
+ * Q1: Del día 26 del mes anterior al día 10 del mes actual
+ * Q2: Del día 11 al día 25 del mes actual
  */
 
-export const Q1_INICIO = 26;  // Q1 inicia el día 28 del mes anterior
-export const Q1_FIN = 10;     // Q1 termina el día 12 del mes actual
-export const Q2_INICIO = 11;  // Q2 inicia el día 13
-export const Q2_FIN = 25;     // Q2 termina el día 27
+export const Q1_INICIO = 26;  // Q1 inicia el día 26 del mes anterior
+export const Q1_FIN = 10;     // Q1 termina el día 10 del mes actual
+export const Q2_INICIO = 11;  // Q2 inicia el día 11 del mes actual
+export const Q2_FIN = 25;     // Q2 termina el día 25 del mes actual
 
 /**
  * Convierte una fecha a string YYYY-MM-DD usando zona horaria local

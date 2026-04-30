@@ -19,7 +19,7 @@ from funciones import manager
 from conexiones import conexiones
 from funciones.eventos import EventManager
 import time_manager
-from backup_scheduler import BackupManager
+from backup_scheduler import BackupManager, BACKUP_MORNING_TIME, BACKUP_FINAL_TIME
 
 # Importar API REST (ahora ambos: usuarios + historial )
 from api import app as api_app
@@ -125,28 +125,35 @@ def run_rest_api():
 
 
 def run_backup_scheduler():
-    """Ejecuta el scheduler de backup automático"""
+    """Ejecuta el scheduler de backup automático con dos cortes diarios."""
     print("\n" + "="*60)
-    print("INICIANDO SCHEDULER DE BACKUP")
+    print("INICIANDO SCHEDULER DE BACKUP — DOS CORTES")
     print("="*60)
-    print("Backup programado: Diario a las 00:10 (00:01 AM)")
+    print(f"  Corte matutino : diario a las {BACKUP_MORNING_TIME}")
+    print(f"  Corte final    : diario a las {BACKUP_FINAL_TIME}")
     print("Función: Copiar tareas_semana -> historial")
     print("="*60 + "\n")
-    
+
     backup_manager = BackupManager()
 
     print("🔎 Verificando si hay backups pendientes al iniciar...")
-    backup_manager.realizar_backup_diario()
-    
-    # Programar backup diario a las 00:10 (12:10 AM)
-    schedule.every().day.at("00:01").do(backup_manager.realizar_backup_diario)
-    
-    print(f"⏰ Próximo backup: {schedule.next_run().strftime('%Y-%m-%d %H:%M:%S')}\n")
-    
-    # Loop infinito para ejecutar tareas programadas
+    backup_manager.realizar_backup_final()
+
+    # Corte matutino (no resetea, solo guarda tareas de primer turno)
+    schedule.every().day.at(BACKUP_MORNING_TIME).do(
+        backup_manager.realizar_backup_morning
+    )
+
+    # Corte final (guarda resto + resetea + cierra día)
+    schedule.every().day.at(BACKUP_FINAL_TIME).do(
+        backup_manager.realizar_backup_final
+    )
+
+    print(f"⏰ Próximo corte: {schedule.next_run().strftime('%Y-%m-%d %H:%M:%S')}\n")
+
     while True:
         schedule.run_pending()
-        time.sleep(60)  # Verificar cada minuto
+        time.sleep(60)
 
 
 #corremos servidor api y el ws

@@ -2,6 +2,9 @@ import asyncio
 from datetime import datetime
 from conexiones import conexiones
 import time
+import logging
+
+logger = logging.getLogger(__name__)
 
 async def ping_relojes():
     relojes = conexiones.obtener_conexiones()
@@ -25,8 +28,8 @@ async def chequeo_hora(Manager):
         # Actualización cada minuto
         if ahora.minute != ultimo_minuto:
             ultimo_minuto = ahora.minute
-            if ahora.second == 0:
-                await Manager.Actualizar()
+            logger.info("Actualizador por minuto ejecutado: %s", ahora.strftime("%Y-%m-%d %H:%M"))
+            await Manager.Actualizar()
 
         # Ping cada 15 s
         if time.time() - ultimo_ping > 15:

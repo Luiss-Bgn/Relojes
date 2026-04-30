@@ -1,11 +1,13 @@
 """
 Rutas (endpoints) para tareas de la semana
 """
+import asyncio
 from fastapi import APIRouter, HTTPException, status
 from database.database import DatabaseManager
 from database.db_tareas import TareasManager
 from .models import TareasCrear, TareasActualizar
 import logging
+from conexiones import conexiones
 
 from .utils import construir_panel
 
@@ -13,6 +15,56 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/tareas", tags=["Tareas"])
 db_manager = DatabaseManager("relojes.db")  # Inicializamos manager con la db real
 tareas_manager = TareasManager(db_manager)
+
+
+async def _emitir_update_tareas_rest(origen: str) -> None:
+    """Emite aviso websocket update_tareas tras mutaciones REST exitosas."""
+    mensaje = {
+        "tipo": "notificacion",
+        "comando": "update_tareas",
+        "data": ["update_tareas"],
+        "vibrar": True
+    }
+
+    conexiones_activas = conexiones.obtener_conexiones()
+    if not conexiones_activas:
+        logger.info("REST->WS update_tareas omitido: sin conexiones activas (origen=%s)", origen)
+        return
+
+    envios = []
+    meta = []
+    for uuid, conn_data in conexiones_activas.items():
+        ws = conn_data.get("ws")
+        if ws:
+            envios.append(ws.send_json(mensaje))
+            meta.append((uuid, conn_data.get("tipo", "desconocido")))
+
+    resultados = await asyncio.gather(*envios, return_exceptions=True)
+
+    ok = 0
+    fail = 0
+    for (uuid, tipo), resultado in zip(meta, resultados):
+        if isinstance(resultado, Exception):
+            fail += 1
+            logger.error(
+                "REST->WS envio fallido: origen=%s uuid=%s tipo=%s error=%s",
+                origen,
+                uuid,
+                tipo,
+                resultado,
+            )
+            conexiones.eliminar_conexion(uuid)
+            logger.warning("Conexion eliminada tras fallo REST->WS: uuid=%s", uuid)
+        else:
+            ok += 1
+
+    logger.info(
+        "REST->WS update_tareas emitido: origen=%s total=%s ok=%s fail=%s",
+        origen,
+        len(envios),
+        ok,
+        fail,
+    )
 
 
 @router.post( "", response_model=dict, status_code =status.HTTP_201_CREATED)
@@ -41,6 +93,11 @@ async def crear_registro(registro: TareasCrear):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=resultado.get("mensaje")
         )
+
+    try:
+        await _emitir_update_tareas_rest("crear_tarea")
+    except Exception as e:
+        logger.error("Fallo emitiendo update_tareas tras crear tarea: %s", e)
     
     
     return resultado
@@ -223,6 +280,11 @@ async def actualizar_registro(registro_id: int, datos: TareasActualizar):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=resultado.get("mensaje")
         )
+
+    try:
+        await _emitir_update_tareas_rest("actualizar_tarea")
+    except Exception as e:
+        logger.error("Fallo emitiendo update_tareas tras actualizar tarea: %s", e)
     
     print("Resultado de la actualización:", resultado)
     return resultado
@@ -238,6 +300,11 @@ async def eliminar_registro(registro_id: int):
             status_code=status.HTTP_404_NOT_FOUND,
             detail= resultado.get("mensaje")
         )
+
+    try:
+        await _emitir_update_tareas_rest("eliminar_tarea")
+    except Exception as e:
+        logger.error("Fallo emitiendo update_tareas tras eliminar tarea: %s", e)
     
     return resultado
 
@@ -387,11 +454,17 @@ async def asignar_tareas_empleado(empleado_id: int, datos: dict):
                         detail=resultado.get("mensaje", "Error al crear tarea")
                     )
         
+        try:
+            await _emitir_update_tareas_rest("asignacion_masiva")
+        except Exception as e:
+            logger.error("Fallo emitiendo update_tareas tras asignacion masiva: %s", e)
+
         return {
             "status": "success",
             "mensaje": f"{len(tareas_creadas)} tarea(s) asignada(s) correctamente",
             "tareas": tareas_creadas
         }
+
         
     except HTTPException:
         raise

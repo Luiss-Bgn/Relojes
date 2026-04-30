@@ -4,6 +4,9 @@ from conexiones import conexiones
 from database.database import DatabaseManager
 from database.db_relojes import RelojManager
 from database.db_usuarios import UsuarioManager
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Manager():
@@ -112,6 +115,12 @@ class Manager():
             "vibrar": payload.get("vibrar")
         }
 
+        logger.info(
+            "Evento WS: comando=%s destinatarios_resueltos=%s",
+            key[1],
+            len(destinatarios_finales)
+        )
+
         # 📡 3. Enviar ya con UUIDs reales
         await self._enviar_notificacion(destinatarios_finales, mensaje)
 
@@ -153,26 +162,80 @@ class Manager():
         if criterios["reloj"]:
             destinatarios.update(conexiones.obtener_uuids_por_tipo("reloj"))
 
-        print(f"Destinatarios finales: {destinatarios}")
+        # print(f"Destinatarios finales: {destinatarios}")
         return destinatarios
 
 
     # Envio de mensaje
     async def _enviar_notificacion(self, destinatarios, mensaje):
-        lista_mensajes = []
-        
-        # relojes específicos
+        envios = []
+
+        # relojes/específicos por UUID
         for uuid in destinatarios:
-            ws = conexiones.obtener_conexion(uuid)
-            if ws:
-                lista_mensajes.append(ws['ws'].send_json(mensaje))
+            conn_data = conexiones.obtener_conexion(uuid)
+            if conn_data:
+                envios.append({
+                    "uuid": uuid,
+                    "tipo": conn_data.get("tipo", "desconocido"),
+                    "ws": conn_data["ws"],
+                    "task": conn_data["ws"].send_json(mensaje)
+                })
 
         # web siempre recibe
         for ws in conexiones.obtener_web():
-            lista_mensajes.append(ws.send_json(mensaje))
+            envios.append({
+                "uuid": None,
+                "tipo": "web",
+                "ws": ws,
+                "task": ws.send_json(mensaje)
+            })
 
-        # print(f"mensajes enviados: {lista_mensajes}")
-        await asyncio.gather(*lista_mensajes,return_exceptions=True)
+        if not envios:
+            logger.info("Envio WS omitido: sin destinatarios para comando=%s", mensaje.get("comando"))
+            return
+
+        resultados = await asyncio.gather(
+            *[item["task"] for item in envios],
+            return_exceptions=True
+        )
+
+        exitosos = 0
+        fallidos = 0
+        for item, resultado in zip(envios, resultados):
+            if isinstance(resultado, Exception):
+                fallidos += 1
+                uuid = item["uuid"]
+                logger.error(
+                    "Envio WS fallido: comando=%s uuid=%s tipo=%s error=%s",
+                    mensaje.get("comando"),
+                    uuid,
+                    item["tipo"],
+                    resultado
+                )
+
+                # Limpiar sockets muertos por fallo de envío
+                if uuid:
+                    conexiones.eliminar_conexion(uuid)
+                    logger.warning("Conexion eliminada por error de envio: uuid=%s", uuid)
+                else:
+                    uuid_web = None
+                    for conn_uuid, conn_data in conexiones.obtener_conexiones().items():
+                        if conn_data.get("tipo") == "web" and conn_data.get("ws") is item["ws"]:
+                            uuid_web = conn_uuid
+                            break
+                    if uuid_web:
+                        conexiones.eliminar_conexion(uuid_web)
+                        logger.warning("Conexion web eliminada por error de envio: uuid=%s", uuid_web)
+            else:
+                exitosos += 1
+
+        logger.info(
+            "Envio WS completado: comando=%s total=%s ok=%s fail=%s",
+            mensaje.get("comando"),
+            len(envios),
+            exitosos,
+            fallidos,
+        )
 
 
     async def Actualizar(self):

@@ -104,5 +104,29 @@ class DatabaseManager:
             )
         ''')
 
+        # Tabla de control de cortes/backups
+        # Registra qué cortes ya se ejecutaron en cada fecha real para:
+        #   - evitar duplicados en historial
+        #   - decirle al actualizador automático qué tareas ya están cerradas
+        # Columnas:
+        #   fecha_real   : fecha YYYY-MM-DD del backup
+        #   dia_semana   : nombre del día (Lunes … Domingo)
+        #   corte        : 'morning' o 'final'
+        #   estado       : 'running' | 'done' | 'failed'
+        #   started_at   : timestamp de inicio
+        #   finished_at  : timestamp de fin (NULL si no terminó)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS backup_control (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                fecha_real  TEXT NOT NULL,
+                dia_semana  TEXT NOT NULL,
+                corte       TEXT NOT NULL CHECK(corte IN ('morning', 'final')),
+                estado      TEXT NOT NULL DEFAULT 'running' CHECK(estado IN ('running', 'done', 'failed')),
+                started_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                finished_at TIMESTAMP,
+                UNIQUE(fecha_real, dia_semana, corte)
+            )
+        ''')
+
 
 

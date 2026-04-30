@@ -1,0 +1,9 @@
+{
+  "enabled": true,
+  "local_backup_dir": "C:\\Relojes\\backups",
+  "retention_count": 30,
+  "targets": [
+    "\\\\MINIPC-01\\BackupsRelojes",
+    "\\\\MINIPC-02\\BackupsRelojes"
+  ]
+}
